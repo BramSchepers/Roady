@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Roady – Version française</title>
+  <meta name="description" content="Version française – bientôt disponible.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <link rel="icon" type="image/x-icon" href="../favicon.ico">
+  <link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+  <script>
+    (function () { var t = localStorage.getItem('theme'); if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark'); else document.documentElement.removeAttribute('data-theme'); })();
+  </script>
+</head>
+
+<body>
+  <header class="header">
+    <div class="container header__inner">
+      <a href="index.html" class="logo" aria-label="Roady – accueil">
+        <img class="logo__img" src="../assets/illustrations/Roady_naam.svg" alt="Roady" width="293" height="47">
+      </a>
+      <nav class="nav">
+        <div class="nav__lang-dropdown" id="nav-lang-dropdown">
+          <button type="button" class="nav__lang-trigger" aria-label="Choix de langue" aria-haspopup="true"
+            aria-expanded="false" aria-controls="nav-lang-menu" id="nav-lang-trigger">
+            <span class="nav__lang-current">FR</span>
+            <svg class="nav__lang-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
+          <div class="nav__lang-panel" id="nav-lang-menu" role="menu" aria-labelledby="nav-lang-trigger"
+            aria-hidden="true">
+            <span class="nav__lang-item nav__lang-item--current" role="menuitem" aria-current="true">FR</span>
+            <a href="../nl/" class="nav__lang-item" role="menuitem">NL</a>
+          </div>
+        </div>
+        <label class="theme-toggle" for="theme-toggle">
+          <input type="checkbox" class="theme-toggle__input" id="theme-toggle" aria-label="Mode sombre on/off" />
+          <span class="theme-toggle__track" aria-hidden="true">
+            <span class="theme-toggle__label theme-toggle__label--day">JOUR</span>
+            <span class="theme-toggle__label theme-toggle__label--night">NUIT</span>
+            <span class="theme-toggle__thumb">
+              <span class="theme-toggle__thumb-icon theme-toggle__thumb-icon--sun" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round">
+                  <circle cx="12" cy="12" r="4" />
+                  <path
+                    d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+                </svg>
+              </span>
+              <span class="theme-toggle__thumb-icon theme-toggle__thumb-icon--moon" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+              </span>
+            </span>
+          </span>
+        </label>
+      </nav>
+      <button class="nav__toggle" aria-label="Ouvrir le menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div class="nav-overlay" id="nav-overlay" aria-hidden="true"></div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero__inner">
+        <div class="hero__content">
+          <h1 class="hero__title">Version française – bientôt</h1>
+          <p class="hero__subtitle">La version française de DrivePass sera bientôt disponible. En attendant, utilisez la
+            version néerlandaise.</p>
+          <a href="../nl/" class="btn btn--primary btn--lg hero__cta" target="_self">Version néerlandaise</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__logo">
+        <img class="logo__img logo__img--footer" src="../assets/illustrations/Roady_naam.svg" alt="Roady" width="293"
+          height="47">
+      </div>
+      <p class="footer__copy">&copy; <span class="footer__year"></span> Roady. Tous droits réservés.</p>
+    </div>
+  </footer>
+
+  <!-- Retour en haut (desktop uniquement) -->
+  <button type="button" class="back-to-top" aria-label="Retour en haut" title="Retour en haut">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round" aria-hidden="true">
+      <path d="M18 15l-6-6-6 6" />
+    </svg>
+  </button>
+
+  <script src="../js/main.js"></script>
+</body>
+
+</html>

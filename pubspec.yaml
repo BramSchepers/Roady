@@ -1,0 +1,39 @@
+name: roady
+description: Rijbewijs theorie quiz app - oefen voor je theorie-examen.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.0.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_svg: ^2.0.10+1
+  flutter_native_splash: ^2.4.7
+  firebase_core: ^3.8.1
+  firebase_auth: ^5.3.4
+  go_router: ^14.6.2
+  shared_preferences: ^2.3.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/questions.json
+    - assets/splash.png
+    - assets/images/mascot.png
+    - images/Roady_mascot_nobackground.png
+    - images/GoRoady_sideview.png
+    - images/logo-roady.svg
+
+flutter_native_splash:
+  color: "#F5F7FA"
+  image: assets/splash.png
+  android_12:
+    color: "#F5F7FA"
+    image: assets/splash.png

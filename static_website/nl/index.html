@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Flutter web app: CTAs link to app (path ../ = same host root). For other host set base in js/main.js ROADY_APP_URL -->
+  <title>Roady – Slaag sneller voor je rijbewijs</title>
+  <meta name="description"
+    content="De leukste manier om je theorie-examen te halen. Offline gebruik, officiële examensimulaties en cross-platform sync. Start gratis!">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+  <!-- Favicons -->
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <link rel="icon" type="image/x-icon" href="../favicon.ico">
+  <link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+  <script>
+    (function () { var t = localStorage.getItem('theme'); if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark'); else document.documentElement.removeAttribute('data-theme'); })();
+  </script>
+</head>
+
+<body>
+  <!-- Header / Navigation -->
+  <header class="header">
+    <div class="container header__inner">
+      <a href="index.html" class="logo" aria-label="Roady – naar homepage">
+        <img class="logo__img" src="../assets/illustrations/Roady_naam.svg" alt="Roady" width="293" height="47">
+      </a>
+      <nav class="nav">
+        <a href="#crossplatform" class="nav__link">Ontdek</a>
+        <a href="#pricing" class="nav__link">Prijzen</a>
+        <div class="nav__lang-dropdown" id="nav-lang-dropdown">
+          <button type="button" class="nav__lang-trigger" aria-label="Taalkeuze" aria-haspopup="true"
+            aria-expanded="false" aria-controls="nav-lang-menu" id="nav-lang-trigger">
+            <span class="nav__lang-current">NL</span>
+            <svg class="nav__lang-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
+          <div class="nav__lang-panel" id="nav-lang-menu" role="menu" aria-labelledby="nav-lang-trigger"
+            aria-hidden="true">
+            <span class="nav__lang-item nav__lang-item--current" role="menuitem" aria-current="true">NL</span>
+            <a href="../fr/" class="nav__lang-item" role="menuitem">FR</a>
+          </div>
+        </div>
+        <a href="../auth" class="btn btn--ghost btn--icon" target="_self">
+          <span class="btn__icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+          </span>
+          Login
+        </a>
+        <a href="../auth" class="btn btn--secondary" target="_self">Gratis test</a>
+        <label class="theme-toggle" for="theme-toggle">
+          <input type="checkbox" class="theme-toggle__input" id="theme-toggle" aria-label="Donkere modus aan of uit" />
+          <span class="theme-toggle__track" aria-hidden="true">
+            <span class="theme-toggle__label theme-toggle__label--day">DAG</span>
+            <span class="theme-toggle__label theme-toggle__label--night">NACHT</span>
+            <span class="theme-toggle__thumb">
+              <span class="theme-toggle__thumb-icon theme-toggle__thumb-icon--sun" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round">
+                  <circle cx="12" cy="12" r="4" />
+                  <path
+                    d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+                </svg>
+              </span>
+              <span class="theme-toggle__thumb-icon theme-toggle__thumb-icon--moon" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+              </span>
+            </span>
+          </span>
+        </label>
+      </nav>
+      <button class="nav__toggle" aria-label="Menu openen">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div class="nav-overlay" id="nav-overlay" aria-hidden="true"></div>
+  </header>
+
+  <main>
+    <!-- Hero Section -->
+    <section class="hero" id="hero">
+      <div class="container hero__inner">
+        <div class="hero__content">
+          <h1 class="hero__title">Slaag sneller voor je rijbewijs <span class="hero__highlight">met Roady!</span></h1>
+          <ul class="hero__features" aria-label="Belangrijkste voordelen">
+            <li>Offline oefenen</li>
+            <li>Officiële examensimulaties</li>
+            <li>Sync op al je apparaten</li>
+          </ul>
+          <p class="hero__subtitle">Maak elke dag een beetje voortgang. Oefen waar en wanneer je wilt – op je telefoon
+            of laptop. 99% van onze gebruikers slaagt de eerste keer!</p>
+          <div class="hero__ctas">
+            <a href="../auth?plan=free" class="btn btn--primary btn--lg hero__cta" target="_self">Start Nu Gratis!</a>
+            <a href="#crossplatform" class="btn btn--ghost btn--lg hero__cta hero__cta--secondary">Ontdek de app</a>
+          </div>
+        </div>
+        <div class="hero__visual">
+          <div class="hero__mascot" aria-hidden="true">
+            <svg viewBox="-270 378 53.6 82" xmlns="http://www.w3.org/2000/svg"
+              xmlns:xlink="http://www.w3.org/1999/xlink">
+              <style type="text/css">
+                .st0 {
+                  fill: #F97316;
+                }
+
+                .st1 {
+                  fill: #E5E5E5;
+                }
+
+                .st2 {
+                  fill: #FB923C;
+                }
+
+                .st5 {
+                  fill: #343434;
+                }
+
+                .st6 {
+                  fill: #4F4F4F;
+                }
+              </style>
+              <g class="mascot__shadow">
+                <ellipse class="st1" cx="-243" cy="451" rx="20" ry="4.5" />
+              </g>
+              <g class="mascot__figure">
+                <path class="st0"
+                  d="M-253.3,402.6c2.4-1.7,16.4-1.4,19.9,0c0,0,1.7,1.7,2.4,2.5c3.1,3.9,4,7.5,3.9,12.3c0.7,1.1,1.5,2.3,2,3.5c0.5,1,0.9,2.1,1.3,3.2c2.5,3.5,8.6,14.5,4.4,18.3c-1.1,1-2.8,1.1-4.2,0.7c-1.5-1-1.5-0.8-2.6-2.4c-1.9,3.1-6,7-6,7s-3,2.7-7.1,2.7c-4,0-5.9-0.1-9.5-0.2c-2.4-0.1-5.6-2.6-5.6-2.6s-4.5-4-6.3-6.8c-0.8,1.2-1.9,2.2-3.4,2.5c-1.1,0.2-2.3,0-3.2-0.6c-5-3.4,1.9-15.5,4.4-19c0.3-0.3,0.7-1.9,1-2.5c0.6-1.2,1.6-2.5,1.9-3.7c0.2-0.7,0.1-2.3,0.1-3C-259.1,409.1-257.2,406.1-253.3,402.6C-253.3,402.6-255.7,404.2-253.3,402.6z" />
+                <path class="st2"
+                  d="M-252.2,448.9c1.7-2.2,3.6-3.1,6.4-3.4c3.2-0.4,7.5-0.1,10.2,1.8c0.3,0.2,1,1.3,1.3,1.7c-0.7,1.2-1.1,1.9-2.4,2.6c-3.1,1.6-8.3,1.6-11.6,0.6C-250.3,451.4-251.3,450.6-252.2,448.9z" />
+                <path class="st5"
+                  d="M-248.5,411.4c0.9-0.3,1.9,0.2,2.1,1.1c0.3,0.9-0.2,1.9-1.2,2.1c-0.9,0.3-1.9-0.2-2.1-1.2C-249.9,412.7-249.4,411.7-248.5,411.4z" />
+                <path class="st5"
+                  d="M-239.5,411.4c0.9-0.3,1.8,0.2,2.1,1.1s-0.1,1.8-1,2.1c-0.6,0.2-1.2,0.1-1.7-0.3s-0.7-1-0.6-1.6C-240.5,412.1-240.1,411.6-239.5,411.4L-239.5,411.4z" />
+                <path class="st5"
+                  d="M-247,420.9c1,0.1,2.2,1.4,3.8,1.4c1.3,0,2.6-1.2,3.4-1.1c0.3,0.4,0.2,0.1,0.2,0.7c-1.1,0.8-2.2,1.3-3.6,1.3C-244.7,423.1-247.1,422.7-247,420.9z" />
+                <path class="st6"
+                  d="M-243.4,387.6c0.7,0.2,1.3,0.4,2,0.6c4.4,1.4,8.7,3,13.1,4.3c0,0.9,0,2,0,2.9c-1.6,0.6-3.3,1.3-4.9,1.9c-0.3,0.4-0.2,4.5-0.2,5.3c-3.4-0.9-6.6-0.3-9.8,0.9c-3.3-1-6.5-1.9-10-1c0-0.9,0.1-4.8-0.1-5.3c-2.2-0.8-4.5-1.6-6.7-2.5c-0.4-0.2-0.9-0.3-1-0.8c0.2-0.3,0.5-0.5,0.8-0.6C-254.7,391.5-249.1,389.4-243.4,387.6L-243.4,387.6z" />
+                <path class="st5"
+                  d="M-243.4,387.6c0.7,0.2,1.3,0.4,2,0.6c4.4,1.4,8.7,3,13.1,4.3c0,0.9,0,2,0,2.9c-1.6,0.6-3.3,1.3-4.9,1.9c-0.1-0.3-0.2-1.8-0.2-2.3c-2.9-3.6-14.5-3.1-18.4-1.1c-2,1-1.1,1.8-1.6,3.2c-2.2-0.8-4.5-1.6-6.7-2.5c-0.4-0.2-0.9-0.3-1-0.8c0.2-0.3,0.5-0.5,0.8-0.6C-254.7,391.5-249.1,389.4-243.4,387.6L-243.4,387.6z" />
+                <path class="st0"
+                  d="M-228.3,392.6c0.4,0,0.7,0,1,0.3c0.7,0.3,1.5,0.5,2,1c0,0.7-1.3,1-2,1.2c-0.1,0.7-0.1,2.5-0.1,3.4c0,1.8,0.4,1.4,0.5,2.8c-0.6,1.1,0,2.2,0.4,3.5c-0.9,0.1-1.9,0-2.8,0.1c0.2-1,0.7-2,0.8-2.8c0-0.1-0.4-0.7-0.4-0.7c0.5-1.4,0.6-2.2,0.7-3.7c-0.1-0.6,0-1.3-0.1-2C-228.3,394.5-228.3,393.5-228.3,392.6L-228.3,392.6z" />
+                <path class="st2"
+                  d="M-228.3,392.6c0.4,0,0.7,0,1,0.3c0.7,0.3,1.5,0.5,2,1c0,0.7-1.3,1-2,1.2c-0.1,0.7-0.1,2.5-0.1,3.4c-0.3-1-0.2-2.6-0.4-2.9l0.2,0.2l-0.1-0.4c-0.3,0.2-0.1,1.7-0.4,2.1c-0.1-0.6,0-1.3-0.1-2C-228.3,394.5-228.3,393.5-228.3,392.6L-228.3,392.6z" />
+              </g>
+            </svg>
+          </div>
+          <div class="hero__devices">
+            <div class="device device--phone">
+              <div class="device__screen">
+                <div class="device__ui">
+                  <div class="device__streak">🔥 7</div>
+                  <div class="device__progress"></div>
+                  <div class="device__cards">
+                    <div class="device__card"></div>
+                    <div class="device__card"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cross-platform Section -->
+    <section class="mockups scroll-fade" id="crossplatform">
+      <div class="container">
+        <h2 class="section__title">Leer op je favoriete apparaat</h2>
+        <p class="section__subtitle">Gsm, tablet of pc – je voortgang sync automatisch<sup>*</sup>
+          <br><small>(internetverbinding vereist)</small>
+        </p>
+        <div class="mockups__grid">
+          <div class="mockup mockup--iphone">
+            <div class="mockup__notch"></div>
+            <div class="mockup__screen">
+              <div class="mockup__ui">
+                <div class="mockup__header">
+                  <span class="mockup__streak">🔥 14 dagen</span>
+                  <span class="mockup__xp">+50 XP</span>
+                </div>
+                <div class="mockup__question">
+                  <div class="mockup__bar"></div>
+                  <div class="mockup__bar mockup__bar--short"></div>
+                  <div class="mockup__bar mockup__bar--short"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mockup mockup--tablet">
+            <div class="mockup__camera mockup__camera--tablet"></div>
+            <div class="mockup__screen">
+              <div class="mockup__ui mockup__ui--tablet">
+                <div class="mockup__header">
+                  <span class="mockup__streak">🔥 14 dagen</span>
+                  <span class="mockup__xp">+50 XP</span>
+                </div>
+                <div class="mockup__question">
+                  <div class="mockup__bar"></div>
+                  <div class="mockup__bar mockup__bar--short"></div>
+                  <div class="mockup__bar mockup__bar--short"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mockup mockup--macbook">
+            <div class="mockup__camera"></div>
+            <div class="mockup__screen">
+              <div class="mockup__ui mockup__ui--desktop">
+                <div class="mockup__sidebar"></div>
+                <div class="mockup__content">
+                  <div class="mockup__stats">
+                    <div class="mockup__stat"></div>
+                    <div class="mockup__stat"></div>
+                    <div class="mockup__stat"></div>
+                  </div>
+                  <div class="mockup__cards">
+                    <div class="mockup__card"></div>
+                    <div class="mockup__card"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="mockup__base"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features scroll-fade" id="features">
+      <div class="container">
+        <h2 class="section__title">Ontdek de Features</h2>
+        <p class="section__subtitle">Alles wat je nodig hebt om met vertrouwen je examen te halen.</p>
+        <div class="features__grid">
+          <article class="feature-card">
+            <div class="feature-card__icon">
+              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="12" y="8" width="24" height="32" rx="2" fill="#F97316" stroke="#3C3C3C" stroke-width="2" />
+                <path d="M24 18v12M20 26l4 4 4-4" stroke="#3C3C3C" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
+            </div>
+            <h3 class="feature-card__title">Offline Gebruik</h3>
+            <p class="feature-card__desc">Leer overal, ook zonder internet. Download de inhoud en oefen onderweg – in de
+              trein, wachtkamer of gewoon thuis.</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-card__icon">
+              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="8" y="6" width="32" height="36" rx="4" fill="#F97316" stroke="#3C3C3C" stroke-width="2" />
+                <path d="M16 14H32M16 22H28M16 30H24" stroke="#3C3C3C" stroke-width="1.5" stroke-linecap="round" />
+              </svg>
+            </div>
+            <h3 class="feature-card__title">Officiële Examen simulaties</h3>
+            <p class="feature-card__desc">Oefen met examens die exact lijken op het echte theorie-examen. Zo ben je 100%
+              voorbereid op de grote dag.</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-card__icon">
+              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="8" y="12" width="14" height="24" rx="2" fill="#F97316" stroke="#3C3C3C" stroke-width="2" />
+                <rect x="26" y="8" width="18" height="32" rx="2" fill="#F97316" stroke="#3C3C3C" stroke-width="2" />
+                <path d="M15 20H15.01M21 32H27M21 36H25" stroke="#3C3C3C" stroke-width="1.5" stroke-linecap="round" />
+              </svg>
+            </div>
+            <h3 class="feature-card__title">Cross-platform Synchronisatie</h3>
+            <p class="feature-card__desc">Start op je telefoon, ga verder op je laptop. Je voortgang volgt je overal –
+              geen opnieuw beginnen!</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-card__icon">
+              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 40L16 28L24 32L32 20L40 24" stroke="#F97316" stroke-width="3" stroke-linecap="round"
+                  stroke-linejoin="round" />
+                <circle cx="8" cy="40" r="3" fill="#F97316" />
+                <circle cx="16" cy="28" r="3" fill="#F97316" />
+                <circle cx="24" cy="32" r="3" fill="#F97316" />
+                <circle cx="32" cy="20" r="3" fill="#F97316" />
+                <circle cx="40" cy="24" r="3" fill="#F97316" />
+              </svg>
+            </div>
+            <h3 class="feature-card__title">Gepersonaliseerde Leerpaden</h3>
+            <p class="feature-card__desc">We passen de oefeningen aan op jouw zwakke punten. Leer slimmer, niet harder.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing scroll-fade" id="pricing">
+      <div class="container">
+        <h2 class="section__title">Kies je abonnement</h2>
+        <p class="section__subtitle">Start gratis of kies voor meer oefeningen en AI-ondersteuning.</p>
+        <div class="pricing__grid">
+          <article class="pricing-card">
+            <h3 class="pricing-card__title">Gratis</h3>
+            <p class="pricing-card__price"><span class="pricing-card__amount">€0</span></p>
+            <span class="pricing-card__no-renewal pricing-card__no-renewal--spacer" aria-hidden="true">&nbsp;</span>
+            <ul class="pricing-card__features">
+              <li>Theorie leren</li>
+              <li>Offline gebruik</li>
+              <li>Enkele oefenvragen</li>
+            </ul>
+            <a href="#" class="pricing-card__details">Meer details →</a>
+            <a href="../auth?plan=free" class="btn btn--primary btn--lg pricing-card__cta" target="_self">Start
+              gratis</a>
+          </article>
+          <article class="pricing-card">
+            <h3 class="pricing-card__title">Standaard</h3>
+            <p class="pricing-card__price"><span class="pricing-card__amount">4,99 €</span> / 2 maanden</p>
+            <span class="pricing-card__no-renewal">Geen automatische verlenging</span>
+            <ul class="pricing-card__features">
+              <li>Alles van Gratis</li>
+              <li>Volledige toegang tot oefeningen en examensimulaties</li>
+            </ul>
+            <a href="#" class="pricing-card__details">Meer details →</a>
+            <a href="../auth?plan=standard" class="btn btn--primary btn--lg pricing-card__cta" target="_self">Kies
+              Standaard</a>
+          </article>
+          <article class="pricing-card pricing-card--highlight">
+            <span class="pricing-card__badge">Aanbevolen</span>
+            <h3 class="pricing-card__title">Met AI</h3>
+            <p class="pricing-card__price"><span class="pricing-card__amount">9,99 €</span> / 2 maanden</p>
+            <span class="pricing-card__no-renewal">Geen automatische verlenging</span>
+            <ul class="pricing-card__features">
+              <li>Alles van Standaard</li>
+              <li>AI bepaalt je zwakke hoofdstukken</li>
+              <li>Gepersonaliseerde vragen voor betere voorbereiding</li>
+            </ul>
+            <a href="#" class="pricing-card__details">Meer details →</a>
+            <a href="../auth?plan=ai" class="btn btn--primary btn--lg pricing-card__cta" target="_self">Kies Met AI</a>
+          </article>
+        </div>
+        <div class="pricing__nav">
+          <button class="pricing__arrow pricing__arrow--prev" aria-label="Vorige prijsoptie">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+          <div class="pricing__dots">
+            <button class="pricing__dot" aria-label="Ga naar prijsoptie 1"></button>
+            <button class="pricing__dot is-active" aria-label="Ga naar prijsoptie 2"></button>
+            <button class="pricing__dot" aria-label="Ga naar prijsoptie 3"></button>
+          </div>
+          <button class="pricing__arrow pricing__arrow--next" aria-label="Volgende prijsoptie">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <footer class="footer">
+        <div class="container footer__inner">
+          <div class="footer__logo">
+            <img class="logo__img logo__img--footer" src="../assets/illustrations/Roady_naam.svg" alt="Roady"
+              width="293" height="47">
+          </div>
+          <div class="footer__links">
+            <a href="#">Privacy</a>
+            <a href="#">Algemene Voorwaarden</a>
+          </div>
+          <p class="footer__copy">&copy; <span class="footer__year"></span> Roady. Alle rechten voorbehouden.</p>
+        </div>
+      </footer>
+    </section>
+  </main>
+
+  <!-- Back to top (alleen desktop) -->
+  <button type="button" class="back-to-top" aria-label="Terug naar boven" title="Terug naar boven">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round" aria-hidden="true">
+      <path d="M18 15l-6-6-6 6" />
+    </svg>
+  </button>
+
+  <script src="../js/main.js"></script>
+</body>
+
+</html>

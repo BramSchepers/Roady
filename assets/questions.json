@@ -1,0 +1,64 @@
+{
+  "questions": [
+    {
+      "id": "1",
+      "text": "Wat is de maximumsnelheid binnen de bebouwde kom in Nederland?",
+      "options": ["30 km/h", "50 km/h", "80 km/h", "100 km/h"],
+      "correctIndex": 1
+    },
+    {
+      "id": "2",
+      "text": "Wat betekent een rood omcirkeld verkeersbord met een wit vlak?",
+      "options": ["Gevaar", "Verbod", "Gebod", "Voorrang"],
+      "correctIndex": 1
+    },
+    {
+      "id": "3",
+      "text": "Wanneer mag je een voetgangersoversteekplaats gebruiken als bestuurder?",
+      "options": ["Nooit", "Alleen als er geen voetgangers zijn", "Je moet voetgangers die oversteken voor laten gaan", "Alleen overdag"],
+      "correctIndex": 2
+    },
+    {
+      "id": "4",
+      "text": "Wat betekent een geel knipperend verkeerslicht?",
+      "options": ["Stop", "Let op, voorzichtig oversteken of doorrijden", "Maximumsnelheid 30", "Einde verbod"],
+      "correctIndex": 1
+    },
+    {
+      "id": "5",
+      "text": "Hoe ver mag je parkeren van een kruising?",
+      "options": ["Minder dan 5 meter", "Minimaal 5 meter", "Minimaal 10 meter", "Het maakt niet uit"],
+      "correctIndex": 1
+    },
+    {
+      "id": "6",
+      "text": "Wat moet je doen als een ambulance met zwaailicht en sirene achter je rijdt?",
+      "options": ["Doorrijden in dezelfde snelheid", "Snelheid verminderen en ruimte maken", "Stoppen waar je bent", "Uitstappen"],
+      "correctIndex": 1
+    },
+    {
+      "id": "7",
+      "text": "Wat is de maximumsnelheid op een autosnelweg in Nederland?",
+      "options": ["100 km/h", "120 km/h", "130 km/h", "140 km/h"],
+      "correctIndex": 2
+    },
+    {
+      "id": "8",
+      "text": "Wanneer moet je je richtingaanwijzer gebruiken?",
+      "options": ["Alleen op de snelweg", "Bij elke richtingsverandering of voornemen", "Alleen bij afslaan", "Nooit in de stad"],
+      "correctIndex": 1
+    },
+    {
+      "id": "9",
+      "text": "Wat betekent een driehoekig verkeersbord met rode rand?",
+      "options": ["Verbod", "Gebod", "Waarschuwing/gevaar", "Informatie"],
+      "correctIndex": 2
+    },
+    {
+      "id": "10",
+      "text": "Hoeveel alcohol mag er in je bloed zitten als beginnend bestuurder (eerste 5 jaar)?",
+      "options": ["0,2 promille", "0,5 promille", "0,0 promille", "0,8 promille"],
+      "correctIndex": 2
+    }
+  ]
+}
