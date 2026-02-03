@@ -84,22 +84,6 @@ De companion-website staat in **`website/`** (HTML, CSS, JavaScript), naast de F
 
 **Supabase:** Gebruik hetzelfde Supabase-project voor de Flutter-app en de website. Kopieer `website/js/config.js.example` naar `website/js/config.js`, vul `SUPABASE_URL` en `SUPABASE_ANON_KEY` in. `config.js` staat in `.gitignore`; commit geen keys.
 
-## Deploy (Firebase Hosting)
-
-De landingspagina (`static_website/`) en de Flutter web-app worden samen op één domein gehost. De app staat op `/auth`, zodat knoppen zoals “Start gratis” naar de login-pagina gaan.
-
-1. **Firebase CLI** installeren: `npm install -g firebase-tools` en inloggen met `firebase login`.
-2. **Build** (PowerShell, vanuit de projectroot):
-   ```powershell
-   .\scripts\build_hosting.ps1
-   ```
-   Dit bouwt de Flutter web-app met `--base-href /auth/`, kopieert `static_website/` naar `build/hosting/` en de Flutter build naar `build/hosting/auth/`.
-3. **Deploy**:
-   ```bash
-   firebase deploy
-   ```
-   De site staat daarna op het Firebase Hosting-domein (bijv. `https://goroady-22332.web.app`). `/auth` en `/auth?plan=free` openen de Flutter login-pagina.
-
 ## Licentie
 
 Privé / educatief gebruik.
