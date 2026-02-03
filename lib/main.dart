@@ -31,20 +31,30 @@ class RoadyApp extends StatelessWidget {
 
   final AuthState authState;
 
+  static const _heroBg = Color(0xFFe8f0e9);
+
   @override
   Widget build(BuildContext context) {
     final router = _createRouter(authState);
-    return MaterialApp.router(
-      title: 'Roady',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFF97316),
-          brightness: Brightness.light,
+    return Container(
+      color: _heroBg,
+      child: MaterialApp.router(
+        title: 'Roady',
+        debugShowCheckedModeBanner: false,
+        themeMode: ThemeMode.light,
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFFF97316),
+            brightness: Brightness.light,
+          ).copyWith(
+            surface: const Color(0xFFe8f0e9),
+            surfaceContainerLowest: const Color(0xFFe8f0e9),
+          ),
+          scaffoldBackgroundColor: const Color(0xFFe8f0e9),
+          useMaterial3: true,
         ),
-        useMaterial3: true,
+        routerConfig: router,
       ),
-      routerConfig: router,
     );
   }
 

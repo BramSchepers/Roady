@@ -157,6 +157,8 @@ class _AuthScreenState extends State<AuthScreen> {
                 fit: BoxFit.cover,
                 width: double.infinity,
                 height: double.infinity,
+                placeholderBuilder: (_) => const SizedBox.shrink(),
+                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
               ),
             ),
           ),
@@ -178,6 +180,27 @@ class _AuthScreenState extends State<AuthScreen> {
                             'images/logo-roady.svg',
                             height: 48,
                             fit: BoxFit.contain,
+                            placeholderBuilder: (_) => const SizedBox(
+                              height: 48,
+                              child: Center(
+                                child: Text(
+                                  'Roady',
+                                  style: TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                    color: _primary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            errorBuilder: (_, __, ___) => Text(
+                              'Roady',
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: _primary,
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 8),
