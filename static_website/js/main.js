@@ -270,72 +270,93 @@
   const nextArrow = document.querySelector('.pricing__arrow--next');
   const dots = document.querySelectorAll('.pricing__dot');
 
-  if (pricingGrid && pricingCards.length > 0 && window.innerWidth < 640) {
-    let currentIndex = 1; // Start at middle card (Standaard €4,99)
+  function isPricingMobile() {
+    return window.innerWidth < 640;
+  }
 
-    // Initialize - scroll to middle card
-    function scrollToCard(index, smooth = true) {
+  if (pricingGrid && pricingCards.length > 0 && prevArrow && nextArrow && dots.length > 0) {
+    let currentIndex = 1;
+    let programmaticScroll = false;
+
+    // Scroll to center the card at index
+    function scrollToCard(index, smooth) {
+      if (index < 0 || index >= pricingCards.length) return;
       const card = pricingCards[index];
-      if (card) {
-        const scrollLeft = card.offsetLeft - (pricingGrid.offsetWidth - card.offsetWidth) / 2;
-        pricingGrid.scrollTo({
-          left: scrollLeft,
-          behavior: smooth ? 'smooth' : 'auto'
-        });
+      const gridWidth = pricingGrid.offsetWidth;
+      const cardWidth = card.offsetWidth;
+      const scrollLeft = card.offsetLeft - (gridWidth - cardWidth) / 2;
+      programmaticScroll = true;
+      pricingGrid.scrollTo({
+        left: Math.max(0, scrollLeft),
+        behavior: smooth ? 'smooth' : 'auto'
+      });
+      if (!smooth) {
+        programmaticScroll = false;
+      } else {
+        setTimeout(function () {
+          programmaticScroll = false;
+        }, 400);
       }
     }
 
-    // Update active states
+    // Update dots and arrow disabled state
     function updateActiveStates(index) {
       currentIndex = index;
-
-      // Update dots
       dots.forEach(function (dot, i) {
-        if (i === index) {
-          dot.classList.add('is-active');
-        } else {
-          dot.classList.remove('is-active');
-        }
+        dot.classList.toggle('is-active', i === index);
       });
-
-      // Update arrows
-      if (prevArrow && nextArrow) {
-        prevArrow.disabled = index === 0;
-        nextArrow.disabled = index === pricingCards.length - 1;
-      }
+      prevArrow.disabled = index <= 0;
+      nextArrow.disabled = index >= pricingCards.length - 1;
     }
 
-    // Get current card index based on scroll position
+    // Which card is closest to center (works with padding/gap)
     function getCurrentIndex() {
-      const scrollLeft = pricingGrid.scrollLeft;
-      const cardWidth = pricingCards[0].offsetWidth;
-      const gap = parseInt(getComputedStyle(pricingGrid).gap) || 0;
-      return Math.round(scrollLeft / (cardWidth + gap));
+      const gridWidth = pricingGrid.offsetWidth;
+      const scrollCenter = pricingGrid.scrollLeft + gridWidth / 2;
+      let bestIndex = 0;
+      let bestDist = Infinity;
+      for (let i = 0; i < pricingCards.length; i++) {
+        const card = pricingCards[i];
+        const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+        const dist = Math.abs(scrollCenter - cardCenter);
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestIndex = i;
+        }
+      }
+      return bestIndex;
+    }
+
+    function initCarouselPosition() {
+      if (!isPricingMobile()) return;
+      scrollToCard(1, false);
+      updateActiveStates(1);
     }
 
     // Arrow navigation
-    if (prevArrow) {
-      prevArrow.addEventListener('click', function () {
-        if (currentIndex > 0) {
-          scrollToCard(currentIndex - 1);
-          updateActiveStates(currentIndex - 1);
-        }
-      });
-    }
+    prevArrow.addEventListener('click', function () {
+      if (!isPricingMobile()) return;
+      if (currentIndex > 0) {
+        const next = currentIndex - 1;
+        scrollToCard(next, true);
+        updateActiveStates(next);
+      }
+    });
 
-    if (nextArrow) {
-      nextArrow.addEventListener('click', function () {
-        if (currentIndex < pricingCards.length - 1) {
-          scrollToCard(currentIndex + 1);
-          updateActiveStates(currentIndex + 1);
-        }
-      });
-    }
+    nextArrow.addEventListener('click', function () {
+      if (!isPricingMobile()) return;
+      if (currentIndex < pricingCards.length - 1) {
+        const next = currentIndex + 1;
+        scrollToCard(next, true);
+        updateActiveStates(next);
+      }
+    });
 
     // Dot navigation
     dots.forEach(function (dot, index) {
       dot.addEventListener('click', function () {
-        scrollToCard(index);
+        if (!isPricingMobile()) return;
+        scrollToCard(index, true);
         updateActiveStates(index);
       });
     });
@@ -343,58 +364,50 @@
     // Touch/swipe support
     let touchStartX = 0;
     let touchEndX = 0;
-
     pricingGrid.addEventListener('touchstart', function (e) {
       touchStartX = e.changedTouches[0].screenX;
     }, { passive: true });
-
     pricingGrid.addEventListener('touchend', function (e) {
       touchEndX = e.changedTouches[0].screenX;
-      handleSwipe();
-    }, { passive: true });
-
-    function handleSwipe() {
+      if (!isPricingMobile()) return;
       const swipeThreshold = 50;
       const diff = touchStartX - touchEndX;
-
-      if (Math.abs(diff) > swipeThreshold) {
-        if (diff > 0 && currentIndex < pricingCards.length - 1) {
-          // Swipe left - next
-          scrollToCard(currentIndex + 1);
-          updateActiveStates(currentIndex + 1);
-        } else if (diff < 0 && currentIndex > 0) {
-          // Swipe right - prev
-          scrollToCard(currentIndex - 1);
-          updateActiveStates(currentIndex - 1);
-        }
+      if (diff > swipeThreshold && currentIndex < pricingCards.length - 1) {
+        const next = currentIndex + 1;
+        scrollToCard(next, true);
+        updateActiveStates(next);
+      } else if (diff < -swipeThreshold && currentIndex > 0) {
+        const next = currentIndex - 1;
+        scrollToCard(next, true);
+        updateActiveStates(next);
       }
-    }
-
-    // Update on scroll (for manual scroll)
-    let scrollTimeout;
-    pricingGrid.addEventListener('scroll', function () {
-      clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(function () {
-        const newIndex = getCurrentIndex();
-        if (newIndex !== currentIndex && newIndex >= 0 && newIndex < pricingCards.length) {
-          updateActiveStates(newIndex);
-        }
-      }, 150);
     }, { passive: true });
 
-    // Initialize
-    setTimeout(function () {
-      scrollToCard(1, false); // Start at middle card without animation
-      updateActiveStates(1);
-    }, 100);
+    // Sync state when user scrolls manually (not during programmatic scroll)
+    let scrollTimeout;
+    pricingGrid.addEventListener('scroll', function () {
+      if (programmaticScroll) return;
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(function () {
+        if (!isPricingMobile()) return;
+        const newIndex = getCurrentIndex();
+        if (newIndex >= 0 && newIndex < pricingCards.length) {
+          updateActiveStates(newIndex);
+        }
+      }, 120);
+    }, { passive: true });
 
-    // Re-initialize on resize if still mobile
+    // Initialize on load when mobile
+    setTimeout(initCarouselPosition, 100);
+
+    // Re-init when resizing to mobile
     let resizeTimeout;
     window.addEventListener('resize', function () {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(function () {
-        if (window.innerWidth < 640) {
+        if (isPricingMobile()) {
           scrollToCard(currentIndex, false);
+          updateActiveStates(currentIndex);
         }
       }, 250);
     });
