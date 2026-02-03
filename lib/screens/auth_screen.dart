@@ -247,10 +247,12 @@ class _AuthScreenState extends State<AuthScreen> {
                             fillColor: Colors.white,
                           ),
                           validator: (v) {
-                            if (v == null || v.trim().isEmpty)
+                            if (v == null || v.trim().isEmpty) {
                               return 'Vul je e-mail in.';
-                            if (!v.contains('@'))
+                            }
+                            if (!v.contains('@')) {
                               return 'Vul een geldig e-mailadres in.';
+                            }
                             return null;
                           },
                           textInputAction: TextInputAction.next,
@@ -266,10 +268,12 @@ class _AuthScreenState extends State<AuthScreen> {
                             fillColor: Colors.white,
                           ),
                           validator: (v) {
-                            if (v == null || v.isEmpty)
+                            if (v == null || v.isEmpty) {
                               return 'Vul je wachtwoord in.';
-                            if (_isSignUp && v.length < 6)
+                            }
+                            if (_isSignUp && v.length < 6) {
                               return 'Minimaal 6 tekens.';
+                            }
                             return null;
                           },
                           textInputAction: _isSignUp
@@ -312,7 +316,9 @@ class _AuthScreenState extends State<AuthScreen> {
                               ? null
                               : () {
                                   if (_formKey.currentState?.validate() ??
-                                      false) _submit();
+                                      false) {
+                                    _submit();
+                                  }
                                 },
                           style: FilledButton.styleFrom(
                             backgroundColor: _primary,
