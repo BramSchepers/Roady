@@ -1,12 +1,13 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 /// Dashboard na inloggen: welkom, "Lessen bekijken", "Abonnement kiezen", uitloggen.
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
-  static const _bg = Color(0xFFF5F7FA);
+  static const _heroBg = Color(0xFFe8f0e9);
   static const _grey = Color(0xFF6B7280);
 
   @override
@@ -21,10 +22,15 @@ class DashboardScreen extends StatelessWidget {
             : 'Hoi!';
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: _heroBg,
       appBar: AppBar(
-        title: const Text('Roady'),
-        backgroundColor: _bg,
+        title: SvgPicture.asset(
+          'images/logo-roady.svg',
+          height: 32,
+          fit: BoxFit.contain,
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         foregroundColor: _grey,
         actions: [
           TextButton(
@@ -36,51 +42,66 @@ class DashboardScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 24),
-              Text(
-                welcome,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Container(
+              color: _heroBg,
+              child: SvgPicture.asset(
+                'assets/illustrations/Background_hero.svg',
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
+              ),
+            ),
+          ),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 24),
+                  Text(
+                    welcome,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: _grey,
+                            ) ??
+                        const TextStyle(
+                          fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: _grey,
-                        ) ??
-                    const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: _grey,
-                    ),
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Kies wat je wilt doen',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyLarge
+                        ?.copyWith(color: _grey),
+                  ),
+                  const SizedBox(height: 32),
+                  _DashboardCard(
+                    icon: Icons.menu_book,
+                    title: 'Lessen bekijken',
+                    subtitle: 'Bekijk lesmateriaal en maak oefenexamens',
+                    onTap: () => context.go('/app'),
+                  ),
+                  const SizedBox(height: 16),
+                  _DashboardCard(
+                    icon: Icons.payment,
+                    title: 'Abonnement kiezen',
+                    subtitle: 'Overgaan tot betaling voor Standaard of Met AI',
+                    onTap: () => context.go('/payment'),
+                  ),
+                  const SizedBox(height: 32),
+                ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Kies wat je wilt doen',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyLarge
-                    ?.copyWith(color: _grey),
-              ),
-              const SizedBox(height: 32),
-              _DashboardCard(
-                icon: Icons.menu_book,
-                title: 'Lessen bekijken',
-                subtitle: 'Bekijk lesmateriaal en maak oefenexamens',
-                onTap: () => context.go('/app'),
-              ),
-              const SizedBox(height: 16),
-              _DashboardCard(
-                icon: Icons.payment,
-                title: 'Abonnement kiezen',
-                subtitle: 'Overgaan tot betaling voor Standaard of Met AI',
-                onTap: () => context.go('/payment'),
-              ),
-              const SizedBox(height: 32),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../data/quiz_repository.dart';
 import '../models/question.dart';
@@ -103,7 +104,13 @@ class _QuizScreenState extends State<QuizScreen> {
 
     if (_error != null || _questions.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Roady')),
+        appBar: AppBar(
+          title: SvgPicture.asset(
+            'images/logo-roady.svg',
+            height: 28,
+            fit: BoxFit.contain,
+          ),
+        ),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -132,7 +139,15 @@ class _QuizScreenState extends State<QuizScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Roady'),
+        title: SvgPicture.asset(
+          'images/logo-roady.svg',
+          height: 28,
+          fit: BoxFit.contain,
+          colorFilter: const ColorFilter.mode(
+            Colors.white,
+            BlendMode.srcIn,
+          ),
+        ),
         backgroundColor: const Color(0xFF2E7D32),
         foregroundColor: Colors.white,
       ),
@@ -222,8 +237,8 @@ class _QuizScreenState extends State<QuizScreen> {
                       child: Text(
                         q.text,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              height: 1.3,
-                            ) ??
+                                  height: 1.3,
+                                ) ??
                             const TextStyle(
                               fontSize: 20,
                               height: 1.3,
@@ -261,9 +276,7 @@ class _QuizScreenState extends State<QuizScreen> {
                           elevation: hasChosen ? 0 : 1,
                           shadowColor: Colors.black26,
                           child: InkWell(
-                            onTap: hasChosen
-                                ? null
-                                : () => _onAnswerChosen(i),
+                            onTap: hasChosen ? null : () => _onAnswerChosen(i),
                             borderRadius: BorderRadius.circular(14),
                             child: Container(
                               padding: const EdgeInsets.symmetric(
@@ -312,12 +325,12 @@ class _QuizScreenState extends State<QuizScreen> {
                         child: FilledButton(
                           onPressed: _goNext,
                           style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF2E7D32),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+                            backgroundColor: const Color(0xFF2E7D32),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                           ),
-                        ),
                           child: Text(
                             _currentIndex + 1 >= _questions.length
                                 ? 'Bekijk resultaat'
