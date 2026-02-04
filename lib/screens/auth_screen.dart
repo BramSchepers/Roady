@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-/// Login/registratie: één scherm met toggle "Account aanmaken" (standaard) of "Log in".
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
 
@@ -21,7 +20,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _confirmPasswordController = TextEditingController();
   final _displayNameController = TextEditingController();
 
-  static const _primary = Color(0xFFF97316);
+  static const _accentBlue = Color(0xFF2563EB);
   static const _heroBg = Color(0xFFe8f0e9);
 
   @override
@@ -38,11 +37,9 @@ class _AuthScreenState extends State<AuthScreen> {
       _errorMessage = null;
       _isLoading = true;
     });
-
     try {
       final email = _emailController.text.trim();
       final password = _passwordController.text;
-
       if (_isSignUp) {
         final confirm = _confirmPasswordController.text;
         if (password != confirm) {
@@ -59,25 +56,19 @@ class _AuthScreenState extends State<AuthScreen> {
           });
           return;
         }
-        final cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: email,
-          password: password,
-        );
+        final cred = await FirebaseAuth.instance
+            .createUserWithEmailAndPassword(email: email, password: password);
         final name = _displayNameController.text.trim();
         if (name.isNotEmpty && cred.user != null) {
           await cred.user!.updateDisplayName(name);
         }
       } else {
-        await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: email,
-          password: password,
-        );
+        await FirebaseAuth.instance
+            .signInWithEmailAndPassword(email: email, password: password);
       }
-      // Auth state will update; GoRouter redirect will navigate to dashboard/payment
     } on FirebaseAuthException catch (e) {
-      final msg = _authErrorToDutch(e.code);
       setState(() {
-        _errorMessage = msg;
+        _errorMessage = _authErrorToDutch(e.code);
         _isLoading = false;
       });
     } catch (e) {
@@ -168,190 +159,194 @@ class _AuthScreenState extends State<AuthScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 420),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const SizedBox(height: 24),
-                        Center(
-                          child: SvgPicture.asset(
-                            'images/logo-roady.svg',
-                            height: 48,
-                            fit: BoxFit.contain,
-                            placeholderBuilder: (_) => const SizedBox(
-                              height: 48,
-                              child: Center(
-                                child: Text(
-                                  'Roady',
+                  child: Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 24,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Center(
+                            child: SvgPicture.asset(
+                              'assets/images/logo-roady.svg',
+                              height: 44,
+                              fit: BoxFit.contain,
+                              colorFilter: const ColorFilter.mode(
+                                  _accentBlue, BlendMode.srcIn),
+                              placeholderBuilder: (_) => const Text('Roady',
                                   style: TextStyle(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                    color: _primary,
-                                  ),
-                                ),
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: _accentBlue)),
+                              errorBuilder: (_, __, ___) => const Text('Roady',
+                                  style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: _accentBlue)),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Text(
+                            _isSignUp ? 'Account aanmaken' : 'Inloggen',
+                            style: Theme.of(context).textTheme.titleLarge,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 20),
+                          if (_errorMessage != null) ...[
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.red.shade50,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                _errorMessage!,
+                                style: TextStyle(color: Colors.red.shade800),
                               ),
                             ),
-                            errorBuilder: (_, __, ___) => Text(
-                              'Roady',
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: _primary,
+                            const SizedBox(height: 16),
+                          ],
+                          if (_isSignUp)
+                            TextFormField(
+                              controller: _displayNameController,
+                              decoration: const InputDecoration(
+                                labelText: 'Naam (optioneel)',
+                                border: OutlineInputBorder(),
+                                filled: true,
+                                fillColor: Colors.white,
                               ),
+                              textInputAction: TextInputAction.next,
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          _isSignUp ? 'Account aanmaken' : 'Inloggen',
-                          style: Theme.of(context).textTheme.titleLarge,
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 24),
-                        if (_errorMessage != null) ...[
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.red.shade50,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              _errorMessage!,
-                              style: TextStyle(color: Colors.red.shade800),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-                        if (_isSignUp)
+                          if (_isSignUp) const SizedBox(height: 16),
                           TextFormField(
-                            controller: _displayNameController,
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            autocorrect: false,
                             decoration: const InputDecoration(
-                              labelText: 'Naam (optioneel)',
-                              border: OutlineInputBorder(),
-                              filled: true,
-                              fillColor: Colors.white,
-                            ),
-                            textInputAction: TextInputAction.next,
-                          ),
-                        if (_isSignUp) const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          autocorrect: false,
-                          decoration: const InputDecoration(
-                            labelText: 'E-mail',
-                            border: OutlineInputBorder(),
-                            filled: true,
-                            fillColor: Colors.white,
-                          ),
-                          validator: (v) {
-                            if (v == null || v.trim().isEmpty) {
-                              return 'Vul je e-mail in.';
-                            }
-                            if (!v.contains('@')) {
-                              return 'Vul een geldig e-mailadres in.';
-                            }
-                            return null;
-                          },
-                          textInputAction: TextInputAction.next,
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _passwordController,
-                          obscureText: true,
-                          decoration: const InputDecoration(
-                            labelText: 'Wachtwoord',
-                            border: OutlineInputBorder(),
-                            filled: true,
-                            fillColor: Colors.white,
-                          ),
-                          validator: (v) {
-                            if (v == null || v.isEmpty) {
-                              return 'Vul je wachtwoord in.';
-                            }
-                            if (_isSignUp && v.length < 6) {
-                              return 'Minimaal 6 tekens.';
-                            }
-                            return null;
-                          },
-                          textInputAction: _isSignUp
-                              ? TextInputAction.next
-                              : TextInputAction.done,
-                        ),
-                        if (_isSignUp) ...[
-                          const SizedBox(height: 16),
-                          TextFormField(
-                            controller: _confirmPasswordController,
-                            obscureText: true,
-                            decoration: const InputDecoration(
-                              labelText: 'Wachtwoord bevestigen',
+                              labelText: 'E-mail',
                               border: OutlineInputBorder(),
                               filled: true,
                               fillColor: Colors.white,
                             ),
                             validator: (v) {
-                              if (_isSignUp && v != _passwordController.text) {
-                                return 'Wachtwoorden komen niet overeen.';
+                              if (v == null || v.trim().isEmpty) {
+                                return 'Vul je e-mail in.';
+                              }
+                              if (!v.contains('@')) {
+                                return 'Vul een geldig e-mailadres in.';
                               }
                               return null;
                             },
-                            textInputAction: TextInputAction.done,
+                            textInputAction: TextInputAction.next,
                           ),
-                        ],
-                        if (!_isSignUp) ...[
-                          const SizedBox(height: 8),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton(
-                              onPressed: _isLoading ? null : _sendPasswordReset,
-                              child: const Text('Wachtwoord vergeten?'),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _passwordController,
+                            obscureText: true,
+                            decoration: const InputDecoration(
+                              labelText: 'Wachtwoord',
+                              border: OutlineInputBorder(),
+                              filled: true,
+                              fillColor: Colors.white,
                             ),
+                            validator: (v) {
+                              if (v == null || v.isEmpty) {
+                                return 'Vul je wachtwoord in.';
+                              }
+                              if (_isSignUp && v.length < 6) {
+                                return 'Minimaal 6 tekens.';
+                              }
+                              return null;
+                            },
+                            textInputAction: _isSignUp
+                                ? TextInputAction.next
+                                : TextInputAction.done,
+                          ),
+                          if (_isSignUp) ...[
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _confirmPasswordController,
+                              obscureText: true,
+                              decoration: const InputDecoration(
+                                labelText: 'Wachtwoord bevestigen',
+                                border: OutlineInputBorder(),
+                                filled: true,
+                                fillColor: Colors.white,
+                              ),
+                              validator: (v) {
+                                if (_isSignUp &&
+                                    v != _passwordController.text) {
+                                  return 'Wachtwoorden komen niet overeen.';
+                                }
+                                return null;
+                              },
+                              textInputAction: TextInputAction.done,
+                            ),
+                          ],
+                          if (!_isSignUp) ...[
+                            const SizedBox(height: 8),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                onPressed:
+                                    _isLoading ? null : _sendPasswordReset,
+                                child: const Text('Wachtwoord vergeten?'),
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 24),
+                          FilledButton(
+                            onPressed: _isLoading
+                                ? null
+                                : () {
+                                    if (_formKey.currentState?.validate() ??
+                                        false) {
+                                      _submit();
+                                    }
+                                  },
+                            style: FilledButton.styleFrom(
+                              backgroundColor: _accentBlue,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                            ),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    height: 24,
+                                    width: 24,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2, color: Colors.white),
+                                  )
+                                : Text(_isSignUp
+                                    ? 'Account aanmaken'
+                                    : 'Inloggen'),
+                          ),
+                          const SizedBox(height: 16),
+                          TextButton(
+                            onPressed: _isLoading
+                                ? null
+                                : () {
+                                    setState(() {
+                                      _isSignUp = !_isSignUp;
+                                      _errorMessage = null;
+                                    });
+                                  },
+                            child: Text(_isSignUp
+                                ? 'Al een account? Log in'
+                                : 'Geen account? Account aanmaken'),
                           ),
                         ],
-                        const SizedBox(height: 24),
-                        FilledButton(
-                          onPressed: _isLoading
-                              ? null
-                              : () {
-                                  if (_formKey.currentState?.validate() ??
-                                      false) {
-                                    _submit();
-                                  }
-                                },
-                          style: FilledButton.styleFrom(
-                            backgroundColor: _primary,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                          child: _isLoading
-                              ? SizedBox(
-                                  height: 24,
-                                  width: 24,
-                                  child:
-                                      CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : Text(
-                                  _isSignUp ? 'Account aanmaken' : 'Inloggen'),
-                        ),
-                        const SizedBox(height: 16),
-                        TextButton(
-                          onPressed: _isLoading
-                              ? null
-                              : () {
-                                  setState(() {
-                                    _isSignUp = !_isSignUp;
-                                    _errorMessage = null;
-                                  });
-                                },
-                          child: Text(
-                            _isSignUp
-                                ? 'Al een account? Log in'
-                                : 'Geen account? Account aanmaken',
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                      ],
+                      ),
                     ),
                   ),
                 ),

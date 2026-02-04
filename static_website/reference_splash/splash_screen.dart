@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:dotlottie_loader/dotlottie_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 
+/// In-app laadscherm met Lottie-auto; na korte delay doorsturen naar auth/dashboard.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -35,7 +38,7 @@ class _SplashScreenState extends State<SplashScreen> {
           height: 200,
           child: DotLottieLoader.fromAsset(
             'assets/lottie/car.lottie',
-            frameBuilder: (BuildContext context, dotlottie) {
+            frameBuilder: (BuildContext context, DotLottie? dotlottie) {
               if (dotlottie != null && dotlottie.animations.isNotEmpty) {
                 return Lottie.memory(
                   dotlottie.animations.values.first,
@@ -45,8 +48,8 @@ class _SplashScreenState extends State<SplashScreen> {
               }
               return const SizedBox.shrink();
             },
-            errorBuilder: (_, __, ___) =>
-                const Icon(Icons.directions_car, size: 48, color: Colors.grey),
+            errorBuilder: (context, error, stackTrace) =>
+                const Icon(Icons.error_outline, size: 48),
           ),
         ),
       ),
