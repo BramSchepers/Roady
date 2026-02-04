@@ -1,18 +1,28 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'dart:convert';
 
 class AuthScreen extends StatefulWidget {
-  const AuthScreen({super.key});
+  final bool initialSignUp;
+
+  const AuthScreen({super.key, this.initialSignUp = true});
 
   @override
   State<AuthScreen> createState() => _AuthScreenState();
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  bool _isSignUp = true;
+  late bool _isSignUp;
   bool _isLoading = false;
   String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _isSignUp = widget.initialSignUp;
+  }
 
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
@@ -30,6 +40,96 @@ class _AuthScreenState extends State<AuthScreen> {
     _confirmPasswordController.dispose();
     _displayNameController.dispose();
     super.dispose();
+  }
+
+  void _log(String message, [Map<String, dynamic>? data]) {
+    // #region agent log
+    try {
+      final entry = {
+        'sessionId': 'debug-session',
+        'runId': 'run-${DateTime.now().millisecondsSinceEpoch}',
+        'hypothesisId': 'h1-google-signin',
+        'location': 'auth_screen.dart',
+        'message': message,
+        'data': data ?? {},
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+      };
+      print(jsonEncode(entry));
+    } catch (e) {
+      // ignore
+    }
+    // #endregion
+  }
+
+  Future<void> _signInWithGoogle() async {
+    _log('Starting Google Sign-In');
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      _log('Calling GoogleSignIn().signIn()');
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+      if (googleUser == null) {
+        _log('User cancelled sign in');
+        // Gebruiker heeft geannuleerd
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      _log('User signed in, getting auth', {'email': googleUser.email});
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      _log('Got auth, creating credential');
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      _log('Signing in to Firebase');
+      await FirebaseAuth.instance.signInWithCredential(credential);
+      _log('Firebase sign in successful');
+    } on FirebaseAuthException catch (e) {
+      _log('FirebaseAuthException', {'code': e.code, 'message': e.message});
+      setState(() {
+        _errorMessage = _authErrorToDutch(e.code);
+        _isLoading = false;
+      });
+    } catch (e) {
+      _log('General Exception', {'error': e.toString()});
+      setState(() {
+        _errorMessage = 'Inloggen met Google mislukt.';
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _signInAnonymously() async {
+    _log('Starting Anonymous Sign-In');
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await FirebaseAuth.instance.signInAnonymously();
+      _log('Anonymous sign in successful');
+    } on FirebaseAuthException catch (e) {
+      _log('Anonymous Sign-In Error', {'code': e.code});
+      setState(() {
+        _errorMessage = _authErrorToDutch(e.code);
+        _isLoading = false;
+      });
+    } catch (e) {
+      _log('Anonymous Sign-In Exception', {'error': e.toString()});
+      setState(() {
+        _errorMessage = 'Inloggen als gast mislukt.';
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _submit() async {
@@ -330,6 +430,20 @@ class _AuthScreenState extends State<AuthScreen> {
                                 : Text(_isSignUp
                                     ? 'Account aanmaken'
                                     : 'Inloggen'),
+                          ),
+                          const SizedBox(height: 16),
+                          OutlinedButton.icon(
+                            onPressed: _isLoading ? null : _signInWithGoogle,
+                            icon: const Icon(Icons.login),
+                            label: const Text('Doorgaan met Google'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextButton(
+                            onPressed: _isLoading ? null : _signInAnonymously,
+                            child: const Text('Doorgaan als gast'),
                           ),
                           const SizedBox(height: 16),
                           TextButton(
