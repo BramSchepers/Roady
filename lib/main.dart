@@ -67,12 +67,23 @@ class RoadyApp extends StatelessWidget {
       },
       routes: <RouteBase>[
         GoRoute(
+          path: '/',
+          redirect: (context, state) {
+            final query = state.uri.query;
+            return query.isNotEmpty ? '/splash?$query' : '/splash';
+          },
+        ),
+        GoRoute(
           path: '/splash',
           builder: (_, __) => const SplashScreen(),
         ),
         GoRoute(
           path: '/auth',
-          builder: (_, __) => const AuthScreen(),
+          builder: (context, state) {
+            final mode = state.uri.queryParameters['mode'];
+            final isSignUp = mode != 'login';
+            return AuthScreen(initialSignUp: isSignUp);
+          },
         ),
         GoRoute(
           path: '/dashboard',

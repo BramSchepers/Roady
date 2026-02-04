@@ -22,7 +22,13 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void _navigateAway() {
     if (!mounted) return;
-    context.go('/auth');
+    final state = GoRouterState.of(context);
+    final query = state.uri.query;
+    if (query.isNotEmpty) {
+      context.go('/auth?$query');
+    } else {
+      context.go('/auth');
+    }
   }
 
   @override
