@@ -1,29 +1,19 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:go_router/go_router.dart';
 
 import 'auth/auth_state.dart';
 import 'firebase_options.dart';
 import 'screens/auth_screen.dart';
 import 'screens/dashboard_screen.dart';
-import 'screens/home_screen.dart';
-import 'screens/payment_screen.dart';
 import 'screens/splash_screen.dart';
-import 'package:go_router/go_router.dart';
 
 void main() async {
-  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
-  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
-
+  WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   final authState = AuthState();
   runApp(RoadyApp(authState: authState));
-
-  // Remove splash after first frame so auth redirect can run
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    FlutterNativeSplash.remove();
-  });
 }
 
 class RoadyApp extends StatelessWidget {
@@ -36,25 +26,24 @@ class RoadyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final router = _createRouter(authState);
-    return Container(
-      color: _heroBg,
-      child: MaterialApp.router(
-        title: 'Roady',
-        debugShowCheckedModeBanner: false,
-        themeMode: ThemeMode.light,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFFF97316),
-            brightness: Brightness.light,
-          ).copyWith(
-            surface: const Color(0xFFe8f0e9),
-            surfaceContainerLowest: const Color(0xFFe8f0e9),
-          ),
-          scaffoldBackgroundColor: const Color(0xFFe8f0e9),
-          useMaterial3: true,
+    return MaterialApp.router(
+      title: 'Roady',
+      debugShowCheckedModeBanner: false,
+      themeMode: ThemeMode.light,
+      theme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: _heroBg,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF2563EB),
+          brightness: Brightness.light,
+        ).copyWith(
+          primary: const Color(0xFF2563EB),
+          surface: _heroBg,
+          surfaceContainerLowest: _heroBg,
         ),
-        routerConfig: router,
       ),
+      routerConfig: router,
     );
   }
 
@@ -65,47 +54,29 @@ class RoadyApp extends StatelessWidget {
       redirect: (BuildContext context, GoRouterState state) {
         final isLoggedIn = authState.isLoggedIn;
         final path = state.uri.path;
-        final plan = state.uri.queryParameters['plan'];
 
         if (path == '/splash') return null;
 
         if (!isLoggedIn) {
-          if (path == '/dashboard' || path == '/app' || path == '/payment') {
-            final query = plan != null ? '?plan=$plan' : '';
-            return '/auth$query';
-          }
+          if (path == '/dashboard') return '/auth';
           return null;
         }
 
-        if (path == '/auth' || path == '/') {
-          if (plan == 'standard' || plan == 'ai') {
-            return '/payment?plan=$plan';
-          }
-          return '/dashboard';
-        }
-
+        if (path == '/auth' || path == '/') return '/dashboard';
         return null;
       },
       routes: <RouteBase>[
         GoRoute(
           path: '/splash',
-          builder: (context, state) => const SplashScreen(),
+          builder: (_, __) => const SplashScreen(),
         ),
         GoRoute(
           path: '/auth',
-          builder: (context, state) => const AuthScreen(),
+          builder: (_, __) => const AuthScreen(),
         ),
         GoRoute(
           path: '/dashboard',
-          builder: (context, state) => const DashboardScreen(),
-        ),
-        GoRoute(
-          path: '/app',
-          builder: (context, state) => const HomeScreen(),
-        ),
-        GoRoute(
-          path: '/payment',
-          builder: (context, state) => const PaymentScreen(),
+          builder: (_, __) => const DashboardScreen(),
         ),
       ],
     );

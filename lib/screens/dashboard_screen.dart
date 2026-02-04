@@ -3,42 +3,37 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
-/// Dashboard na inloggen: welkom, "Lessen bekijken", "Abonnement kiezen", uitloggen.
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
   static const _heroBg = Color(0xFFe8f0e9);
-  static const _grey = Color(0xFF6B7280);
+  static const _accentBlue = Color(0xFF2563EB);
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    final displayName = user?.displayName?.trim();
-    final email = user?.email ?? '';
-    final welcome = displayName != null && displayName.isNotEmpty
-        ? 'Hoi, $displayName!'
-        : email.isNotEmpty
-            ? 'Hoi, ${email.split('@').first}!'
-            : 'Hoi!';
-
     return Scaffold(
       backgroundColor: _heroBg,
       appBar: AppBar(
-        title: SvgPicture.asset(
-          'images/logo-roady.svg',
-          height: 32,
-          fit: BoxFit.contain,
-        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        foregroundColor: _grey,
+        title: SvgPicture.asset(
+          'assets/images/logo-roady.svg',
+          height: 32,
+          fit: BoxFit.contain,
+          colorFilter: const ColorFilter.mode(_accentBlue, BlendMode.srcIn),
+          errorBuilder: (_, __, ___) => const Text('Roady',
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: _accentBlue)),
+        ),
         actions: [
-          TextButton(
+          IconButton(
+            icon: const Icon(Icons.logout),
             onPressed: () async {
               await FirebaseAuth.instance.signOut();
               if (context.mounted) context.go('/auth');
             },
-            child: const Text('Uitloggen'),
           ),
         ],
       ),
@@ -52,128 +47,25 @@ class DashboardScreen extends StatelessWidget {
                 fit: BoxFit.cover,
                 width: double.infinity,
                 height: double.infinity,
+                placeholderBuilder: (_) => const SizedBox.shrink(),
+                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
               ),
             ),
           ),
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 24),
-                  Text(
-                    welcome,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: _grey,
-                            ) ??
-                        const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: _grey,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Kies wat je wilt doen',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyLarge
-                        ?.copyWith(color: _grey),
-                  ),
-                  const SizedBox(height: 32),
-                  _DashboardCard(
-                    icon: Icons.menu_book,
-                    title: 'Lessen bekijken',
-                    subtitle: 'Bekijk lesmateriaal en maak oefenexamens',
-                    onTap: () => context.go('/app'),
-                  ),
-                  const SizedBox(height: 16),
-                  _DashboardCard(
-                    icon: Icons.payment,
-                    title: 'Abonnement kiezen',
-                    subtitle: 'Overgaan tot betaling voor Standaard of Met AI',
-                    onTap: () => context.go('/payment'),
-                  ),
-                  const SizedBox(height: 32),
-                ],
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Text(
+                'Hier komt het dashboard',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
               ),
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _DashboardCard extends StatelessWidget {
-  const _DashboardCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  static const _primary = Color(0xFFF97316);
-  static const _grey = Color(0xFF6B7280);
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(12),
-      elevation: 1,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: _primary.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: _primary, size: 28),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ) ??
-                          const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: _grey,
-                              ) ??
-                          TextStyle(fontSize: 12, color: _grey),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(Icons.chevron_right),
-            ],
-          ),
-        ),
       ),
     );
   }

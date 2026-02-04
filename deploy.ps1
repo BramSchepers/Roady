@@ -1,4 +1,4 @@
-# Roady – Firebase deploy (statische site + Flutter web op /auth)
+# Roady – Hybride deploy: statische site + Flutter web op /auth
 # Gebruik: .\deploy.ps1
 
 $ErrorActionPreference = "Stop"
@@ -6,7 +6,7 @@ $root = $PSScriptRoot
 
 Write-Host "Deploy voorbereiden..." -ForegroundColor Cyan
 
-# 1. firebase_hosting (opnieuw) aanmaken en vullen met statische site
+# 1. firebase_hosting aanmaken en vullen met statische site
 if (Test-Path "$root\firebase_hosting") {
     Remove-Item -Recurse -Force "$root\firebase_hosting"
 }
@@ -16,6 +16,9 @@ Write-Host "  Statische site gekopieerd naar firebase_hosting\" -ForegroundColor
 
 # 2. Flutter web bouwen voor /auth
 Write-Host "  Flutter web bouwen (base-href /auth/)..." -ForegroundColor Yellow
+Set-Location $root
+& flutter pub get
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 & flutter build web --base-href /auth/
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
@@ -32,4 +35,4 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host ""
 Write-Host "Deploy klaar. Hosting URL: https://goroady-22332.web.app" -ForegroundColor Green
-Write-Host "Flutter app: https://goroady-22332.web.app/auth" -ForegroundColor Green
+Write-Host "Flutter app (login): https://goroady-22332.web.app/auth" -ForegroundColor Green
