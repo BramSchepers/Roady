@@ -6,6 +6,8 @@ import 'auth/auth_state.dart';
 import 'firebase_options.dart';
 import 'screens/auth_screen.dart';
 import 'screens/dashboard_screen.dart';
+import 'screens/home_screen.dart';
+import 'screens/profile_screen.dart';
 import 'screens/splash_screen.dart';
 
 void main() async {
@@ -58,11 +60,11 @@ class RoadyApp extends StatelessWidget {
         if (path == '/splash') return null;
 
         if (!isLoggedIn) {
-          if (path == '/dashboard') return '/auth';
+          if (path == '/home' || path == '/dashboard') return '/auth';
           return null;
         }
 
-        if (path == '/auth' || path == '/') return '/dashboard';
+        if (path == '/auth' || path == '/') return '/home';
         return null;
       },
       routes: <RouteBase>[
@@ -86,8 +88,20 @@ class RoadyApp extends StatelessWidget {
           },
         ),
         GoRoute(
+          path: '/home',
+          builder: (_, __) => const HomeScreen(),
+        ),
+        GoRoute(
+          path: '/profile',
+          builder: (_, __) => const ProfileScreen(),
+        ),
+        GoRoute(
           path: '/dashboard',
-          builder: (_, __) => const DashboardScreen(),
+          builder: (context, state) {
+            final tab = state.uri.queryParameters['tab'];
+            final initialIndex = tab != null ? int.tryParse(tab) ?? 0 : 0;
+            return DashboardScreen(initialIndex: initialIndex);
+          },
         ),
       ],
     );

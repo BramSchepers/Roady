@@ -48,7 +48,7 @@ class _AuthScreenState extends State<AuthScreen> {
       final entry = {
         'sessionId': 'debug-session',
         'runId': 'run-${DateTime.now().millisecondsSinceEpoch}',
-        'hypothesisId': 'h1-google-signin',
+        'hypothesisId': 'h2-google-signin-error',
         'location': 'auth_screen.dart',
         'message': message,
         'data': data ?? {},
@@ -74,7 +74,6 @@ class _AuthScreenState extends State<AuthScreen> {
 
       if (googleUser == null) {
         _log('User cancelled sign in');
-        // Gebruiker heeft geannuleerd
         setState(() => _isLoading = false);
         return;
       }
@@ -101,14 +100,13 @@ class _AuthScreenState extends State<AuthScreen> {
     } catch (e) {
       _log('General Exception', {'error': e.toString()});
       setState(() {
-        _errorMessage = 'Inloggen met Google mislukt.';
+        _errorMessage = 'Inloggen met Google mislukt. (Fout: ${e.toString()})';
         _isLoading = false;
       });
     }
   }
 
   Future<void> _signInAnonymously() async {
-    _log('Starting Anonymous Sign-In');
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -116,15 +114,12 @@ class _AuthScreenState extends State<AuthScreen> {
 
     try {
       await FirebaseAuth.instance.signInAnonymously();
-      _log('Anonymous sign in successful');
     } on FirebaseAuthException catch (e) {
-      _log('Anonymous Sign-In Error', {'code': e.code});
       setState(() {
         _errorMessage = _authErrorToDutch(e.code);
         _isLoading = false;
       });
     } catch (e) {
-      _log('Anonymous Sign-In Exception', {'error': e.toString()});
       setState(() {
         _errorMessage = 'Inloggen als gast mislukt.';
         _isLoading = false;
@@ -283,8 +278,6 @@ class _AuthScreenState extends State<AuthScreen> {
                               'assets/images/logo-roady.svg',
                               height: 44,
                               fit: BoxFit.contain,
-                              colorFilter: const ColorFilter.mode(
-                                  _accentBlue, BlendMode.srcIn),
                               placeholderBuilder: (_) => const Text('Roady',
                                   style: TextStyle(
                                       fontSize: 24,
