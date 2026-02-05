@@ -120,10 +120,8 @@ class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
                   FilledButton.icon(
                     onPressed: () {
                       // Klaar met module
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Module afgerond! 🎉')),
-                      );
-                      Navigator.of(context).pop(); // Ga terug naar overzicht
+                      Navigator.of(context).pop(
+                          true); // Ga terug naar overzicht en start animatie
                     },
                     style: FilledButton.styleFrom(
                       backgroundColor: Colors.green,
