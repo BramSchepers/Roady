@@ -7,6 +7,7 @@ import 'firebase_options.dart';
 import 'screens/auth_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/license_selection_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/splash_screen.dart';
 
@@ -60,11 +61,12 @@ class RoadyApp extends StatelessWidget {
         if (path == '/splash') return null;
 
         if (!isLoggedIn) {
-          if (path == '/home' || path == '/dashboard') return '/auth';
+          if (path == '/home' || path == '/dashboard' || path == '/license')
+            return '/auth';
           return null;
         }
 
-        if (path == '/auth' || path == '/') return '/home';
+        if (path == '/auth' || path == '/') return '/license';
         return null;
       },
       routes: <RouteBase>[
@@ -86,6 +88,10 @@ class RoadyApp extends StatelessWidget {
             final isSignUp = mode != 'login';
             return AuthScreen(initialSignUp: isSignUp);
           },
+        ),
+        GoRoute(
+          path: '/license',
+          builder: (_, __) => const LicenseSelectionScreen(),
         ),
         GoRoute(
           path: '/home',
