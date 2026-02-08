@@ -5,10 +5,9 @@ import 'package:go_router/go_router.dart';
 
 import '../auth/user_language_repository.dart';
 
-class LicenseSelectionScreen extends StatelessWidget {
-  const LicenseSelectionScreen({super.key});
+class ExamRegionSelectionScreen extends StatelessWidget {
+  const ExamRegionSelectionScreen({super.key});
 
-  static const _heroBg = Color(0xFFe8f0e9);
   static const _accentBlue = Color(0xFF2563EB);
 
   @override
@@ -17,7 +16,6 @@ class LicenseSelectionScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // Background: white so overflow (large screens / scroll) shows white
           Positioned.fill(
             child: Container(
               color: Colors.white,
@@ -38,7 +36,6 @@ class LicenseSelectionScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 32),
-                  // Logo
                   Center(
                     child: SvgPicture.asset(
                       'assets/images/logo-roady.svg',
@@ -51,10 +48,8 @@ class LicenseSelectionScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 48),
-
-                  // Title
                   Text(
-                    'Welk rijbewijswil je halen?',
+                    'Waar legt u uw examen af?',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
@@ -63,43 +58,44 @@ class LicenseSelectionScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Maak een keuze om te beginnen',
+                    'Selecteer uw regio',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           color: Colors.grey[600],
                         ),
                   ),
                   const SizedBox(height: 48),
-
-                  // Option B (Active)
-                  _LicenseOptionCard(
-                    title: 'Rijbewijs B',
-                    subtitle: 'Auto',
-                    icon: Icons.directions_car_filled,
+                  _RegionOptionCard(
+                    title: 'Vlaanderen',
+                    subtitle: 'Flanders',
+                    icon: Icons.place,
                     isActive: true,
                     onTap: () async {
                       final uid = FirebaseAuth.instance.currentUser?.uid;
                       if (uid != null) {
-                        await UserLanguageRepository.instance.setLicenseType(uid, 'B');
+                        await UserLanguageRepository.instance
+                            .setExamRegion(uid, 'vlaanderen');
                       }
-                      if (context.mounted) context.go('/region');
+                      if (context.mounted) context.go('/home');
                     },
                   ),
-
                   const SizedBox(height: 16),
-
-                  // Other Options (Disabled)
-                  _LicenseOptionCard(
-                    title: 'Andere rijbewijzen',
-                    subtitle: 'Motor, Bromfiets, Vrachtwagen...',
-                    icon: Icons.two_wheeler,
+                  _RegionOptionCard(
+                    title: 'Brussel',
+                    subtitle: 'Brussels',
+                    icon: Icons.place,
                     isActive: false,
                     onTap: () {},
                   ),
-
+                  const SizedBox(height: 16),
+                  _RegionOptionCard(
+                    title: 'Wallonië',
+                    subtitle: 'Wallonia',
+                    icon: Icons.place,
+                    isActive: false,
+                    onTap: () {},
+                  ),
                   const Spacer(),
-
-                  // Info Text
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 12),
@@ -115,7 +111,7 @@ class LicenseSelectionScreen extends StatelessWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Wij werken hard om in de toekomst meer types toe te voegen!',
+                            'Brussel en Wallonië komen binnenkort beschikbaar!',
                             style: TextStyle(
                               color: Colors.grey[700],
                               fontSize: 13,
@@ -137,14 +133,14 @@ class LicenseSelectionScreen extends StatelessWidget {
   }
 }
 
-class _LicenseOptionCard extends StatelessWidget {
+class _RegionOptionCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final IconData icon;
   final bool isActive;
   final VoidCallback onTap;
 
-  const _LicenseOptionCard({
+  const _RegionOptionCard({
     required this.title,
     required this.subtitle,
     required this.icon,
@@ -154,7 +150,7 @@ class _LicenseOptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accentColor = const Color(0xFF2563EB);
+    const accentColor = Color(0xFF2563EB);
 
     return Material(
       color: isActive ? Colors.white : Colors.white.withOpacity(0.6),
@@ -206,21 +202,20 @@ class _LicenseOptionCard extends StatelessWidget {
                 ),
               ),
               if (isActive)
-                Icon(
+                const Icon(
                   Icons.arrow_forward_ios_rounded,
                   color: accentColor,
                   size: 20,
                 )
               else
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.grey[200],
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    'Binnenkort',
+                    'Coming soon',
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,

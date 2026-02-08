@@ -5,11 +5,38 @@ import 'package:go_router/go_router.dart';
 
 import '../auth/user_language_repository.dart';
 
-class LicenseSelectionScreen extends StatelessWidget {
-  const LicenseSelectionScreen({super.key});
+class LanguageSelectionScreen extends StatefulWidget {
+  const LanguageSelectionScreen({super.key});
 
+  @override
+  State<LanguageSelectionScreen> createState() => _LanguageSelectionScreenState();
+}
+
+class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
   static const _heroBg = Color(0xFFe8f0e9);
   static const _accentBlue = Color(0xFF2563EB);
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkAndNavigate());
+  }
+
+  Future<void> _checkAndNavigate() async {
+    if (!mounted) return;
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      if (!mounted) return;
+      context.go('/auth');
+      return;
+    }
+    final language =
+        await UserLanguageRepository.instance.getLanguage(user.uid);
+    if (!mounted) return;
+    if (language != null && language.isNotEmpty) {
+      context.go('/start');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +44,6 @@ class LicenseSelectionScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // Background: white so overflow (large screens / scroll) shows white
           Positioned.fill(
             child: Container(
               color: Colors.white,
@@ -38,7 +64,6 @@ class LicenseSelectionScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 32),
-                  // Logo
                   Center(
                     child: SvgPicture.asset(
                       'assets/images/logo-roady.svg',
@@ -51,55 +76,50 @@ class LicenseSelectionScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 48),
-
-                  // Title
                   Text(
-                    'Welk rijbewijswil je halen?',
+                    'Kies je taal',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
+                        fontWeight: FontWeight.bold, color: Colors.black87),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Maak een keuze om te beginnen',
+                    'Momenteel beschikbaar in het Nederlands',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                        color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 48),
-
-                  // Option B (Active)
-                  _LicenseOptionCard(
-                    title: 'Rijbewijs B',
-                    subtitle: 'Auto',
-                    icon: Icons.directions_car_filled,
+                  _LanguageOptionCard(
+                    title: 'Nederlands',
+                    subtitle: 'Dutch',
+                    icon: Icons.language,
                     isActive: true,
                     onTap: () async {
                       final uid = FirebaseAuth.instance.currentUser?.uid;
-                      if (uid != null) {
-                        await UserLanguageRepository.instance.setLicenseType(uid, 'B');
-                      }
-                      if (context.mounted) context.go('/region');
+                      if (uid == null) return;
+                      await UserLanguageRepository.instance
+                          .setLanguage(uid, 'nl');
+                      if (context.mounted) context.go('/start');
                     },
                   ),
-
                   const SizedBox(height: 16),
-
-                  // Other Options (Disabled)
-                  _LicenseOptionCard(
-                    title: 'Andere rijbewijzen',
-                    subtitle: 'Motor, Bromfiets, Vrachtwagen...',
-                    icon: Icons.two_wheeler,
+                  _LanguageOptionCard(
+                    title: 'Français',
+                    subtitle: 'Frans',
+                    icon: Icons.language,
                     isActive: false,
                     onTap: () {},
                   ),
-
+                  const SizedBox(height: 16),
+                  _LanguageOptionCard(
+                    title: 'English',
+                    subtitle: 'Engels',
+                    icon: Icons.language,
+                    isActive: false,
+                    onTap: () {},
+                  ),
                   const Spacer(),
-
-                  // Info Text
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 12),
@@ -115,7 +135,7 @@ class LicenseSelectionScreen extends StatelessWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Wij werken hard om in de toekomst meer types toe te voegen!',
+                            'Frans en Engels komen binnenkort beschikbaar!',
                             style: TextStyle(
                               color: Colors.grey[700],
                               fontSize: 13,
@@ -137,14 +157,14 @@ class LicenseSelectionScreen extends StatelessWidget {
   }
 }
 
-class _LicenseOptionCard extends StatelessWidget {
+class _LanguageOptionCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final IconData icon;
   final bool isActive;
   final VoidCallback onTap;
 
-  const _LicenseOptionCard({
+  const _LanguageOptionCard({
     required this.title,
     required this.subtitle,
     required this.icon,
@@ -154,7 +174,7 @@ class _LicenseOptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accentColor = const Color(0xFF2563EB);
+    const accentColor = Color(0xFF2563EB);
 
     return Material(
       color: isActive ? Colors.white : Colors.white.withOpacity(0.6),
@@ -206,7 +226,7 @@ class _LicenseOptionCard extends StatelessWidget {
                 ),
               ),
               if (isActive)
-                Icon(
+                const Icon(
                   Icons.arrow_forward_ios_rounded,
                   color: accentColor,
                   size: 20,
@@ -220,7 +240,7 @@ class _LicenseOptionCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    'Binnenkort',
+                    'Coming soon',
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,

@@ -31,9 +31,13 @@ class ShopScreen extends StatelessWidget {
           const SizedBox(height: 32),
 
           SubscriptionCard(
-            title: 'Gratis',
+            title: 'Basic',
             price: '€0 / maand',
-            features: const ['Basis theorie', 'Beperkte examens'],
+            features: const [
+              'Alles offline beschikbaar',
+              'Geen reclame',
+              'Beperkte oefeningen',
+            ],
             color: Colors.blue.shade50,
             textColor: Colors.blue.shade900,
             isCurrent: true, // Assuming default is free for now
@@ -43,13 +47,13 @@ class ShopScreen extends StatelessWidget {
             title: 'Pro',
             price: '€4.99 / maand',
             features: const [
-              'Alle theorie',
-              'Onbeperkt examens',
-              'Geen advertenties'
+              'Onbeperkte examens (meer dan 1000 vragen)',
+              'Alle oefeningen',
             ],
             color: Colors.orange.shade50,
             textColor: Colors.orange.shade900,
             isCurrent: false,
+            isPopular: true,
           ),
           const SizedBox(height: 16),
           SubscriptionCard(
@@ -63,7 +67,7 @@ class ShopScreen extends StatelessWidget {
             color: Colors.purple.shade50,
             textColor: Colors.purple.shade900,
             isCurrent: false,
-            isPopular: true,
+            isComingSoon: true,
           ),
           // Add some bottom padding for scrolling
           const SizedBox(height: 24),

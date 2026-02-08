@@ -17,13 +17,13 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _heroBg,
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // Background
+          // Background: white so overflow (large screens / scroll) shows white
           Positioned.fill(
             child: Container(
-              color: _heroBg,
+              color: Colors.white,
               child: SvgPicture.asset(
                 'assets/illustrations/Background_hero.svg',
                 fit: BoxFit.cover,
@@ -69,8 +69,9 @@ class HomeScreen extends StatelessWidget {
                                 const Icon(Icons.logout, color: Colors.black87),
                             onPressed: () async {
                               await FirebaseAuth.instance.signOut();
-                              if (context.mounted)
+                              if (context.mounted) {
                                 context.go('/auth?mode=login');
+                              }
                             },
                           ),
                         ],

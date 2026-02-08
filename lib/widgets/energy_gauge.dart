@@ -17,19 +17,73 @@ class EnergyGauge extends StatefulWidget {
 }
 
 class _EnergyGaugeState extends State<EnergyGauge>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   static const _duration = Duration(milliseconds: 1800);
   static const _curve = Curves.easeOutCubic;
+  static const _minGlowDuration = Duration(milliseconds: 2500);
+  static const _maxGlowDuration = Duration(milliseconds: 8000);
+  static const _basePercentage = 0.4;
+  static const _glowPauseDuration = Duration(seconds: 5);
 
   late AnimationController _controller;
   late Animation<double> _fillAnimation;
+  late AnimationController _glowController;
+  late Animation<double> _glowAnimation;
   double _targetPercentage = 0.0;
+  int _glowGeneration = 0;
+  bool _glowPaused = false;
+
+  Duration _glowDurationFor(double pct) {
+    final clamped = pct.clamp(0.05, 1.0);
+    final ms = (_minGlowDuration.inMilliseconds * _basePercentage / clamped)
+        .round()
+        .clamp(
+            _minGlowDuration.inMilliseconds, _maxGlowDuration.inMilliseconds);
+    return Duration(milliseconds: ms);
+  }
+
+  void _startGlowLoop() {
+    setState(() => _glowPaused = false);
+    _glowController.forward(from: 0);
+  }
+
+  void _setupGlowController(double pct) {
+    _glowGeneration++;
+    _glowController.removeStatusListener(_onGlowStatusChanged);
+    _glowController.dispose();
+    _glowController = AnimationController(
+      vsync: this,
+      duration: _glowDurationFor(pct),
+    );
+    _glowController.addStatusListener(_onGlowStatusChanged);
+    _glowAnimation = Tween<double>(begin: 0, end: 1).animate(
+        CurvedAnimation(parent: _glowController, curve: Curves.linear));
+    _startGlowLoop();
+  }
+
+  void _onGlowStatusChanged(AnimationStatus status) {
+    if (status == AnimationStatus.completed && mounted) {
+      setState(() => _glowPaused = true);
+      final gen = _glowGeneration;
+      Future.delayed(_glowPauseDuration, () {
+        if (mounted && _glowGeneration == gen) _startGlowLoop();
+      });
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(vsync: this, duration: _duration);
+    _glowController = AnimationController(
+      vsync: this,
+      duration: _glowDurationFor(widget.percentage),
+    );
+    _glowController.addStatusListener(_onGlowStatusChanged);
+    _glowAnimation = Tween<double>(begin: 0, end: 1).animate(
+        CurvedAnimation(parent: _glowController, curve: Curves.linear));
     _targetPercentage = widget.percentage;
+    _startGlowLoop();
     // Animeer van laatst getoonde waarde (op home) naar actuele progress
     final startValue = EnergyState().lastDisplayedPercentageForGauge;
     _fillAnimation = Tween<double>(begin: startValue, end: widget.percentage)
@@ -47,13 +101,16 @@ class _EnergyGaugeState extends State<EnergyGauge>
         end: widget.percentage,
       ).animate(CurvedAnimation(parent: _controller, curve: _curve));
       _controller.forward(from: 0.0);
+      _setupGlowController(widget.percentage);
     }
   }
 
   @override
   void dispose() {
+    _glowController.removeStatusListener(_onGlowStatusChanged);
     EnergyState().lastDisplayedPercentageForGauge = _fillAnimation.value;
     _controller.dispose();
+    _glowController.dispose();
     super.dispose();
   }
 
@@ -63,7 +120,7 @@ class _EnergyGaugeState extends State<EnergyGauge>
     final height = size * 0.4;
 
     return AnimatedBuilder(
-      animation: _controller,
+      animation: Listenable.merge([_controller, _glowController]),
       builder: (context, _) {
         final displayValue = _fillAnimation.value;
         Color statusColor;
@@ -84,7 +141,11 @@ class _EnergyGaugeState extends State<EnergyGauge>
             children: [
               CustomPaint(
                 size: Size(size, height),
-                painter: _FlatGaugePainter(percentage: displayValue),
+                painter: _FlatGaugePainter(
+                  percentage: displayValue,
+                  glowProgress: _glowAnimation.value,
+                  glowVisible: !_glowPaused,
+                ),
               ),
               Positioned(
                 bottom: -28,
@@ -124,8 +185,14 @@ class _EnergyGaugeState extends State<EnergyGauge>
 
 class _FlatGaugePainter extends CustomPainter {
   final double percentage;
+  final double glowProgress;
+  final bool glowVisible;
 
-  _FlatGaugePainter({required this.percentage});
+  _FlatGaugePainter({
+    required this.percentage,
+    this.glowProgress = 0.0,
+    this.glowVisible = true,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -215,6 +282,66 @@ class _FlatGaugePainter extends CustomPainter {
           redPaint,
         );
       }
+
+      if (glowVisible) {
+        // StrokeCap.round strekt zich uit met ~strokeWidth/2 aan begin én einde
+        final capExtensionAngle = (strokeWidth / 2) / radius;
+        final progressSweepWithCaps = progressSweep + 2 * capExtensionAngle;
+        final startAngleWithCap = startAngle - capExtensionAngle;
+
+        const glowWidth = 0.2;
+        final glowSweep = glowWidth * totalSweepAngle;
+        final travelLength = (progressSweepWithCaps + glowSweep)
+            .clamp(0.2, totalSweepAngle * 1.3);
+        final glowPos =
+            (glowProgress * travelLength) % travelLength - glowSweep * 0.5;
+        final glowStartAngle = startAngleWithCap + glowPos;
+
+        final innerR = radius - strokeWidth * 0.5;
+        final outerR = radius + strokeWidth * 0.5;
+        final clipPath = Path()
+          ..arcTo(
+            Rect.fromCircle(center: center, radius: outerR),
+            startAngleWithCap,
+            progressSweepWithCaps,
+            false,
+          )
+          ..arcTo(
+            Rect.fromCircle(center: center, radius: innerR),
+            startAngleWithCap + progressSweepWithCaps,
+            -progressSweepWithCaps,
+            false,
+          )
+          ..close();
+
+        canvas.save();
+        canvas.clipPath(clipPath);
+
+        // Fade-in: gloed komt zacht binnen in de eerste ~15% van de reis
+        const fadeInFraction = 0.15;
+        final posInTravel =
+            ((glowProgress * travelLength) % travelLength) / travelLength;
+        final opacity = posInTravel < fadeInFraction
+            ? (posInTravel / fadeInFraction) * 0.45
+            : 0.45;
+
+        final glowPaint = Paint()
+          ..color = Colors.white.withValues(alpha: opacity)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth * 1.15
+          ..strokeCap = StrokeCap.round
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
+
+        canvas.drawArc(
+          Rect.fromCircle(center: center, radius: radius),
+          glowStartAngle,
+          glowSweep,
+          false,
+          glowPaint,
+        );
+
+        canvas.restore();
+      }
     }
 
     // Streepjes (Ticks)
@@ -243,7 +370,9 @@ class _FlatGaugePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return true;
+  bool shouldRepaint(covariant _FlatGaugePainter oldDelegate) {
+    return oldDelegate.percentage != percentage ||
+        oldDelegate.glowProgress != glowProgress ||
+        oldDelegate.glowVisible != glowVisible;
   }
 }
