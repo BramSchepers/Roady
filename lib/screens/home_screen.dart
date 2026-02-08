@@ -2,7 +2,9 @@ import 'dart:math' as math;
 
 import '../models/energy_state.dart';
 import '../models/theory_models.dart';
-import '../widgets/energy_gauge.dart'; // Import the new widget
+import '../repositories/theory_repository.dart';
+import '../utils/progress_color.dart';
+import '../widgets/energy_gauge.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -65,6 +67,11 @@ class HomeScreen extends StatelessWidget {
                             onPressed: () => context.push('/profile'),
                           ),
                           IconButton(
+                            icon: const Icon(Icons.shopping_cart,
+                                color: Colors.black87),
+                            onPressed: () => context.push('/shop'),
+                          ),
+                          IconButton(
                             icon:
                                 const Icon(Icons.logout, color: Colors.black87),
                             onPressed: () async {
@@ -112,24 +119,24 @@ class HomeScreen extends StatelessWidget {
                           onTap: () => context.go('/dashboard?tab=0'),
                         ),
                         _HomeNavCard(
+                          title: 'Oefenvragen',
+                          icon: Icons.quiz,
+                          color: Colors.teal.shade100,
+                          iconColor: Colors.teal.shade800,
+                          onTap: () => context.go('/dashboard?tab=1'),
+                        ),
+                        _HomeNavCard(
                           title: 'Examen',
                           icon: Icons.school,
                           color: Colors.orange.shade100,
                           iconColor: Colors.orange.shade800,
-                          onTap: () => context.go('/dashboard?tab=1'),
+                          onTap: () => context.go('/dashboard?tab=2'),
                         ),
                         _HomeNavCard(
                           title: 'AI Coach',
                           icon: Icons.smart_toy,
                           color: Colors.purple.shade100,
                           iconColor: Colors.purple.shade800,
-                          onTap: () => context.go('/dashboard?tab=2'),
-                        ),
-                        _HomeNavCard(
-                          title: 'Shop',
-                          icon: Icons.shopping_cart,
-                          color: Colors.green.shade100,
-                          iconColor: Colors.green.shade800,
                           onTap: () => context.go('/dashboard?tab=3'),
                         ),
                       ],
@@ -145,19 +152,23 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-/// Progress 0.0–1.0 afgeleid uit de lijst voltooide hoofdstukken (bron van waarheid).
-double _progressFromCompletedLessons(List<String> completedIds) {
+/// Progress 0.0–1.0 afgeleid uit de lijst voltooide lessen (bron van waarheid).
+/// [chapters] from repo cache or dummy; completedIds are lesson ids.
+double _progressFromCompletedLessons(
+    List<String> completedIds, List<TheoryChapter> chapters) {
   int total = 0;
-  for (var c in dummyChapters) {
+  for (var c in chapters) {
     total += c.lessons.length;
   }
   if (total == 0) return 0.0;
   double p = 0.0;
   for (var id in completedIds) {
-    for (var c in dummyChapters) {
-      if (c.id == id) {
-        p += c.lessons.length / total;
-        break;
+    for (var c in chapters) {
+      for (var lesson in c.lessons) {
+        if (lesson.id == id) {
+          p += 1 / total;
+          break;
+        }
       }
     }
   }
@@ -178,13 +189,7 @@ String _getStatusText(double effective) {
   return 'Net begonnen';
 }
 
-Color _getStatusColor(double effective) {
-  if (effective >= 1.0) return Colors.green;
-  if (effective >= 0.70) return Colors.green.shade300;
-  if (effective >= 0.40) return Colors.blue;
-  if (effective >= 0.10) return Colors.orange;
-  return Colors.grey;
-}
+Color _getStatusColor(double effective) => getProgressColor(effective);
 
 /// Curve: scale up (0→0.4) then plop back with bounce (0.4→1).
 class _PlopCurve extends Curve {
@@ -250,8 +255,9 @@ class _AnimatedStatusBadgeState extends State<_AnimatedStatusBadge>
 
   void _onUpdate() {
     final stored = widget.state.progress.value;
-    final fromCompleted =
-        _progressFromCompletedLessons(widget.state.completedLessons.value);
+    final fromCompleted = _progressFromCompletedLessons(
+        widget.state.completedLessons.value,
+        TheoryRepository.instance.getChaptersCachedSync());
     final effective = fromCompleted > stored ? fromCompleted : stored;
     final status = _getStatusText(effective);
 
@@ -279,8 +285,9 @@ class _AnimatedStatusBadgeState extends State<_AnimatedStatusBadge>
       ]),
       builder: (context, _) {
         final stored = widget.state.progress.value;
-        final fromCompleted =
-            _progressFromCompletedLessons(widget.state.completedLessons.value);
+        final fromCompleted = _progressFromCompletedLessons(
+            widget.state.completedLessons.value,
+            TheoryRepository.instance.getChaptersCachedSync());
         final effective = fromCompleted > stored ? fromCompleted : stored;
         if (fromCompleted > stored) {
           widget.state.repairProgress(fromCompleted);
@@ -359,8 +366,9 @@ class FuelMeterCard extends StatelessWidget {
             animation: listenable,
             builder: (context, _) {
               final stored = state.progress.value;
-              final fromCompleted =
-                  _progressFromCompletedLessons(state.completedLessons.value);
+              final fromCompleted = _progressFromCompletedLessons(
+                  state.completedLessons.value,
+                  TheoryRepository.instance.getChaptersCachedSync());
               final effective = fromCompleted > stored ? fromCompleted : stored;
               if (fromCompleted > stored) {
                 state.repairProgress(fromCompleted);

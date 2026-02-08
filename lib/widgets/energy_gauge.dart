@@ -1,6 +1,8 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+
 import '../models/energy_state.dart';
+import '../utils/progress_color.dart';
 
 class EnergyGauge extends StatefulWidget {
   final double percentage; // 0.0 to 1.0
@@ -123,14 +125,7 @@ class _EnergyGaugeState extends State<EnergyGauge>
       animation: Listenable.merge([_controller, _glowController]),
       builder: (context, _) {
         final displayValue = _fillAnimation.value;
-        Color statusColor;
-        if (displayValue > 0.6) {
-          statusColor = Colors.green;
-        } else if (displayValue > 0.3) {
-          statusColor = Colors.orange;
-        } else {
-          statusColor = Colors.red;
-        }
+        final statusColor = getProgressColor(displayValue);
 
         return SizedBox(
           width: size,

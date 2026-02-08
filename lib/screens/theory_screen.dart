@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../models/theory_models.dart';
 import '../models/energy_state.dart';
-import '../widgets/common_image.dart';
-import 'theory_player_screen.dart';
+import '../repositories/theory_repository.dart';
+import '../widgets/chapter_accordion.dart';
+import '../debug_log_stub.dart' if (dart.library.io) '../debug_log_io.dart' as _log;
 
 class TheoryScreen extends StatefulWidget {
   const TheoryScreen({super.key});
@@ -15,7 +16,7 @@ class TheoryScreen extends StatefulWidget {
 class _TheoryScreenState extends State<TheoryScreen> {
   static const _currentLang = 'nl'; // Hardcoded taal voor nu
 
-  final Set<String> _completedIds = {};
+  List<TheoryChapter>? _chapters;
   void Function()? _completedListener;
 
   @override
@@ -23,6 +24,17 @@ class _TheoryScreenState extends State<TheoryScreen> {
     super.initState();
     _completedListener = () => setState(() {});
     EnergyState().completedLessons.addListener(_completedListener!);
+    TheoryRepository.instance.getChapters().then((c) {
+      // #region agent log
+      _log.debugLog('theory_screen.dart', 'getChapters then', {
+        'mounted': mounted,
+        'listLength': c.length,
+        'firstChapterId': c.isNotEmpty ? c.first.id : null,
+        'source': c.isNotEmpty && c.first.id == 'chapter_00' ? 'likely_firestore' : 'likely_dummy',
+      }, 'E');
+      // #endregion
+      if (mounted) setState(() => _chapters = c);
+    });
   }
 
   @override
@@ -31,13 +43,19 @@ class _TheoryScreenState extends State<TheoryScreen> {
     super.dispose();
   }
 
-  bool _isCompleted(TheoryChapter chapter) {
-    return _completedIds.contains(chapter.id) ||
-        EnergyState().completedLessons.value.contains(chapter.id);
+  int _totalLessonsInApp(List<TheoryChapter> chapters) {
+    int total = 0;
+    for (var c in chapters) {
+      total += c.lessons.length;
+    }
+    return total;
   }
 
   @override
   Widget build(BuildContext context) {
+    final chapters = _chapters ?? dummyChapters;
+    final totalLessons = _totalLessonsInApp(chapters);
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
@@ -55,130 +73,43 @@ class _TheoryScreenState extends State<TheoryScreen> {
               ),
             ),
           ),
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: ColoredBox(
-                color: Colors.white,
-                child: ListView.separated(
-                padding: const EdgeInsets.all(20),
-                itemCount: dummyChapters.length,
-                separatorBuilder: (context, index) =>
-                    const SizedBox(height: 16),
-                itemBuilder: (context, index) {
-                  final chapter = dummyChapters[index];
-                  return _buildChapterCard(context, chapter);
-                },
+          SafeArea(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: ColoredBox(
+                    color: Colors.white,
+                    child: _chapters == null
+                    ? const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(24),
+                          child: CircularProgressIndicator(),
+                        ),
+                      )
+                    : ListView.separated(
+                        padding: const EdgeInsets.all(20),
+                        itemCount: chapters.length,
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(height: 16),
+                        itemBuilder: (context, index) {
+                          final chapter = chapters[index];
+                          return ChapterAccordion(
+                            chapter: chapter,
+                            currentLang: _currentLang,
+                            totalLessonsInApp: totalLessons,
+                            onChapterCompleted: (c) =>
+                                _showCompletionAnimation(context, c),
+                          );
+                        },
+                      ),
+                  ),
+                ),
               ),
-            ),
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildChapterCard(BuildContext context, TheoryChapter chapter) {
-    final completed = _isCompleted(chapter);
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      clipBehavior:
-          Clip.antiAlias, // Zorgt dat plaatje binnen de ronding blijft
-      child: InkWell(
-        onTap: () async {
-          final result = await Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => TheoryPlayerScreen(chapter: chapter),
-            ),
-          );
-
-          if (result == true && context.mounted) {
-            setState(() => _completedIds.add(chapter.id));
-            _showCompletionAnimation(context, chapter);
-          }
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Bovenkant: klein icoon + titel
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: SizedBox(
-                      width: 48,
-                      height: 48,
-                      child: CommonImage(
-                        imageUrl: chapter.imageUrl,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      chapter.getTitle(_currentLang),
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Footer met info
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                children: [
-                  const Icon(Icons.class_outlined,
-                      size: 20, color: Colors.grey),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${chapter.lessons.length} pagina\'s',
-                    style: TextStyle(color: Colors.grey[700]),
-                  ),
-                  const Spacer(),
-                  if (completed) ...[
-                    Text(
-                      'Voltooid',
-                      style: TextStyle(
-                        color: Colors.grey[700],
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.check_circle,
-                      size: 20,
-                      color: Colors.green[600],
-                    ),
-                  ] else ...[
-                    Text(
-                      'Starten',
-                      style: TextStyle(
-                        color: Theme.of(context).primaryColor,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.arrow_forward_ios,
-                      size: 14,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -191,21 +122,6 @@ class _TheoryScreenState extends State<TheoryScreen> {
       builder: (context) => CompletionAnimationWidget(
         onComplete: () {
           overlayEntry.remove();
-
-          // Bereken voortgang op basis van het aantal lessen in dit hoofdstuk
-          // vs totaal aantal lessen in de hele app.
-          int totalLessonsInApp = 0;
-          for (var c in dummyChapters) {
-            totalLessonsInApp += c.lessons.length;
-          }
-
-          if (totalLessonsInApp > 0) {
-            final double progressPerLesson = 1.0 / totalLessonsInApp;
-            final double chapterProgress =
-                progressPerLesson * chapter.lessons.length;
-
-            EnergyState().addProgress(chapterProgress, lessonId: chapter.id);
-          }
         },
       ),
     );

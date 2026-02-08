@@ -1,14 +1,21 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dotlottie_loader/dotlottie_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import '../models/theory_models.dart';
+import '../models/energy_state.dart';
+import '../widgets/image_loading_placeholder.dart';
 
 class TheoryPlayerScreen extends StatefulWidget {
   final TheoryChapter chapter;
+  final int initialPage;
+  final int totalLessonsInApp;
 
   const TheoryPlayerScreen({
     super.key,
     required this.chapter,
+    this.initialPage = 0,
+    required this.totalLessonsInApp,
   });
 
   @override
@@ -16,11 +23,43 @@ class TheoryPlayerScreen extends StatefulWidget {
 }
 
 class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
-  final PageController _pageController = PageController();
-  int _currentPage = 0;
+  late final PageController _pageController;
+  late int _currentPage;
 
   // Hardcoded taal voor nu
   final String _currentLang = 'nl';
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: widget.initialPage);
+    _currentPage = widget.initialPage;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _preloadAdjacentImages(_currentPage);
+    });
+  }
+
+  Future<void> _markLessonComplete(int index) async {
+    if (index < 0 || index >= widget.chapter.lessons.length) return;
+    final lesson = widget.chapter.lessons[index];
+    final amount = widget.totalLessonsInApp > 0
+        ? 1.0 / widget.totalLessonsInApp
+        : 0.0;
+    await EnergyState().addProgress(amount, lessonId: lesson.id);
+  }
+
+  void _preloadAdjacentImages(int currentIndex) {
+    for (final offset in [1, -1]) {
+      final index = currentIndex + offset;
+      if (index < 0 || index >= widget.chapter.lessons.length) continue;
+      final url = widget.chapter.lessons[index].imageUrl;
+      if (url != null &&
+          url.isNotEmpty &&
+          (url.startsWith('http://') || url.startsWith('https://'))) {
+        precacheImage(CachedNetworkImageProvider(url), context);
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -63,9 +102,14 @@ class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
               controller: _pageController,
               itemCount: widget.chapter.lessons.length,
               onPageChanged: (index) {
+                final previousPage = _currentPage;
                 setState(() {
                   _currentPage = index;
                 });
+                if (index > previousPage) {
+                  _markLessonComplete(previousPage);
+                }
+                _preloadAdjacentImages(index);
               },
               itemBuilder: (context, index) {
                 final lesson = widget.chapter.lessons[index];
@@ -104,7 +148,9 @@ class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
 
                 if (_currentPage < widget.chapter.lessons.length - 1)
                   FilledButton.icon(
-                    onPressed: () {
+                    onPressed: () async {
+                      await _markLessonComplete(_currentPage);
+                      if (!mounted) return;
                       _pageController.nextPage(
                         duration: const Duration(milliseconds: 300),
                         curve: Curves.easeInOut,
@@ -118,10 +164,10 @@ class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
                   )
                 else
                   FilledButton.icon(
-                    onPressed: () {
-                      // Klaar met module
-                      Navigator.of(context).pop(
-                          true); // Ga terug naar overzicht en start animatie
+                    onPressed: () async {
+                      await _markLessonComplete(_currentPage);
+                      if (!mounted) return;
+                      Navigator.of(context).pop(true);
                     },
                     style: FilledButton.styleFrom(
                       backgroundColor: Colors.green,
@@ -133,6 +179,64 @@ class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLessonMedia(TheoryLesson lesson) {
+    final imageUrl = lesson.imageUrl;
+    if (imageUrl != null &&
+        imageUrl.isNotEmpty &&
+        (imageUrl.startsWith('http://') || imageUrl.startsWith('https://'))) {
+      return CachedNetworkImage(
+        imageUrl: imageUrl,
+        fit: BoxFit.contain,
+        placeholder: (context, url) => const Padding(
+          padding: EdgeInsets.all(24.0),
+          child: ImageLoadingPlaceholder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+        ),
+        errorWidget: (context, url, error) => Padding(
+          padding: const EdgeInsets.all(24),
+          child: DotLottieLoader.fromAsset(
+            lesson.lottieAsset,
+            frameBuilder: (BuildContext context, dotlottie) {
+              if (dotlottie != null && dotlottie.animations.isNotEmpty) {
+                return Lottie.memory(
+                  dotlottie.animations.values.first,
+                  fit: BoxFit.contain,
+                );
+              }
+              return const Center(child: CircularProgressIndicator());
+            },
+            errorBuilder: (_, __, ___) => const Icon(
+              Icons.image_not_supported,
+              size: 64,
+              color: Colors.grey,
+            ),
+          ),
+        ),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: DotLottieLoader.fromAsset(
+        lesson.lottieAsset,
+        frameBuilder: (BuildContext context, dotlottie) {
+          if (dotlottie != null && dotlottie.animations.isNotEmpty) {
+            return Lottie.memory(
+              dotlottie.animations.values.first,
+              fit: BoxFit.contain,
+            );
+          }
+          return const Center(child: CircularProgressIndicator());
+        },
+        errorBuilder: (_, __, ___) => const Icon(
+          Icons.image_not_supported,
+          size: 64,
+          color: Colors.grey,
+        ),
       ),
     );
   }
@@ -154,33 +258,17 @@ class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 1. Animatie / Afbeelding
+          // 1. Afbeelding (als URL) of animatie / Lottie
           Expanded(
             flex: 4,
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.blue[50], // Lichte achtergrond voor animatie
+                color: Colors.blue[50],
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(24)),
               ),
-              padding: const EdgeInsets.all(24),
-              child: DotLottieLoader.fromAsset(
-                lesson.lottieAsset,
-                frameBuilder: (BuildContext context, dotlottie) {
-                  if (dotlottie != null && dotlottie.animations.isNotEmpty) {
-                    return Lottie.memory(
-                      dotlottie.animations.values.first,
-                      fit: BoxFit.contain,
-                    );
-                  }
-                  return const Center(child: CircularProgressIndicator());
-                },
-                errorBuilder: (_, __, ___) => const Icon(
-                  Icons.image_not_supported,
-                  size: 64,
-                  color: Colors.grey,
-                ),
-              ),
+              clipBehavior: Clip.antiAlias,
+              child: _buildLessonMedia(lesson),
             ),
           ),
 

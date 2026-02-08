@@ -5,7 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'ai_screen.dart';
 import 'exam_screen.dart';
-import 'shop_screen.dart';
+import 'oefenvragen_screen.dart';
 import 'theory_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -24,9 +24,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // Colors from HomeScreen
   static const _accentBlue = Color(0xFFe8f0e9); // Using hero bg color as placeholder or just keep original
   static const _activeBlue = Color(0xFF2563EB);
+  static final _tealColor = Colors.teal.shade800;
   static final _orangeColor = Colors.orange.shade800;
   static final _purpleColor = Colors.purple.shade800;
-  static final _greenColor = Colors.green.shade800;
 
   // Track animation direction
   bool _isForward = true;
@@ -36,9 +36,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     // Map logical index (0..3) to visual index (0, 1, 3, 4)
     // 0 -> 0 (Theorie)
-    // 1 -> 1 (Examen)
-    // 2 -> 3 (AI)
-    // 3 -> 4 (Shop)
+    // 1 -> 1 (Oefenvragen)
+    // 2 -> 3 (Examen)
+    // 3 -> 4 (AI)
     _selectedIndex = _mapLogicalToVisual(widget.initialIndex);
   }
 
@@ -57,9 +57,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // De pagina's die we willen tonen (logical order)
   final List<Widget> _pages = const [
     TheoryScreen(),
+    OefenvragenScreen(),
     ExamScreen(),
     AiScreen(),
-    ShopScreen(),
   ];
 
   void _onItemTapped(int index) {
@@ -77,11 +77,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       case 0:
         return _activeBlue;
       case 1:
-        return _orangeColor;
+        return _tealColor;
       case 3:
-        return _purpleColor;
+        return _orangeColor;
       case 4:
-        return _greenColor;
+        return _purpleColor;
       default:
         return _activeBlue;
     }
@@ -110,6 +110,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           IconButton(
             icon: const Icon(Icons.person, color: Colors.black87),
             onPressed: () => context.push('/profile'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.shopping_cart, color: Colors.black87),
+            onPressed: () => context.push('/shop'),
           ),
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.black87),
@@ -177,20 +181,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
             label: 'Theorie',
           ),
           const BottomNavigationBarItem(
-            icon: Icon(Icons.school),
-            label: 'Examen',
+            icon: Icon(Icons.quiz),
+            label: 'Oefenvragen',
           ),
           const BottomNavigationBarItem(
             icon: SizedBox.shrink(), // Dummy item
             label: '',
           ),
           const BottomNavigationBarItem(
-            icon: Icon(Icons.smart_toy),
-            label: 'AI',
+            icon: Icon(Icons.school),
+            label: 'Examen',
           ),
           const BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart),
-            label: 'Shop',
+            icon: Icon(Icons.smart_toy),
+            label: 'AI',
           ),
         ],
         currentIndex: _selectedIndex,

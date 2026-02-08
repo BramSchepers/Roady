@@ -31,7 +31,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
       return;
     }
     final language =
-        await UserLanguageRepository.instance.getLanguage(user.uid);
+        await UserLanguageRepository.instance.getLanguageOrFetch(user.uid);
     if (!mounted) return;
     if (language != null && language.isNotEmpty) {
       context.go('/start');

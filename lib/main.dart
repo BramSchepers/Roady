@@ -11,6 +11,7 @@ import 'screens/home_screen.dart';
 import 'screens/language_selection_screen.dart';
 import 'screens/license_selection_screen.dart';
 import 'screens/profile_screen.dart';
+import 'screens/shop_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/start_screen.dart';
 
@@ -85,6 +86,7 @@ class RoadyApp extends StatelessWidget {
         if (!isLoggedIn) {
           if (path == '/home' ||
               path == '/dashboard' ||
+              path == '/shop' ||
               path == '/license' ||
               path == '/language' ||
               path == '/region' ||
@@ -94,7 +96,7 @@ class RoadyApp extends StatelessWidget {
           return null;
         }
 
-        if (path == '/auth' || path == '/') return '/language';
+        if (path == '/auth' || path == '/') return '/start';
         return null;
       },
       routes: <RouteBase>[
@@ -148,6 +150,11 @@ class RoadyApp extends StatelessWidget {
           path: '/profile',
           pageBuilder: (context, state) =>
               _slideWithBouncePage(state, const ProfileScreen()),
+        ),
+        GoRoute(
+          path: '/shop',
+          pageBuilder: (context, state) =>
+              _slideWithBouncePage(state, const ShopScreen()),
         ),
         GoRoute(
           path: '/dashboard',

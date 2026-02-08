@@ -33,10 +33,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return;
     }
     final value = await UserLanguageRepository.instance.getLanguage(uid);
-    if (mounted) setState(() {
+    if (mounted) {
+      setState(() {
       _language = value;
       _languageLoaded = true;
     });
+    }
   }
 
   Future<void> _onLanguageChanged(String? newValue) async {
@@ -65,10 +67,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return;
     }
     final value = await UserLanguageRepository.instance.getLicenseType(uid);
-    if (mounted) setState(() {
+    if (mounted) {
+      setState(() {
       _licenseType = value;
       _licenseLoaded = true;
     });
+    }
   }
 
   Future<void> _onLicenseTypeChanged(String? newValue) async {
@@ -181,7 +185,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
                 child: DropdownButtonFormField<String>(
-                  value: _language != null &&
+                  initialValue: _language != null &&
                           kLanguageOptions.any((o) => o.id == _language)
                       ? _language
                       : null,
@@ -238,7 +242,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
                 child: DropdownButtonFormField<String>(
-                  value: _licenseType != null &&
+                  initialValue: _licenseType != null &&
                           kLicenseTypeOptions.any((o) => o.id == _licenseType)
                       ? _licenseType
                       : null,
@@ -307,7 +311,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton(
-                onPressed: () => context.go('/dashboard?tab=3'), // Go to Shop
+                onPressed: () => context.go('/shop'),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   side: const BorderSide(color: Color(0xFF2563EB)),
