@@ -20,6 +20,7 @@ dependencies:
   sign_in_with_apple: ^7.0.1
   cached_network_image: ^3.4.1
   shared_preferences: ^2.5.4
+  flutter_shimmer: ^2.1.2
 
 dev_dependencies:
   flutter_test:
