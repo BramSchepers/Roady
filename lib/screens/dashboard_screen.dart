@@ -22,10 +22,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   late int _selectedIndex;
 
   // Colors from HomeScreen
-  static const _accentBlue = Color(0xFF2563EB);
+  static const _accentBlue = Color(0xFFe8f0e9); // Using hero bg color as placeholder or just keep original
+  static const _activeBlue = Color(0xFF2563EB);
   static final _orangeColor = Colors.orange.shade800;
   static final _purpleColor = Colors.purple.shade800;
   static final _greenColor = Colors.green.shade800;
+
+  // Track animation direction
+  bool _isForward = true;
 
   @override
   void initState() {
@@ -63,6 +67,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (index == 2) return;
 
     setState(() {
+      _isForward = index > _selectedIndex;
       _selectedIndex = index;
     });
   }
@@ -70,7 +75,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Color _getCurrentColor() {
     switch (_selectedIndex) {
       case 0:
-        return _accentBlue;
+        return _activeBlue;
       case 1:
         return _orangeColor;
       case 3:
@@ -78,14 +83,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       case 4:
         return _greenColor;
       default:
-        return _accentBlue;
+        return _activeBlue;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _heroBg,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
@@ -99,7 +104,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: _accentBlue)),
+                  color: _activeBlue)),
         ),
         actions: [
           IconButton(
@@ -119,7 +124,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           Positioned.fill(
             child: Container(
-              color: _heroBg,
+              color: Colors.white,
               child: SvgPicture.asset(
                 'assets/illustrations/Background_hero.svg',
                 fit: BoxFit.cover,
@@ -130,8 +135,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
           ),
-          // Show active page based on mapped logical index
-          _pages[_mapVisualToLogical(_selectedIndex)],
+          // Show active page with directional slide animation
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 350),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              final isEntering = child.key == ValueKey<int>(_selectedIndex);
+              // Calculate offset based on direction and whether entering or exiting
+              // If forward: Enter from right (1), Exit to left (-1)
+              // If backward: Enter from left (-1), Exit to right (1)
+              final double startX = (_isForward == isEntering) ? 1.0 : -1.0;
+              
+              return SlideTransition(
+                position: Tween<Offset>(
+                  begin: Offset(startX, 0.0),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              );
+            },
+            child: KeyedSubtree(
+              key: ValueKey<int>(_selectedIndex),
+              child: _pages[_mapVisualToLogical(_selectedIndex)],
+            ),
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -139,7 +167,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         elevation: 4,
         backgroundColor: Colors.white,
         shape: const CircleBorder(),
-        child: const Icon(Icons.home, color: _accentBlue, size: 30),
+        child: const Icon(Icons.home, color: _activeBlue, size: 30),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomNavigationBar(
@@ -178,3 +206,4 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 }
+// _DirectionalSlideTransition removed as logic is now inline

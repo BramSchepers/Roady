@@ -13,7 +13,6 @@ class TheoryScreen extends StatefulWidget {
 }
 
 class _TheoryScreenState extends State<TheoryScreen> {
-  static const _heroBg = Color(0xFFe8f0e9);
   static const _currentLang = 'nl'; // Hardcoded taal voor nu
 
   final Set<String> _completedIds = {};
@@ -40,12 +39,12 @@ class _TheoryScreenState extends State<TheoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _heroBg,
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
           Positioned.fill(
             child: Container(
-              color: _heroBg,
+              color: Colors.white,
               child: SvgPicture.asset(
                 'assets/illustrations/Background_hero.svg',
                 fit: BoxFit.cover,
@@ -59,7 +58,9 @@ class _TheoryScreenState extends State<TheoryScreen> {
           Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
-              child: ListView.separated(
+              child: ColoredBox(
+                color: Colors.white,
+                child: ListView.separated(
                 padding: const EdgeInsets.all(20),
                 itemCount: dummyChapters.length,
                 separatorBuilder: (context, index) =>
@@ -69,6 +70,7 @@ class _TheoryScreenState extends State<TheoryScreen> {
                   return _buildChapterCard(context, chapter);
                 },
               ),
+            ),
             ),
           ),
         ],

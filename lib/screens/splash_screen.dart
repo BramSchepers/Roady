@@ -42,7 +42,7 @@ class _SplashScreenState extends State<SplashScreen> {
     // Op Web tonen we alleen de "loading" animatie
     if (kIsWeb) {
       return Scaffold(
-        backgroundColor: _heroBg,
+        backgroundColor: Colors.white,
         body: Center(
           child: SizedBox(
             width: 200,
@@ -69,15 +69,18 @@ class _SplashScreenState extends State<SplashScreen> {
 
     // Op App (Android/iOS) tonen we het volledige Welkomstscherm
     return Scaffold(
-      backgroundColor: _heroBg,
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // Achtergrond
+          // Achtergrond: wit zodat overflow (grote schermen / scroll) wit is
           Positioned.fill(
-            child: SvgPicture.asset(
-              'assets/illustrations/Background_hero.svg',
-              fit: BoxFit.cover,
-              placeholderBuilder: (_) => const SizedBox.shrink(),
+            child: Container(
+              color: Colors.white,
+              child: SvgPicture.asset(
+                'assets/illustrations/Background_hero.svg',
+                fit: BoxFit.cover,
+                placeholderBuilder: (_) => const SizedBox.shrink(),
+              ),
             ),
           ),
           SafeArea(

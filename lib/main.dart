@@ -6,10 +6,34 @@ import 'auth/auth_state.dart';
 import 'firebase_options.dart';
 import 'screens/auth_screen.dart';
 import 'screens/dashboard_screen.dart';
+import 'screens/exam_region_selection_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/language_selection_screen.dart';
 import 'screens/license_selection_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/splash_screen.dart';
+import 'screens/start_screen.dart';
+
+Page<void> _slideWithBouncePage(GoRouterState state, Widget child) {
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    child: child,
+    transitionDuration: const Duration(milliseconds: 350),
+    reverseTransitionDuration: const Duration(milliseconds: 300),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      return SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(1.0, 0.0),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutBack,
+        )),
+        child: child,
+      );
+    },
+  );
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,8 +48,6 @@ class RoadyApp extends StatelessWidget {
 
   final AuthState authState;
 
-  static const _heroBg = Color(0xFFe8f0e9);
-
   @override
   Widget build(BuildContext context) {
     final router = _createRouter(authState);
@@ -36,14 +58,14 @@ class RoadyApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.light,
-        scaffoldBackgroundColor: _heroBg,
+        scaffoldBackgroundColor: Colors.white,
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF2563EB),
           brightness: Brightness.light,
         ).copyWith(
           primary: const Color(0xFF2563EB),
-          surface: _heroBg,
-          surfaceContainerLowest: _heroBg,
+          surface: Colors.white,
+          surfaceContainerLowest: Colors.white,
         ),
       ),
       routerConfig: router,
@@ -61,12 +83,18 @@ class RoadyApp extends StatelessWidget {
         if (path == '/splash') return null;
 
         if (!isLoggedIn) {
-          if (path == '/home' || path == '/dashboard' || path == '/license')
+          if (path == '/home' ||
+              path == '/dashboard' ||
+              path == '/license' ||
+              path == '/language' ||
+              path == '/region' ||
+              path == '/start') {
             return '/auth';
+          }
           return null;
         }
 
-        if (path == '/auth' || path == '/') return '/license';
+        if (path == '/auth' || path == '/') return '/language';
         return null;
       },
       routes: <RouteBase>[
@@ -79,34 +107,55 @@ class RoadyApp extends StatelessWidget {
         ),
         GoRoute(
           path: '/splash',
-          builder: (_, __) => const SplashScreen(),
+          pageBuilder: (context, state) =>
+              _slideWithBouncePage(state, const SplashScreen()),
         ),
         GoRoute(
           path: '/auth',
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             final mode = state.uri.queryParameters['mode'];
             final isSignUp = mode != 'login';
-            return AuthScreen(initialSignUp: isSignUp);
+            return _slideWithBouncePage(
+                state, AuthScreen(initialSignUp: isSignUp));
           },
         ),
         GoRoute(
+          path: '/language',
+          pageBuilder: (context, state) =>
+              _slideWithBouncePage(state, const LanguageSelectionScreen()),
+        ),
+        GoRoute(
+          path: '/start',
+          pageBuilder: (context, state) =>
+              _slideWithBouncePage(state, const StartScreen()),
+        ),
+        GoRoute(
           path: '/license',
-          builder: (_, __) => const LicenseSelectionScreen(),
+          pageBuilder: (context, state) =>
+              _slideWithBouncePage(state, const LicenseSelectionScreen()),
+        ),
+        GoRoute(
+          path: '/region',
+          pageBuilder: (context, state) =>
+              _slideWithBouncePage(state, const ExamRegionSelectionScreen()),
         ),
         GoRoute(
           path: '/home',
-          builder: (_, __) => const HomeScreen(),
+          pageBuilder: (context, state) =>
+              _slideWithBouncePage(state, const HomeScreen()),
         ),
         GoRoute(
           path: '/profile',
-          builder: (_, __) => const ProfileScreen(),
+          pageBuilder: (context, state) =>
+              _slideWithBouncePage(state, const ProfileScreen()),
         ),
         GoRoute(
           path: '/dashboard',
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             final tab = state.uri.queryParameters['tab'];
             final initialIndex = tab != null ? int.tryParse(tab) ?? 0 : 0;
-            return DashboardScreen(initialIndex: initialIndex);
+            return _slideWithBouncePage(
+                state, DashboardScreen(initialIndex: initialIndex));
           },
         ),
       ],
