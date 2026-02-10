@@ -1,0 +1,265 @@
+/**
+ * Haalt Firestore-collectie op en schrijft naar het actieve blad.
+ * Stel Script Properties in: PROJECT_ID, CLIENT_EMAIL, PRIVATE_KEY (service account).
+ */
+function exportFirestoreToSheet() {
+    Logger.log('Start: credentials ophalen...');
+    var projectId = getProperty('PROJECT_ID');
+    var clientEmail = getProperty('CLIENT_EMAIL');
+    var privateKey = getProperty('PRIVATE_KEY').replace(/\\n/g, '\n');
+    var collectionId = 'theoryChapters'; // <-- aanpassen naar jouw collectie (bijv. examQuestions)
+
+    Logger.log('OAuth-token ophalen...');
+    var token = getAccessToken(clientEmail, privateKey);
+    Logger.log('Token ontvangen, Firestore aanroepen...');
+    var url = 'https://firestore.googleapis.com/v1/projects/' + projectId + '/databases/(default)/documents/' + collectionId;
+    var options = {
+        method: 'get',
+        headers: { 'Authorization': 'Bearer ' + token },
+        muteHttpExceptions: true,
+        timeout: 30
+    };
+    var response = UrlFetchApp.fetch(url, options);
+    Logger.log('Firestore response: ' + response.getResponseCode());
+    if (response.getResponseCode() !== 200) {
+        SpreadsheetApp.getUi().alert('Fout: ' + response.getContentText());
+        return;
+    }
+    var data = JSON.parse(response.getContentText());
+    var documents = data.documents || [];
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    sheet.clear();
+    if (documents.length === 0) {
+        sheet.getRange(1, 1).setValue('Geen documenten in ' + collectionId);
+        return;
+    }
+    // Overzichtelijke export: één rij per les + hoofdstuktitel (bv. "Inleiding") bewerkbaar
+    var headers = ['chapter_id', 'chapter_title_nl', 'chapter_title_fr', 'chapter_title_en', 'chapter_imageUrl', 'lesson_id', 'title_nl', 'description_nl', 'title_fr', 'description_fr', 'title_en', 'description_en', 'lottieAsset', 'imageUrl'];
+    var rows = [];
+    documents.forEach(function (doc) {
+        var fields = doc.fields || {};
+        var chapterId = doc.name.split('/').pop();
+        var titleMap = getMapValue(fields.title) || {};
+        var chapterTitleNl = getStringValue(titleMap.nl) || '';
+        var chapterTitleFr = getStringValue(titleMap.fr) || '';
+        var chapterTitleEn = getStringValue(titleMap.en) || '';
+        var chapterImageUrl = getStringValue(fields.imageUrl) || '';
+        var lessons = getArrayValue(fields.lessons);
+        if (!lessons || lessons.length === 0) {
+            rows.push([chapterId, chapterTitleNl, chapterTitleFr, chapterTitleEn, chapterImageUrl, '', '', '', '', '', '', '', '', '']);
+            return;
+        }
+        lessons.forEach(function (lessonItem) {
+            var lessonFields = getMapValue(lessonItem) || {};
+            var lessonId = getStringValue(lessonFields.id) || '';
+            var content = getMapValue(lessonFields.content) || {};
+            var titleNl = '', descNl = '', titleFr = '', descFr = '', titleEn = '', descEn = '';
+            ['nl', 'fr', 'en'].forEach(function (lang) {
+                var langMap = getMapValue(content[lang]) || {};
+                if (lang === 'nl') { titleNl = getStringValue(langMap.title) || ''; descNl = getStringValue(langMap.description) || ''; }
+                if (lang === 'fr') { titleFr = getStringValue(langMap.title) || ''; descFr = getStringValue(langMap.description) || ''; }
+                if (lang === 'en') { titleEn = getStringValue(langMap.title) || ''; descEn = getStringValue(langMap.description) || ''; }
+            });
+            var lottieAsset = getStringValue(lessonFields.lottieAsset) || '';
+            var imageUrl = getStringValue(lessonFields.imageUrl) || '';
+            rows.push([chapterId, chapterTitleNl, chapterTitleFr, chapterTitleEn, chapterImageUrl, lessonId, titleNl, descNl, titleFr, descFr, titleEn, descEn, lottieAsset, imageUrl]);
+        });
+    });
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    if (rows.length) sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+    sheet.autoResizeColumns(1, headers.length);
+    Logger.log('Klaar: ' + rows.length + ' lessen geëxporteerd.');
+    // Geen alert meer, zodat de run direct als klaar wordt gezien (spinner stopt).
+}
+
+/**
+ * Leest het actieve blad en schrijft de theorie (hoofdstuktitels + lessen) terug naar Firestore.
+ * Verwacht kolommen o.a. chapter_id, chapter_title_nl, lesson_id, title_nl, ... (zoals na export).
+ */
+function importSheetToFirestore() {
+    Logger.log('Import start: blad uitlezen...');
+    var projectId = getProperty('PROJECT_ID');
+    var clientEmail = getProperty('CLIENT_EMAIL');
+    var privateKey = getProperty('PRIVATE_KEY').replace(/\\n/g, '\n');
+    var token = getAccessToken(clientEmail, privateKey);
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var data = sheet.getDataRange().getValues();
+    if (data.length < 2) {
+        SpreadsheetApp.getUi().alert('Geen data: minstens een headerrij en één datarij nodig.');
+        return;
+    }
+    var headers = data[0].map(function (h) { return String(h).toLowerCase().replace(/\s/g, '_'); });
+    var col = function (name) {
+        var i = headers.indexOf(name);
+        return i >= 0 ? i : headers.indexOf(name.replace(/_/g, ''));
+    };
+    var chapterIdCol = col('chapter_id'), lessonIdCol = col('lesson_id');
+    var chapterTitleNlCol = col('chapter_title_nl'), chapterTitleFrCol = col('chapter_title_fr'), chapterTitleEnCol = col('chapter_title_en'), chapterImageUrlCol = col('chapter_imageurl');
+    var titleNlCol = col('title_nl'), descNlCol = col('description_nl');
+    var titleFrCol = col('title_fr'), descFrCol = col('description_fr');
+    var titleEnCol = col('title_en'), descEnCol = col('description_en');
+    var lottieCol = col('lottieasset'), imageUrlCol = col('imageurl');
+    if (chapterIdCol < 0 || lessonIdCol < 0) {
+        SpreadsheetApp.getUi().alert('Kolommen chapter_id en lesson_id zijn verplicht.');
+        return;
+    }
+    var chapters = {};
+    for (var r = 1; r < data.length; r++) {
+        var row = data[r];
+        var chId = String(row[chapterIdCol] || '').trim();
+        if (!chId) continue;
+        if (!chapters[chId]) chapters[chId] = { chapterTitleNl: '', chapterTitleFr: '', chapterTitleEn: '', chapterImageUrl: '', lessons: [] };
+        if (chapterTitleNlCol >= 0 && chapters[chId].chapterTitleNl === '' && row[chapterTitleNlCol] != null && String(row[chapterTitleNlCol]).trim() !== '')
+            chapters[chId].chapterTitleNl = String(row[chapterTitleNlCol]).trim();
+        if (chapterTitleFrCol >= 0 && chapters[chId].chapterTitleFr === '' && row[chapterTitleFrCol] != null && String(row[chapterTitleFrCol]).trim() !== '')
+            chapters[chId].chapterTitleFr = String(row[chapterTitleFrCol]).trim();
+        if (chapterTitleEnCol >= 0 && chapters[chId].chapterTitleEn === '' && row[chapterTitleEnCol] != null && String(row[chapterTitleEnCol]).trim() !== '')
+            chapters[chId].chapterTitleEn = String(row[chapterTitleEnCol]).trim();
+        if (chapterImageUrlCol >= 0 && chapters[chId].chapterImageUrl === '' && row[chapterImageUrlCol] != null && String(row[chapterImageUrlCol]).trim() !== '')
+            chapters[chId].chapterImageUrl = String(row[chapterImageUrlCol]).trim();
+        var lesson = {
+            lessonId: String(row[lessonIdCol] || '').trim(),
+            titleNl: row[titleNlCol] != null ? String(row[titleNlCol]) : '',
+            descNl: row[descNlCol] != null ? String(row[descNlCol]) : '',
+            titleFr: row[titleFrCol] != null ? String(row[titleFrCol]) : '',
+            descFr: row[descFrCol] != null ? String(row[descFrCol]) : '',
+            titleEn: row[titleEnCol] != null ? String(row[titleEnCol]) : '',
+            descEn: row[descEnCol] != null ? String(row[descEnCol]) : '',
+            lottie: row[lottieCol] != null ? String(row[lottieCol]) : '',
+            imageUrl: row[imageUrlCol] != null ? String(row[imageUrlCol]) : ''
+        };
+        chapters[chId].lessons.push(lesson);
+    }
+    var baseUrl = 'https://firestore.googleapis.com/v1/projects/' + projectId + '/databases/(default)/documents/theoryChapters';
+    var updated = 0;
+    for (var cid in chapters) {
+        var ch = chapters[cid];
+        var lessons = ch.lessons;
+        var docUrl = baseUrl + '/' + encodeURIComponent(cid);
+        var getResp = UrlFetchApp.fetch(docUrl, {
+            method: 'get',
+            headers: { 'Authorization': 'Bearer ' + token },
+            muteHttpExceptions: true,
+            timeout: 30
+        });
+        var currentFields = {};
+        if (getResp.getResponseCode() === 200) {
+            var doc = JSON.parse(getResp.getContentText());
+            if (doc.fields) currentFields = doc.fields;
+        }
+        var lessonValues = lessons.map(function (l) {
+            return {
+                mapValue: {
+                    fields: {
+                        id: { stringValue: l.lessonId },
+                        content: {
+                            mapValue: {
+                                fields: {
+                                    nl: { mapValue: { fields: { title: { stringValue: l.titleNl }, description: { stringValue: l.descNl } } } },
+                                    fr: { mapValue: { fields: { title: { stringValue: l.titleFr }, description: { stringValue: l.descFr } } } },
+                                    en: { mapValue: { fields: { title: { stringValue: l.titleEn }, description: { stringValue: l.descEn } } } }
+                                }
+                            }
+                        },
+                        lottieAsset: { stringValue: l.lottie },
+                        imageUrl: { stringValue: l.imageUrl }
+                    }
+                }
+            };
+        });
+        var newFields = {};
+        if (currentFields.id) newFields.id = currentFields.id;
+        else newFields.id = { stringValue: cid };
+        if (ch.chapterTitleNl !== '' || ch.chapterTitleFr !== '' || ch.chapterTitleEn !== '')
+            newFields.title = { mapValue: { fields: { nl: { stringValue: ch.chapterTitleNl || '' }, fr: { stringValue: ch.chapterTitleFr || '' }, en: { stringValue: ch.chapterTitleEn || '' } } } };
+        else if (currentFields.title) newFields.title = currentFields.title;
+        else newFields.title = { mapValue: { fields: { nl: { stringValue: '' }, fr: { stringValue: '' }, en: { stringValue: '' } } } };
+        if (ch.chapterImageUrl !== '' || currentFields.imageUrl) newFields.imageUrl = { stringValue: ch.chapterImageUrl || getStringValue(currentFields.imageUrl) || '' };
+        else newFields.imageUrl = { stringValue: '' };
+        newFields.lessons = { arrayValue: { values: lessonValues } };
+        var payload = { fields: newFields };
+        var patchResp = UrlFetchApp.fetch(docUrl + '?updateMask.fieldPaths=id&updateMask.fieldPaths=title&updateMask.fieldPaths=imageUrl&updateMask.fieldPaths=lessons', {
+            method: 'patch',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            payload: JSON.stringify(payload),
+            muteHttpExceptions: true,
+            timeout: 30
+        });
+        if (patchResp.getResponseCode() >= 200 && patchResp.getResponseCode() < 300) updated++;
+        else Logger.log('PATCH ' + cid + ': ' + patchResp.getResponseCode() + ' ' + patchResp.getContentText());
+    }
+    Logger.log('Import klaar: ' + updated + ' hoofdstukken bijgewerkt.');
+}
+
+function getProperty(key) {
+    var v = PropertiesService.getScriptProperties().getProperty(key);
+    if (!v) throw new Error('Script Property ontbreekt: ' + key + '. Zet PROJECT_ID, CLIENT_EMAIL, PRIVATE_KEY in Extensies > Apps Script > Scripteigenschappen.');
+    return v;
+}
+
+function getStringValue(field) {
+    if (!field || field.stringValue === undefined) return '';
+    return field.stringValue;
+}
+function getMapValue(field) {
+    if (!field || !field.mapValue || !field.mapValue.fields) return null;
+    return field.mapValue.fields;
+}
+function getArrayValue(field) {
+    if (!field || !field.arrayValue || !field.arrayValue.values) return [];
+    return field.arrayValue.values;
+}
+
+function firestoreValueToText(obj) {
+    if (!obj) return '';
+    if (obj.stringValue !== undefined) return obj.stringValue;
+    if (obj.integerValue !== undefined) return obj.integerValue;
+    if (obj.doubleValue !== undefined) return obj.doubleValue;
+    if (obj.booleanValue !== undefined) return obj.booleanValue;
+    if (obj.mapValue && obj.mapValue.fields) {
+        return JSON.stringify(obj.mapValue.fields);
+    }
+    if (obj.arrayValue && obj.arrayValue.values) {
+        return obj.arrayValue.values.map(firestoreValueToText).join(', ');
+    }
+    return '';
+}
+
+function getAccessToken(clientEmail, privateKey) {
+    var now = Math.floor(Date.now() / 1000);
+    var payload = {
+        iss: clientEmail,
+        sub: clientEmail,
+        aud: 'https://oauth2.googleapis.com/token',
+        iat: now,
+        exp: now + 3600,
+        scope: 'https://www.googleapis.com/auth/datastore'
+    };
+    var header = { alg: 'RS256', typ: 'JWT' };
+    var jwt = base64UrlEncode(JSON.stringify(header)) + '.' + base64UrlEncode(JSON.stringify(payload));
+    var signature = signWithRsaSha256(jwt, privateKey);
+    var signedJwt = jwt + '.' + signature;
+    var tokenUrl = 'https://oauth2.googleapis.com/token';
+    var tokenResponse = UrlFetchApp.fetch(tokenUrl, {
+        method: 'post',
+        contentType: 'application/x-www-form-urlencoded',
+        payload: {
+            grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+            assertion: signedJwt
+        },
+        muteHttpExceptions: true,
+        timeout: 30
+    });
+    return JSON.parse(tokenResponse.getContentText()).access_token;
+}
+
+function base64UrlEncode(str) {
+    var base64 = Utilities.base64EncodeWebSafe(Utilities.newBlob(str).getBytes());
+    return base64.replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
+}
+
+function signWithRsaSha256(message, pemPrivateKey) {
+    // Key als PEM-string doorgeven (met echte newlines; die zet exportFirestoreToSheet al)
+    var signature = Utilities.computeRsaSha256Signature(message, pemPrivateKey);
+    return Utilities.base64EncodeWebSafe(signature).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
+}

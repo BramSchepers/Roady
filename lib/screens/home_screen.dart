@@ -292,16 +292,27 @@ class _AnimatedStatusBadgeState extends State<_AnimatedStatusBadge>
         if (fromCompleted > stored) {
           widget.state.repairProgress(fromCompleted);
         }
-        return Transform.translate(
-          offset: Offset(_shakeAnimation.value, 0),
-          child: ScaleTransition(
-            scale: _scaleAnimation,
-            child: Text(
-              _getStatusText(effective),
-              style: TextStyle(
-                color: _getStatusColor(effective),
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
+
+        final color = _getStatusColor(effective);
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          decoration: BoxDecoration(
+            color: const Color.fromARGB(255, 125, 125, 125), // Cool Grey 50 (Very light grey/almost white)
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: Transform.translate(
+            offset: Offset(_shakeAnimation.value, 0),
+            child: ScaleTransition(
+              scale: _scaleAnimation,
+              child: Text(
+                _getStatusText(effective),
+                style: TextStyle(
+                  color: color, // Original fuel color
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
               ),
             ),
           ),
@@ -345,17 +356,9 @@ class FuelMeterCard extends StatelessWidget {
                   fontSize: 16,
                 ),
               ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF2563EB).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: _AnimatedStatusBadge(
-                  listenable: listenable,
-                  state: state,
-                ),
+              _AnimatedStatusBadge(
+                listenable: listenable,
+                state: state,
               ),
             ],
           ),
@@ -381,14 +384,27 @@ class FuelMeterCard extends StatelessWidget {
           ),
 
           const SizedBox(height: 28),
-          Text(
-            'Voltooi meer cursussen om je tank te vullen!',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[700],
-              fontStyle: FontStyle.italic,
-            ),
-            textAlign: TextAlign.center,
+          AnimatedBuilder(
+            animation: listenable,
+            builder: (context, _) {
+              final stored = state.progress.value;
+              final fromCompleted = _progressFromCompletedLessons(
+                  state.completedLessons.value,
+                  TheoryRepository.instance.getChaptersCachedSync());
+              final effective = fromCompleted > stored ? fromCompleted : stored;
+
+              return Text(
+                effective >= 1.0
+                    ? 'Herhalen en oefenen maar!'
+                    : 'Voltooi meer cursussen om je tank te vullen!',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[700],
+                  fontStyle: FontStyle.italic,
+                ),
+                textAlign: TextAlign.center,
+              );
+            },
           ),
           const SizedBox(height: 8),
           TextButton.icon(

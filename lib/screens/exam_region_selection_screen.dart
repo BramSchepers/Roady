@@ -76,7 +76,7 @@ class ExamRegionSelectionScreen extends StatelessWidget {
                         await UserLanguageRepository.instance
                             .setExamRegion(uid, 'vlaanderen');
                       }
-                      if (context.mounted) context.go('/home');
+                      if (context.mounted) context.go('/offline-download');
                     },
                   ),
                   const SizedBox(height: 16),

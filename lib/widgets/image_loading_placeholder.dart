@@ -67,9 +67,9 @@ class _ImageLoadingPlaceholderState extends State<ImageLoadingPlaceholder>
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Colors.grey[300]!,
-                      Colors.grey[100]!,
-                      Colors.grey[300]!,
+                      Colors.grey[400]!,
+                      Colors.white,
+                      Colors.grey[400]!,
                     ],
                     stops: [
                       _animation.value - 0.3,

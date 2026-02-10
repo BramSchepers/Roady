@@ -192,9 +192,30 @@ class _ChapterAccordionState extends State<ChapterAccordion>
                                   ),
                                 ),
                               );
-                              if (result == true && context.mounted) {
+                              // Markeren doet de player (les gezien = groen vinkje, hoe ze ook sluiten).
+                              final completed = result == true ||
+                                  (result is Map && result['completed'] == true);
+                              final completedIndex = result is Map
+                                  ? result['completedLessonIndex'] as int?
+                                  : null;
+                              final lastIndex = widget.chapter.lessons.length - 1;
+                              final wasLastLesson = completedIndex != null &&
+                                  completedIndex == lastIndex;
+                              final controllerValue = _controller.value;
+                              if (completed && context.mounted) {
                                 setState(() {});
                                 widget.onChapterCompleted?.call(widget.chapter);
+                                if (wasLastLesson && controllerValue > 0) {
+                                  _controller.reverse();
+                                }
+                              } else if (completed && wasLastLesson && controllerValue > 0) {
+                                // context.mounted was false na pop: reverse in volgende frame
+                                WidgetsBinding.instance.addPostFrameCallback((_) {
+                                  if (!mounted) return;
+                                  setState(() {});
+                                  widget.onChapterCompleted?.call(widget.chapter);
+                                  _controller.reverse();
+                                });
                               }
                             },
                             child: Padding(
