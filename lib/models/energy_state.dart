@@ -21,43 +21,60 @@ class EnergyState {
   // Keys for SharedPreferences
   static const String _keyEnergyLevel = 'energy_level';
   static const String _keyCompletedLessons = 'completed_lessons';
+  static const String _keyPendingViewedLessonId = 'pending_viewed_lesson_id';
 
-  /// Loads the saved state from local storage
+  /// Loads the saved state from local storage.
+  /// Als er een pending viewed lesson is (app werd gesloten terwijl les open stond), die nu markeren.
   Future<void> _loadState() async {
     final prefs = await SharedPreferences.getInstance();
 
-    // Load energy level (default to 0.0 if not found)
     progress.value = prefs.getDouble(_keyEnergyLevel) ?? 0.0;
-
-    // Load completed lessons list
     completedLessons.value = prefs.getStringList(_keyCompletedLessons) ?? [];
+
+    final pendingId = prefs.getString(_keyPendingViewedLessonId);
+    if (pendingId != null && pendingId.isNotEmpty) {
+      await prefs.remove(_keyPendingViewedLessonId);
+      await addProgress(0.0, lessonId: pendingId);
+    }
+  }
+
+  /// Opslaan welke les open stond (voor als app wordt gesloten/killed).
+  Future<void> savePendingViewedLessonId(String lessonId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyPendingViewedLessonId, lessonId);
+  }
+
+  /// Clearen bij normaal sluiten player (X of back).
+  Future<void> clearPendingViewedLessonId() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_keyPendingViewedLessonId);
   }
 
   /// Adds progress and marks a lesson as completed.
-  /// If [lessonId] is provided, it checks if the lesson was already completed
-  /// to avoid double counting.
+  /// If [lessonId] is provided, adds it to the list (en notificeert UI). Energie alleen bij als les nog niet voltooid was.
   Future<void> addProgress(double amount, {String? lessonId}) async {
     final prefs = await SharedPreferences.getInstance();
+    final alreadyCompleted = lessonId != null && completedLessons.value.contains(lessonId);
 
-    // If lesson ID is provided and already completed, do nothing
-    if (lessonId != null && completedLessons.value.contains(lessonId)) {
+    // Energie alleen toevoegen als les nog niet voltooid (geen dubbele telling)
+    if (!alreadyCompleted) {
+      double newValue = progress.value + amount;
+      if (newValue > 1.0) newValue = 1.0;
+      progress.value = newValue;
+      await prefs.setDouble(_keyEnergyLevel, newValue);
+    } else {
       debugPrint('Lesson $lessonId already completed. No energy added.');
-      return;
     }
 
-    // Update energy
-    double newValue = progress.value + amount;
-    if (newValue > 1.0) newValue = 1.0;
-    progress.value = newValue;
-    await prefs.setDouble(_keyEnergyLevel, newValue);
-
-    // Update completed lessons list
+    // Lijst altijd bijwerken en notifier zetten zodat UI (vinkjes) ververst
     if (lessonId != null) {
       final newList = List<String>.from(completedLessons.value);
-      newList.add(lessonId);
+      if (!newList.contains(lessonId)) {
+        newList.add(lessonId);
+        debugPrint('Marked lesson $lessonId as completed.');
+      }
       completedLessons.value = newList;
       await prefs.setStringList(_keyCompletedLessons, newList);
-      debugPrint('Marked lesson $lessonId as completed.');
     }
   }
 
@@ -79,5 +96,6 @@ class EnergyState {
     lastDisplayedPercentageForGauge = 0.0;
     await prefs.remove(_keyEnergyLevel);
     await prefs.remove(_keyCompletedLessons);
+    await prefs.remove(_keyPendingViewedLessonId);
   }
 }

@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dotlottie_loader/dotlottie_loader.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:lottie/lottie.dart';
 import '../models/theory_models.dart';
 import '../models/energy_state.dart';
@@ -23,17 +24,23 @@ class TheoryPlayerScreen extends StatefulWidget {
 }
 
 class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
+  late DateTime _startTime;
   late final PageController _pageController;
+
+  /// Alleen bijgewerkt door initState en Volgende/Vorige (niet door onPageChanged: die geeft spurious index).
   late int _currentPage;
 
-  // Hardcoded taal voor nu
   final String _currentLang = 'nl';
 
   @override
   void initState() {
     super.initState();
+    _startTime = DateTime.now();
     _pageController = PageController(initialPage: widget.initialPage);
     _currentPage = widget.initialPage;
+    _markLessonComplete(widget.initialPage);
+    EnergyState().savePendingViewedLessonId(
+        widget.chapter.lessons[widget.initialPage].id);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _preloadAdjacentImages(_currentPage);
     });
@@ -42,10 +49,29 @@ class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
   Future<void> _markLessonComplete(int index) async {
     if (index < 0 || index >= widget.chapter.lessons.length) return;
     final lesson = widget.chapter.lessons[index];
-    final amount = widget.totalLessonsInApp > 0
-        ? 1.0 / widget.totalLessonsInApp
-        : 0.0;
+    final amount =
+        widget.totalLessonsInApp > 0 ? 1.0 / widget.totalLessonsInApp : 0.0;
     await EnergyState().addProgress(amount, lessonId: lesson.id);
+  }
+
+  /// Bij sluiten (X of back): les die nu zichtbaar is markeren, pending clearen, pop.
+  Future<void> _leaveAndMarkCurrent() async {
+    // Gebruik de actuele positie van de PageController als bron van waarheid
+    int index = _currentPage;
+    if (_pageController.hasClients && _pageController.page != null) {
+      index = _pageController.page!.round();
+    }
+
+    // Zorg dat index binnen bereik is
+    index = index.clamp(0, widget.chapter.lessons.length - 1);
+
+    await _markLessonComplete(index);
+    await EnergyState().clearPendingViewedLessonId();
+    if (!mounted) return;
+    Navigator.of(context).pop(<String, dynamic>{
+      'completed': true,
+      'completedLessonIndex': index,
+    });
   }
 
   void _preloadAdjacentImages(int currentIndex) {
@@ -69,116 +95,130 @@ class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: Text(widget.chapter.getTitle(_currentLang)),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        foregroundColor: Colors.black87,
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.of(context).pop(),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        await _leaveAndMarkCurrent();
+      },
+      child: Scaffold(
+        backgroundColor: Colors.grey[50],
+        appBar: AppBar(
+          title: Text(widget.chapter.getTitle(_currentLang)),
+          centerTitle: true,
+          backgroundColor: Colors.white,
+          elevation: 0,
+          foregroundColor: Colors.black87,
+          leading: IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => _leaveAndMarkCurrent(),
+          ),
         ),
-      ),
-      body: Column(
-        children: [
-          // Voortgangsindicator
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: LinearProgressIndicator(
-              value: (_currentPage + 1) / widget.chapter.lessons.length,
-              backgroundColor: Colors.grey[200],
-              color: const Color(0xFF2563EB), // Roady blauw
-              minHeight: 6,
-              borderRadius: BorderRadius.circular(10),
+        body: Column(
+          children: [
+            // Voortgangsindicator
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: LinearProgressIndicator(
+                value: (_currentPage + 1) / widget.chapter.lessons.length,
+                backgroundColor: Colors.grey[200],
+                color: const Color(0xFF2563EB), // Roady blauw
+                minHeight: 6,
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-          ),
 
-          // Swipeable Kaarten
-          Expanded(
-            child: PageView.builder(
-              controller: _pageController,
-              itemCount: widget.chapter.lessons.length,
-              onPageChanged: (index) {
-                final previousPage = _currentPage;
-                setState(() {
-                  _currentPage = index;
-                });
-                if (index > previousPage) {
-                  _markLessonComplete(previousPage);
-                }
-                _preloadAdjacentImages(index);
-              },
-              itemBuilder: (context, index) {
-                final lesson = widget.chapter.lessons[index];
-                return _buildLessonCard(lesson);
-              },
+            Expanded(
+              child: PageView.builder(
+                controller: _pageController,
+                itemCount: widget.chapter.lessons.length,
+                onPageChanged: (index) {
+                  setState(() => _currentPage = index);
+
+                  // Sla pending op als de app crasht, maar negeer snelle spurious events bij start (<500ms)
+                  if (DateTime.now().difference(_startTime).inMilliseconds >
+                      500) {
+                    if (index < widget.chapter.lessons.length) {
+                      EnergyState().savePendingViewedLessonId(
+                          widget.chapter.lessons[index].id);
+                    }
+                  }
+
+                  _preloadAdjacentImages(index);
+                },
+                itemBuilder: (context, index) {
+                  final lesson = widget.chapter.lessons[index];
+                  return _buildLessonCard(lesson);
+                },
+              ),
             ),
-          ),
 
-          // Navigatie knoppen
-          Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                if (_currentPage > 0)
-                  TextButton.icon(
-                    onPressed: () {
-                      _pageController.previousPage(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                      );
-                    },
-                    icon: const Icon(Icons.arrow_back),
-                    label: const Text('Vorige'),
-                  )
-                else
-                  const SizedBox(width: 100), // Spacer
+            // Navigatie knoppen
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (_currentPage > 0)
+                    TextButton.icon(
+                      onPressed: () async {
+                        await _markLessonComplete(_currentPage);
+                        if (!mounted) return;
+                        setState(() => _currentPage--);
+                        EnergyState().savePendingViewedLessonId(
+                            widget.chapter.lessons[_currentPage].id);
+                        _pageController.previousPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                      },
+                      icon: const Icon(Icons.arrow_back),
+                      label: const Text('Vorige'),
+                    )
+                  else
+                    const SizedBox(width: 100), // Spacer
 
-                Text(
-                  '${_currentPage + 1} / ${widget.chapter.lessons.length}',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-                if (_currentPage < widget.chapter.lessons.length - 1)
-                  FilledButton.icon(
-                    onPressed: () async {
-                      await _markLessonComplete(_currentPage);
-                      if (!mounted) return;
-                      _pageController.nextPage(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                      );
-                    },
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF2563EB),
+                  Text(
+                    '${_currentPage + 1} / ${widget.chapter.lessons.length}',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.bold,
                     ),
-                    icon: const Icon(Icons.arrow_forward),
-                    label: const Text('Volgende'),
-                  )
-                else
-                  FilledButton.icon(
-                    onPressed: () async {
-                      await _markLessonComplete(_currentPage);
-                      if (!mounted) return;
-                      Navigator.of(context).pop(true);
-                    },
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Colors.green,
-                    ),
-                    icon: const Icon(Icons.check),
-                    label: const Text('Afronden'),
                   ),
-              ],
+
+                  if (_currentPage < widget.chapter.lessons.length - 1)
+                    FilledButton.icon(
+                      onPressed: () async {
+                        await _markLessonComplete(_currentPage);
+                        if (!mounted) return;
+                        setState(() => _currentPage++);
+                        EnergyState().savePendingViewedLessonId(
+                            widget.chapter.lessons[_currentPage].id);
+                        _pageController.nextPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                      },
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFF2563EB),
+                      ),
+                      icon: const Icon(Icons.arrow_forward),
+                      label: const Text('Volgende'),
+                    )
+                  else
+                    FilledButton.icon(
+                      onPressed: () => _leaveAndMarkCurrent(),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.green,
+                      ),
+                      icon: const Icon(Icons.check),
+                      label: const Text('Afronden'),
+                    ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -291,12 +331,51 @@ class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Text(
-                      lesson.getDescription(_currentLang),
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey[700],
-                        height: 1.6,
+                    MarkdownBody(
+                      data: lesson.getDescription(_currentLang),
+                      selectable: true,
+                      styleSheet: MarkdownStyleSheet(
+                        p: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey[700],
+                          height: 1.6,
+                        ),
+                        strong: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey[800],
+                          fontWeight: FontWeight.bold,
+                          height: 1.6,
+                        ),
+                        em: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey[700],
+                          fontStyle: FontStyle.italic,
+                          height: 1.6,
+                        ),
+                        listIndent: 24,
+                        listBullet: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey[700],
+                          height: 1.6,
+                        ),
+                        h1: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF1E293B),
+                          height: 1.3,
+                        ),
+                        h2: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF1E293B),
+                          height: 1.3,
+                        ),
+                        h3: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF1E293B),
+                          height: 1.3,
+                        ),
                       ),
                     ),
                   ],

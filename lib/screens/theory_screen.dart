@@ -4,7 +4,6 @@ import '../models/theory_models.dart';
 import '../models/energy_state.dart';
 import '../repositories/theory_repository.dart';
 import '../widgets/chapter_accordion.dart';
-import '../debug_log_stub.dart' if (dart.library.io) '../debug_log_io.dart' as _log;
 
 class TheoryScreen extends StatefulWidget {
   const TheoryScreen({super.key});
@@ -25,14 +24,6 @@ class _TheoryScreenState extends State<TheoryScreen> {
     _completedListener = () => setState(() {});
     EnergyState().completedLessons.addListener(_completedListener!);
     TheoryRepository.instance.getChapters().then((c) {
-      // #region agent log
-      _log.debugLog('theory_screen.dart', 'getChapters then', {
-        'mounted': mounted,
-        'listLength': c.length,
-        'firstChapterId': c.isNotEmpty ? c.first.id : null,
-        'source': c.isNotEmpty && c.first.id == 'chapter_00' ? 'likely_firestore' : 'likely_dummy',
-      }, 'E');
-      // #endregion
       if (mounted) setState(() => _chapters = c);
     });
   }
@@ -53,7 +44,7 @@ class _TheoryScreenState extends State<TheoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final chapters = _chapters ?? dummyChapters;
+    final chapters = _chapters ?? [];
     final totalLessons = _totalLessonsInApp(chapters);
 
     return Scaffold(
@@ -96,6 +87,7 @@ class _TheoryScreenState extends State<TheoryScreen> {
                         itemBuilder: (context, index) {
                           final chapter = chapters[index];
                           return ChapterAccordion(
+                            key: ValueKey(chapter.id),
                             chapter: chapter,
                             currentLang: _currentLang,
                             totalLessonsInApp: totalLessons,

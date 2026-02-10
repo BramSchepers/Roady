@@ -10,7 +10,10 @@ import 'screens/exam_region_selection_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/language_selection_screen.dart';
 import 'screens/license_selection_screen.dart';
+import 'screens/offline_download_screen.dart';
 import 'screens/profile_screen.dart';
+import 'models/quiz_models.dart';
+import 'screens/quiz_screen.dart';
 import 'screens/shop_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/start_screen.dart';
@@ -90,6 +93,7 @@ class RoadyApp extends StatelessWidget {
               path == '/license' ||
               path == '/language' ||
               path == '/region' ||
+              path == '/offline-download' ||
               path == '/start') {
             return '/auth';
           }
@@ -142,6 +146,11 @@ class RoadyApp extends StatelessWidget {
               _slideWithBouncePage(state, const ExamRegionSelectionScreen()),
         ),
         GoRoute(
+          path: '/offline-download',
+          pageBuilder: (context, state) =>
+              _slideWithBouncePage(state, const OfflineDownloadScreen()),
+        ),
+        GoRoute(
           path: '/home',
           pageBuilder: (context, state) =>
               _slideWithBouncePage(state, const HomeScreen()),
@@ -163,6 +172,13 @@ class RoadyApp extends StatelessWidget {
             final initialIndex = tab != null ? int.tryParse(tab) ?? 0 : 0;
             return _slideWithBouncePage(
                 state, DashboardScreen(initialIndex: initialIndex));
+          },
+        ),
+        GoRoute(
+          path: '/quiz',
+          pageBuilder: (context, state) {
+            final mode = state.extra as QuizMode? ?? QuizMode.random;
+            return _slideWithBouncePage(state, QuizScreen(mode: mode));
           },
         ),
       ],
