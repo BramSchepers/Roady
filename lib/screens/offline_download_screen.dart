@@ -3,6 +3,7 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../repositories/theory_repository.dart';
+import '../widgets/onboarding_page_indicator.dart';
 
 class OfflineDownloadScreen extends StatefulWidget {
   const OfflineDownloadScreen({super.key});
@@ -29,15 +30,14 @@ class _OfflineDownloadScreenState extends State<OfflineDownloadScreen> {
 
       // 2. Verzamel alle URLs
       final Set<String> urlsToDownload = {};
-      
+
       for (var chapter in chapters) {
         if (chapter.imageUrl.startsWith('http')) {
           urlsToDownload.add(chapter.imageUrl);
         }
 
         for (var lesson in chapter.lessons) {
-          if (lesson.imageUrl != null &&
-              lesson.imageUrl!.startsWith('http')) {
+          if (lesson.imageUrl != null && lesson.imageUrl!.startsWith('http')) {
             urlsToDownload.add(lesson.imageUrl!);
           }
         }
@@ -110,19 +110,31 @@ class _OfflineDownloadScreenState extends State<OfflineDownloadScreen> {
               ),
             ),
           ),
-          
+
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 32),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back_rounded),
+                      onPressed: () => context.go('/region'),
+                      color: accentBlue,
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.white.withOpacity(0.8),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   Center(
-                    child: SvgPicture.asset(
-                      'assets/images/logo-roady.svg',
+                    child: Image.asset(
+                      'assets/images/logo-roady.png',
                       height: 40,
-                      placeholderBuilder: (_) => const Text('Roady',
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) => const Text('Roady',
                           style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
@@ -130,7 +142,6 @@ class _OfflineDownloadScreenState extends State<OfflineDownloadScreen> {
                     ),
                   ),
                   const SizedBox(height: 48),
-                  
                   Text(
                     'Offline leren',
                     textAlign: TextAlign.center,
@@ -140,18 +151,22 @@ class _OfflineDownloadScreenState extends State<OfflineDownloadScreen> {
                         ),
                   ),
                   const SizedBox(height: 16),
-                  
                   Text(
                     'Wil je alle afbeeldingen alvast downloaden? Zo kun je ook zonder internet studeren en werkt de app sneller.',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Colors.grey[600],
+                          color: Colors.grey[900],
                           height: 1.5,
                         ),
                   ),
-                  
                   const Spacer(),
-
+                  const Center(
+                    child: OnboardingPageIndicator(
+                      currentIndex: 3,
+                      totalSteps: 4,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   if (_isDownloading) ...[
                     Text(
                       _statusText,
@@ -171,7 +186,7 @@ class _OfflineDownloadScreenState extends State<OfflineDownloadScreen> {
                     ),
                     const SizedBox(height: 32),
                   ] else ...[
-                     FilledButton.icon(
+                    FilledButton.icon(
                       onPressed: _startDownload,
                       style: FilledButton.styleFrom(
                         backgroundColor: accentBlue,
@@ -183,7 +198,8 @@ class _OfflineDownloadScreenState extends State<OfflineDownloadScreen> {
                       icon: const Icon(Icons.download),
                       label: const Text(
                         'Download alles',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -192,7 +208,7 @@ class _OfflineDownloadScreenState extends State<OfflineDownloadScreen> {
                       child: Text(
                         'Overslaan',
                         style: TextStyle(
-                          color: Colors.grey[600],
+                          color: Colors.grey[900],
                           fontSize: 16,
                         ),
                       ),

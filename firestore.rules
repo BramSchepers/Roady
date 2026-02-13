@@ -10,5 +10,16 @@ service cloud.firestore {
       allow read: if true;
       allow write: if true;
     }
+    // Quiz questions: anyone can read. Write allowed for now to facilitate initial seeding.
+    match /quizQuestions/{questionId} {
+      allow read: if true;
+      allow write: if true;
+    }
+    // Exam attempts: user can only read/write their own.
+    match /examAttempts/{attemptId} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if false;
+    }
   }
 }

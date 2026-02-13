@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../auth/user_language_repository.dart';
+import '../widgets/onboarding_page_indicator.dart';
 
 class LicenseSelectionScreen extends StatelessWidget {
   const LicenseSelectionScreen({super.key});
@@ -37,13 +38,25 @@ class LicenseSelectionScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 32),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back_rounded),
+                      onPressed: () => context.go('/language', extra: true),
+                      color: _accentBlue,
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.white.withOpacity(0.8),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   // Logo
                   Center(
-                    child: SvgPicture.asset(
-                      'assets/images/logo-roady.svg',
+                    child: Image.asset(
+                      'assets/images/logo-roady.png',
                       height: 40,
-                      placeholderBuilder: (_) => const Text('Roady',
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) => const Text('Roady',
                           style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
@@ -61,14 +74,6 @@ class LicenseSelectionScreen extends StatelessWidget {
                           color: Colors.black87,
                         ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Maak een keuze om te beginnen',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Colors.grey[600],
-                        ),
-                  ),
                   const SizedBox(height: 48),
 
                   // Option B (Active)
@@ -79,10 +84,13 @@ class LicenseSelectionScreen extends StatelessWidget {
                     isActive: true,
                     onTap: () async {
                       final uid = FirebaseAuth.instance.currentUser?.uid;
-                      if (uid != null) {
-                        await UserLanguageRepository.instance.setLicenseType(uid, 'B');
-                      }
-                      if (context.mounted) context.go('/region');
+                      if (uid == null) return;
+                      await UserLanguageRepository.instance
+                          .setLicenseType(uid, 'B');
+                      if (!context.mounted) return;
+                      final nextRoute = await UserLanguageRepository.instance
+                          .getNextOnboardingRoute(uid);
+                      if (context.mounted) context.go(nextRoute);
                     },
                   ),
 
@@ -98,7 +106,13 @@ class LicenseSelectionScreen extends StatelessWidget {
                   ),
 
                   const Spacer(),
-
+                  const Center(
+                    child: OnboardingPageIndicator(
+                      currentIndex: 1,
+                      totalSteps: 4,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   // Info Text
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -111,13 +125,13 @@ class LicenseSelectionScreen extends StatelessWidget {
                     child: Row(
                       children: [
                         Icon(Icons.info_outline,
-                            size: 20, color: Colors.grey[600]),
+                            size: 20, color: Colors.grey[900]),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             'Wij werken hard om in de toekomst meer types toe te voegen!',
                             style: TextStyle(
-                              color: Colors.grey[700],
+                              color: Colors.grey[900],
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                             ),
@@ -199,7 +213,7 @@ class _LicenseOptionCard extends StatelessWidget {
                       subtitle,
                       style: TextStyle(
                         fontSize: 14,
-                        color: isActive ? Colors.grey[600] : Colors.grey[400],
+                        color: isActive ? Colors.grey[900] : Colors.grey[400],
                       ),
                     ),
                   ],

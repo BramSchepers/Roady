@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import '../models/energy_state.dart';
 import 'ai_screen.dart';
 import 'exam_screen.dart';
 import 'oefenvragen_screen.dart';
@@ -96,8 +97,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle.dark,
-        title: SvgPicture.asset(
-          'assets/images/logo-roady.svg',
+        title: Image.asset(
+          'assets/images/logo-roady.png',
           height: 32,
           fit: BoxFit.contain,
           errorBuilder: (_, __, ___) => const Text('Roady',
@@ -166,12 +167,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.go('/home'),
-        elevation: 4,
-        backgroundColor: Colors.white,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.home, color: _activeBlue, size: 30),
+      floatingActionButton: ValueListenableBuilder<bool>(
+        valueListenable: EnergyState().hasUnseenDashboardUpdates,
+        builder: (context, hasUnseen, _) {
+          return Badge(
+            isLabelVisible: hasUnseen,
+            smallSize: 10,
+            backgroundColor: Colors.red,
+            child: FloatingActionButton(
+              onPressed: () => context.go('/home'),
+              elevation: 4,
+              backgroundColor: Colors.white,
+              shape: const CircleBorder(),
+              child: const Icon(Icons.home, color: _activeBlue, size: 30),
+            ),
+          );
+        },
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomNavigationBar(

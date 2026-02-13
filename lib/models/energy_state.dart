@@ -13,6 +13,11 @@ class EnergyState {
   final ValueNotifier<double> progress = ValueNotifier<double>(0.0);
   final ValueNotifier<List<String>> completedLessons =
       ValueNotifier<List<String>>([]);
+  /// Aantal geslaagde examens (voor beker op fuel dashboard).
+  final ValueNotifier<int> passedExamsCount = ValueNotifier<int>(0);
+
+  /// True als er op het dashboard iets nieuws is (fuel omhoog of nieuwe beker) dat de gebruiker nog niet heeft gezien.
+  final ValueNotifier<bool> hasUnseenDashboardUpdates = ValueNotifier<bool>(false);
 
   /// Laatst getoonde waarde op de fuel-gauge (bij verlaten home). Wordt gebruikt
   /// om de vul-animatie te starten wanneer de gebruiker terug naar home gaat.
@@ -22,6 +27,7 @@ class EnergyState {
   static const String _keyEnergyLevel = 'energy_level';
   static const String _keyCompletedLessons = 'completed_lessons';
   static const String _keyPendingViewedLessonId = 'pending_viewed_lesson_id';
+  static const String _keyPassedExamsCount = 'passed_exams_count';
 
   /// Loads the saved state from local storage.
   /// Als er een pending viewed lesson is (app werd gesloten terwijl les open stond), die nu markeren.
@@ -30,6 +36,7 @@ class EnergyState {
 
     progress.value = prefs.getDouble(_keyEnergyLevel) ?? 0.0;
     completedLessons.value = prefs.getStringList(_keyCompletedLessons) ?? [];
+    passedExamsCount.value = prefs.getInt(_keyPassedExamsCount) ?? 0;
 
     final pendingId = prefs.getString(_keyPendingViewedLessonId);
     if (pendingId != null && pendingId.isNotEmpty) {
@@ -61,6 +68,7 @@ class EnergyState {
       double newValue = progress.value + amount;
       if (newValue > 1.0) newValue = 1.0;
       progress.value = newValue;
+      hasUnseenDashboardUpdates.value = true; // Fuel omhoog → toon badge op huis-icoon
       await prefs.setDouble(_keyEnergyLevel, newValue);
     } else {
       debugPrint('Lesson $lessonId already completed. No energy added.');
@@ -84,11 +92,26 @@ class EnergyState {
     if (value <= progress.value) return;
     final clamped = value > 1.0 ? 1.0 : value;
     progress.value = clamped;
+    hasUnseenDashboardUpdates.value = true;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble(_keyEnergyLevel, clamped);
   }
 
-  /// Resets progress (useful for testing)
+  /// Verhoogt het aantal geslaagde examens met 1 en slaat op (bij geslaagd examen).
+  Future<void> incrementPassedExams() async {
+    final prefs = await SharedPreferences.getInstance();
+    final newCount = passedExamsCount.value + 1;
+    passedExamsCount.value = newCount;
+    hasUnseenDashboardUpdates.value = true; // Nieuwe beker → toon badge op huis-icoon
+    await prefs.setInt(_keyPassedExamsCount, newCount);
+  }
+
+  /// Cleart de "onbezochte dashboard-updates" vlag (aanroepen wanneer gebruiker home/dashboard opent).
+  void clearUnseenDashboardUpdates() {
+    hasUnseenDashboardUpdates.value = false;
+  }
+
+  /// Resets progress (useful for testing). Behouden aantal geslaagde examens niet gereset.
   Future<void> resetProgress() async {
     final prefs = await SharedPreferences.getInstance();
     progress.value = 0.0;

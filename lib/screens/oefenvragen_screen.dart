@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../models/quiz_models.dart';
 
@@ -31,12 +32,11 @@ class OefenvragenScreen extends StatelessWidget {
                     ),
               ),
               const SizedBox(height: 32),
-
               _QuizSelectionCard(
                 title: 'Verkeersborden',
                 description: 'Oefen specifiek op borden en hun betekenis.',
-                icon: Icons.traffic,
                 color: Colors.blue,
+                icon: Icons.traffic,
                 onTap: () {
                   context.push('/quiz', extra: QuizMode.trafficSigns);
                 },
@@ -66,8 +66,8 @@ class OefenvragenScreen extends StatelessWidget {
               
               const SizedBox(height: 16),
                _QuizSelectionCard(
-                title: 'Gevaarherkenning',
-                description: 'Oefen op gevaarlijke situaties.',
+                title: 'Zware overtredingen',
+                description: 'Oefen enkel de zware overtredingen',
                 icon: Icons.warning_amber_rounded,
                 color: Colors.red,
                 onTap: () {
@@ -87,14 +87,16 @@ class OefenvragenScreen extends StatelessWidget {
 class _QuizSelectionCard extends StatelessWidget {
   final String title;
   final String description;
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final Color color;
   final VoidCallback onTap;
 
   const _QuizSelectionCard({
     required this.title,
     required this.description,
-    required this.icon,
+    this.icon,
+    this.iconAsset,
     required this.color,
     required this.onTap,
   });
@@ -133,11 +135,21 @@ class _QuizSelectionCard extends StatelessWidget {
                     color: color.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Icon(
-                    icon,
-                    color: color,
-                    size: 32,
-                  ),
+                  alignment: Alignment.center,
+                  child: iconAsset != null
+                      ? SvgPicture.asset(
+                          iconAsset!,
+                          width: 40,
+                          height: 40,
+                          fit: BoxFit.contain,
+                          placeholderBuilder: (_) => Icon(icon ?? Icons.traffic, color: color, size: 32),
+                          errorBuilder: (_, __, ___) => Icon(icon ?? Icons.traffic, color: color, size: 32),
+                        )
+                      : Icon(
+                          icon!,
+                          color: color,
+                          size: 32,
+                        ),
                 ),
                 const SizedBox(width: 20),
                 Expanded(
