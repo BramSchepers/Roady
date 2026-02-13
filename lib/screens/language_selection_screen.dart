@@ -1,10 +1,16 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../auth/user_language_repository.dart';
+import '../utils/onboarding_constants.dart';
 import '../widgets/onboarding_page_indicator.dart';
+
+/// CDN-URLs voor vlagafbeeldingen (geen emojis - Windows Chrome ondersteunt die niet goed).
+const _flagBaseUrl = 'https://flagcdn.com/w80';
 
 class LanguageSelectionScreen extends StatefulWidget {
   const LanguageSelectionScreen({super.key, this.backNavigation = false});
@@ -50,22 +56,26 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          Positioned.fill(
-            child: Container(
-              color: Colors.white,
-              child: SvgPicture.asset(
-                'assets/illustrations/Background_hero.svg',
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-                placeholderBuilder: (_) => const SizedBox.shrink(),
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+          if (!kIsWeb)
+            Positioned.fill(
+              child: Container(
+                color: Colors.white,
+                child: SvgPicture.asset(
+                  'assets/illustrations/Background_hero.svg',
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                  placeholderBuilder: (_) => const SizedBox.shrink(),
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
               ),
             ),
-          ),
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: EdgeInsets.symmetric(
+                horizontal: onboardingHorizontalPadding,
+                vertical: 24.0,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -84,7 +94,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                   Center(
                     child: Image.asset(
                       'assets/images/logo-roady.png',
-                      height: 40,
+                      height: kIsWeb ? 34 : 40,
                       fit: BoxFit.contain,
                       errorBuilder: (_, __, ___) => const Text('Roady',
                           style: TextStyle(
@@ -98,14 +108,17 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                     'Kies je taal',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold, color: Colors.black87),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                      fontSize: kIsWeb ? 22 : null,
+                    ),
                   ),
                   const SizedBox(height: 48),
                   _LanguageOptionCard(
                     title: 'Nederlands',
                     subtitle: 'Dutch',
                     icon: Icons.language,
-                    flagEmoji: '🇳🇱',
+                    flagImageUrl: '$_flagBaseUrl/nl.png',
                     isActive: true,
                     onTap: () async {
                       final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -123,7 +136,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                     title: 'Français',
                     subtitle: 'Frans',
                     icon: Icons.language,
-                    flagEmoji: '🇫🇷',
+                    flagImageUrl: '$_flagBaseUrl/fr.png',
                     isActive: false,
                     onTap: () {},
                   ),
@@ -132,7 +145,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                     title: 'English',
                     subtitle: 'Engels',
                     icon: Icons.language,
-                    flagEmoji: '🇬🇧',
+                    flagImageUrl: '$_flagBaseUrl/gb.png',
                     isActive: false,
                     onTap: () {},
                   ),
@@ -185,7 +198,7 @@ class _LanguageOptionCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final IconData icon;
-  final String? flagEmoji;
+  final String? flagImageUrl;
   final bool isActive;
   final VoidCallback onTap;
 
@@ -193,7 +206,7 @@ class _LanguageOptionCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.icon,
-    this.flagEmoji,
+    this.flagImageUrl,
     required this.isActive,
     required this.onTap,
   });
@@ -201,6 +214,12 @@ class _LanguageOptionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const accentColor = Color(0xFF2563EB);
+    final compact = kIsWeb; // ~15% smaller op web
+    final padding = compact ? 17.0 : 20.0;
+    final iconSize = compact ? 24.0 : 28.0;
+    final titleFont = compact ? 14.0 : 16.0;
+    final subtitleFont = compact ? 12.0 : 14.0;
+    final arrowSize = compact ? 17.0 : 20.0;
 
     return Material(
       color: isActive ? Colors.white : Colors.white.withOpacity(0.6),
@@ -210,30 +229,53 @@ class _LanguageOptionCard extends StatelessWidget {
         onTap: isActive ? onTap : null,
         borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(padding),
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(compact ? 10 : 12),
                 decoration: BoxDecoration(
                   color: isActive
                       ? accentColor.withOpacity(0.1)
                       : Colors.grey[100],
                   shape: BoxShape.circle,
                 ),
-                child: flagEmoji != null
-                    ? Text(
-                        flagEmoji!,
-                        style: const TextStyle(fontSize: 28),
-                        textAlign: TextAlign.center,
+                child: flagImageUrl != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: CachedNetworkImage(
+                          imageUrl: flagImageUrl!,
+                          width: iconSize,
+                          height: iconSize,
+                          fit: BoxFit.cover,
+                          placeholder: (_, __) => Container(
+                            width: iconSize,
+                            height: iconSize,
+                            color: Colors.grey[200],
+                            alignment: Alignment.center,
+                            child: SizedBox(
+                              width: iconSize / 2,
+                              height: iconSize / 2,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: isActive ? accentColor : Colors.grey[400],
+                              ),
+                            ),
+                          ),
+                          errorWidget: (_, __, ___) => Icon(
+                            icon,
+                            color: isActive ? accentColor : Colors.grey[400],
+                            size: iconSize,
+                          ),
+                        ),
                       )
                     : Icon(
                         icon,
                         color: isActive ? accentColor : Colors.grey[400],
-                        size: 28,
+                        size: iconSize,
                       ),
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: compact ? 14 : 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -241,7 +283,7 @@ class _LanguageOptionCard extends StatelessWidget {
                     Text(
                       title,
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: titleFont,
                         fontWeight: FontWeight.bold,
                         color: isActive ? Colors.black87 : Colors.grey[500],
                       ),
@@ -250,7 +292,7 @@ class _LanguageOptionCard extends StatelessWidget {
                     Text(
                       subtitle,
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: subtitleFont,
                         color: isActive ? Colors.grey[900] : Colors.grey[400],
                       ),
                     ),
@@ -258,15 +300,15 @@ class _LanguageOptionCard extends StatelessWidget {
                 ),
               ),
               if (isActive)
-                const Icon(
+                Icon(
                   Icons.arrow_forward_ios_rounded,
                   color: accentColor,
-                  size: 20,
+                  size: arrowSize,
                 )
               else
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      EdgeInsets.symmetric(horizontal: compact ? 6 : 8, vertical: compact ? 3 : 4),
                   decoration: BoxDecoration(
                     color: Colors.grey[200],
                     borderRadius: BorderRadius.circular(8),
@@ -274,7 +316,7 @@ class _LanguageOptionCard extends StatelessWidget {
                   child: Text(
                     'Coming soon',
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: compact ? 9 : 10,
                       fontWeight: FontWeight.bold,
                       color: Colors.grey[500],
                     ),

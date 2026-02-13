@@ -9,6 +9,7 @@ import 'auth/user_language_repository.dart';
 import 'firebase_options.dart';
 import 'repositories/quiz_repository.dart';
 import 'screens/auth_screen.dart';
+import 'widgets/hero_background.dart';
 import 'screens/download_app_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'utils/mobile_web_detector.dart';
@@ -79,6 +80,23 @@ class RoadyApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'Roady',
       debugShowCheckedModeBanner: false,
+      builder: (context, child) {
+        if (child == null) return const SizedBox.shrink();
+        if (kIsWeb) {
+          return Stack(
+            children: [
+              const Positioned.fill(child: HeroBackground()),
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1000),
+                  child: child,
+                ),
+              ),
+            ],
+          );
+        }
+        return child;
+      },
       themeMode: ThemeMode.light,
       theme: ThemeData(
         useMaterial3: true,

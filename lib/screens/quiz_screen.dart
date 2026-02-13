@@ -164,9 +164,9 @@ class _QuizScreenState extends State<QuizScreen>
 
     try {
       _flutterTts ??= FlutterTts();
-      // Use 'nl' on web for better browser support; 'nl-BE' on mobile
+      // Web: 'nl' voor een echte Nederlandse stem in Chrome; mobiel: 'nl-BE'
       await _flutterTts!.setLanguage(kIsWeb ? 'nl' : 'nl-BE');
-      await _flutterTts!.setSpeechRate(0.45);
+      await _flutterTts!.setSpeechRate(kIsWeb ? 0.9 : 0.45);
 
       _flutterTts!.setCompletionHandler(() {
         if (mounted && !_ttsReady) startTimer();

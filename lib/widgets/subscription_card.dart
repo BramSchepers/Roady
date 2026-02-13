@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 class SubscriptionCard extends StatelessWidget {
@@ -77,31 +78,62 @@ class SubscriptionCard extends StatelessWidget {
                 ),
               )),
           const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: isComingSoon ? null : () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isComingSoon
-                    ? Colors.grey[300]
-                    : (isCurrent ? Colors.grey[200] : textColor),
-                foregroundColor: isComingSoon
-                    ? Colors.grey[600]
-                    : (isCurrent ? Colors.black : Colors.white),
-                disabledBackgroundColor: Colors.grey[300],
-                disabledForegroundColor: Colors.grey[600],
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+          kIsWeb
+              ? Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 400),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: isComingSoon ? null : () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isComingSoon
+                              ? Colors.grey[300]
+                              : (isCurrent ? Colors.grey[200] : textColor),
+                          foregroundColor: isComingSoon
+                              ? Colors.grey[600]
+                              : (isCurrent ? Colors.black : Colors.white),
+                          disabledBackgroundColor: Colors.grey[300],
+                          disabledForegroundColor: Colors.grey[600],
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Text(
+                          isComingSoon
+                              ? 'Coming soon'
+                              : (isCurrent ? 'Huidig plan' : 'Kies $title'),
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+              : SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: isComingSoon ? null : () {},
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isComingSoon
+                          ? Colors.grey[300]
+                          : (isCurrent ? Colors.grey[200] : textColor),
+                      foregroundColor: isComingSoon
+                          ? Colors.grey[600]
+                          : (isCurrent ? Colors.black : Colors.white),
+                      disabledBackgroundColor: Colors.grey[300],
+                      disabledForegroundColor: Colors.grey[600],
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Text(
+                      isComingSoon
+                          ? 'Coming soon'
+                          : (isCurrent ? 'Huidig plan' : 'Kies $title'),
+                    ),
+                  ),
                 ),
-              ),
-              child: Text(
-                isComingSoon
-                    ? 'Coming soon'
-                    : (isCurrent ? 'Huidig plan' : 'Kies $title'),
-              ),
-            ),
-          ),
         ],
       ),
     );

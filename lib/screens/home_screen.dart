@@ -38,20 +38,21 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // Background: white so overflow (large screens / scroll) shows white
-          Positioned.fill(
-            child: Container(
-              color: Colors.white,
-              child: SvgPicture.asset(
-                'assets/illustrations/Background_hero.svg',
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-                placeholderBuilder: (_) => const SizedBox.shrink(),
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+          // Op web: achtergrond wordt door main builder volle breedte getoond
+          if (!kIsWeb)
+            Positioned.fill(
+              child: Container(
+                color: Colors.white,
+                child: SvgPicture.asset(
+                  'assets/illustrations/Background_hero.svg',
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                  placeholderBuilder: (_) => const SizedBox.shrink(),
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
               ),
             ),
-          ),
 
           SafeArea(
             child: Padding(
@@ -104,139 +105,170 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   const SizedBox(height: 32),
 
-                  // Op web: meter + knoppen in 1000px brede container, gecentreerd
+                  // Hele pagina scrollbaar; op web: meter + knoppen in 1000px container
                   Expanded(
                     child: kIsWeb
                         ? Center(
                             child: LayoutBuilder(
                               builder: (context, constraints) {
+                                final w = constraints.maxWidth.clamp(0.0, 1000.0);
+                                const spacing = 28.0;
+                                const aspectRatio = 1.85;
+                                final cellHeight =
+                                    (w - spacing) / 2 / aspectRatio;
+                                final gridHeight =
+                                    2 * cellHeight + spacing;
                                 return SizedBox(
-                                  width: 1000,
-                                  height: constraints.maxHeight,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      const FuelMeterCard(),
-                                      const SizedBox(height: 32),
-                                      Text(
-                                        'Verder leren',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleLarge
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.black87,
-                                            ),
-                                      ),
-                                      const SizedBox(height: 16),
-                                      Expanded(
-                                        child: GridView.count(
-                                          crossAxisCount: 2,
-                                          mainAxisSpacing: 20,
-                                          crossAxisSpacing: 20,
-                                          childAspectRatio: 1.05,
-                                          children: [
-                                            _HomeNavCard(
-                                              title: 'Theorie',
-                                              icon: Icons.menu_book,
-                                              color: Colors.blue.shade100,
-                                              iconColor: _accentBlue,
-                                              onTap: () =>
-                                                  context.go('/dashboard?tab=0'),
-                                            ),
-                                            _HomeNavCard(
-                                              title: 'Oefenvragen',
-                                              icon: Icons.quiz,
-                                              color: Colors.teal.shade100,
-                                              iconColor: Colors.teal.shade800,
-                                              onTap: () =>
-                                                  context.go('/dashboard?tab=1'),
-                                            ),
-                                            _HomeNavCard(
-                                              title: 'Examen',
-                                              icon: Icons.school,
-                                              color: Colors.orange.shade100,
-                                              iconColor: Colors.orange.shade800,
-                                              onTap: () =>
-                                                  context.go('/dashboard?tab=2'),
-                                            ),
-                                            _HomeNavCard(
-                                              title: 'AI Coach',
-                                              icon: Icons.smart_toy,
-                                              color: Colors.purple.shade100,
-                                              iconColor: Colors.purple.shade800,
-                                              onTap: () =>
-                                                  context.go('/dashboard?tab=3'),
-                                            ),
-                                          ],
+                                  width: w,
+                                  child: SingleChildScrollView(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const FuelMeterCard(),
+                                        const SizedBox(height: 32),
+                                        Text(
+                                          'Verder leren',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleLarge
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.black87,
+                                              ),
                                         ),
-                                      ),
-                                    ],
+                                        const SizedBox(height: 16),
+                                        SizedBox(
+                                          height: gridHeight,
+                                          child: GridView.count(
+                                            physics:
+                                                const NeverScrollableScrollPhysics(),
+                                            crossAxisCount: 2,
+                                            mainAxisSpacing: spacing,
+                                            crossAxisSpacing: spacing,
+                                            childAspectRatio: aspectRatio,
+                                            children: [
+                                              _HomeNavCard(
+                                                title: 'Theorie',
+                                                icon: Icons.menu_book,
+                                                color: Colors.blue.shade100,
+                                                iconColor: _accentBlue,
+                                                onTap: () => context
+                                                    .go('/dashboard?tab=0'),
+                                              ),
+                                              _HomeNavCard(
+                                                title: 'Oefenvragen',
+                                                icon: Icons.quiz,
+                                                color: Colors.teal.shade100,
+                                                iconColor: Colors.teal.shade800,
+                                                onTap: () => context
+                                                    .go('/dashboard?tab=1'),
+                                              ),
+                                              _HomeNavCard(
+                                                title: 'Examen',
+                                                icon: Icons.school,
+                                                color: Colors.orange.shade100,
+                                                iconColor: Colors.orange.shade800,
+                                                onTap: () => context
+                                                    .go('/dashboard?tab=2'),
+                                              ),
+                                              _HomeNavCard(
+                                                title: 'AI Coach',
+                                                icon: Icons.smart_toy,
+                                                color: Colors.purple.shade100,
+                                                iconColor: Colors.purple.shade800,
+                                                onTap: () => context
+                                                    .go('/dashboard?tab=3'),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(height: 32),
+                                      ],
+                                    ),
                                   ),
                                 );
                               },
                             ),
                           )
-                        : Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              const FuelMeterCard(),
-                              const SizedBox(height: 32),
-                              Text(
-                                'Verder leren',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleLarge
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black87,
-                                    ),
-                              ),
-                              const SizedBox(height: 16),
-                              Expanded(
-                                child: GridView.count(
-                                  crossAxisCount: 2,
-                                  mainAxisSpacing: 16,
-                                  crossAxisSpacing: 16,
-                                  childAspectRatio: 1.1,
-                                  children: [
-                                    _HomeNavCard(
-                                      title: 'Theorie',
-                                      icon: Icons.menu_book,
-                                      color: Colors.blue.shade100,
-                                      iconColor: _accentBlue,
-                                      onTap: () =>
-                                          context.go('/dashboard?tab=0'),
-                                    ),
-                                    _HomeNavCard(
-                                      title: 'Oefenvragen',
-                                      icon: Icons.quiz,
-                                      color: Colors.teal.shade100,
-                                      iconColor: Colors.teal.shade800,
-                                      onTap: () =>
-                                          context.go('/dashboard?tab=1'),
-                                    ),
-                                    _HomeNavCard(
-                                      title: 'Examen',
-                                      icon: Icons.school,
-                                      color: Colors.orange.shade100,
-                                      iconColor: Colors.orange.shade800,
-                                      onTap: () =>
-                                          context.go('/dashboard?tab=2'),
-                                    ),
-                                    _HomeNavCard(
-                                      title: 'AI Coach',
-                                      icon: Icons.smart_toy,
-                                      color: Colors.purple.shade100,
-                                      iconColor: Colors.purple.shade800,
-                                      onTap: () =>
-                                          context.go('/dashboard?tab=3'),
-                                    ),
-                                  ],
+                        : SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const FuelMeterCard(),
+                                const SizedBox(height: 32),
+                                Text(
+                                  'Verder leren',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleLarge
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black87,
+                                      ),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(height: 16),
+                                LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    const spacing = 16.0;
+                                    const aspectRatio = 1.1;
+                                    final w = constraints.maxWidth;
+                                    final cellHeight =
+                                        (w - spacing) / 2 / aspectRatio;
+                                    final gridHeight =
+                                        2 * cellHeight + spacing;
+                                    return SizedBox(
+                                      height: gridHeight,
+                                      child: GridView.count(
+                                        physics:
+                                            const NeverScrollableScrollPhysics(),
+                                        crossAxisCount: 2,
+                                        mainAxisSpacing: spacing,
+                                        crossAxisSpacing: spacing,
+                                        childAspectRatio: aspectRatio,
+                                        children: [
+                                          _HomeNavCard(
+                                            title: 'Theorie',
+                                            icon: Icons.menu_book,
+                                            color: Colors.blue.shade100,
+                                            iconColor: _accentBlue,
+                                            onTap: () =>
+                                                context.go('/dashboard?tab=0'),
+                                          ),
+                                          _HomeNavCard(
+                                            title: 'Oefenvragen',
+                                            icon: Icons.quiz,
+                                            color: Colors.teal.shade100,
+                                            iconColor: Colors.teal.shade800,
+                                            onTap: () =>
+                                                context.go('/dashboard?tab=1'),
+                                          ),
+                                          _HomeNavCard(
+                                            title: 'Examen',
+                                            icon: Icons.school,
+                                            color: Colors.orange.shade100,
+                                            iconColor: Colors.orange.shade800,
+                                            onTap: () =>
+                                                context.go('/dashboard?tab=2'),
+                                          ),
+                                          _HomeNavCard(
+                                            title: 'AI Coach',
+                                            icon: Icons.smart_toy,
+                                            color: Colors.purple.shade100,
+                                            iconColor: Colors.purple.shade800,
+                                            onTap: () =>
+                                                context.go('/dashboard?tab=3'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: 32),
+                              ],
+                            ),
                           ),
                   ),
                 ],
@@ -613,12 +645,12 @@ class _HomeNavCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isWeb = kIsWeb;
-    // Op web: knoppen 1000px breed totaal, 2 kolommen → grote kaartjes met groter icoon
-    final iconSize = isWeb ? 48.0 : 32.0;
-    final iconPadding = isWeb ? 20.0 : 16.0;
-    final titleGap = isWeb ? 12.0 : 12.0;
-    final fontSize = isWeb ? 18.0 : 16.0;
-    final radius = isWeb ? 20.0 : 20.0;
+    // Op web: knoppen zelf ~35% kleiner, iconen ongewijzigd
+    final iconSize = isWeb ? 36.0 : 32.0;
+    final iconPadding = isWeb ? 15.0 : 16.0;
+    final titleGap = isWeb ? 6.0 : 12.0;
+    final fontSize = isWeb ? 9.0 : 16.0;
+    final radius = isWeb ? 14.0 : 20.0;
 
     return Material(
       color: Colors.white,

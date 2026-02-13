@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../repositories/theory_repository.dart';
+import '../utils/onboarding_constants.dart';
 import '../widgets/onboarding_page_indicator.dart';
 
 class OfflineDownloadScreen extends StatefulWidget {
@@ -88,6 +90,63 @@ class _OfflineDownloadScreenState extends State<OfflineDownloadScreen> {
     context.go('/home');
   }
 
+  /// Op web: knop 2x dikker (meer verticale padding) en 2x smaller (beperkte breedte).
+  Widget _buildPrimaryButton({
+    required VoidCallback onPressed,
+    required Widget icon,
+    required Widget label,
+  }) {
+    const accentBlue = Color(0xFF2563EB);
+    final button = FilledButton.icon(
+      onPressed: onPressed,
+      style: FilledButton.styleFrom(
+        backgroundColor: accentBlue,
+        padding: EdgeInsets.symmetric(
+          vertical: kIsWeb ? 32 : 16,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+      icon: icon,
+      label: label,
+    );
+    if (kIsWeb) {
+      return Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 220),
+          child: SizedBox(width: double.infinity, child: button),
+        ),
+      );
+    }
+    return button;
+  }
+
+  Widget _buildSkipButton() {
+    final button = TextButton(
+      onPressed: _finish,
+      style: TextButton.styleFrom(
+        padding: EdgeInsets.symmetric(vertical: kIsWeb ? 32 : 16),
+      ),
+      child: Text(
+        'Overslaan',
+        style: TextStyle(
+          color: Colors.grey[900],
+          fontSize: 16,
+        ),
+      ),
+    );
+    if (kIsWeb) {
+      return Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 220),
+          child: SizedBox(width: double.infinity, child: button),
+        ),
+      );
+    }
+    return button;
+  }
+
   @override
   Widget build(BuildContext context) {
     const accentBlue = Color(0xFF2563EB);
@@ -96,24 +155,27 @@ class _OfflineDownloadScreenState extends State<OfflineDownloadScreen> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // Achtergrond
-          Positioned.fill(
-            child: Container(
-              color: Colors.white,
-              child: SvgPicture.asset(
-                'assets/illustrations/Background_hero.svg',
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-                placeholderBuilder: (_) => const SizedBox.shrink(),
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+          if (!kIsWeb)
+            Positioned.fill(
+              child: Container(
+                color: Colors.white,
+                child: SvgPicture.asset(
+                  'assets/illustrations/Background_hero.svg',
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                  placeholderBuilder: (_) => const SizedBox.shrink(),
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
               ),
             ),
-          ),
 
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: EdgeInsets.symmetric(
+                horizontal: onboardingHorizontalPadding,
+                vertical: 24.0,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -186,15 +248,8 @@ class _OfflineDownloadScreenState extends State<OfflineDownloadScreen> {
                     ),
                     const SizedBox(height: 32),
                   ] else ...[
-                    FilledButton.icon(
+                    _buildPrimaryButton(
                       onPressed: _startDownload,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: accentBlue,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
                       icon: const Icon(Icons.download),
                       label: const Text(
                         'Download alles',
@@ -203,16 +258,7 @@ class _OfflineDownloadScreenState extends State<OfflineDownloadScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    TextButton(
-                      onPressed: _finish,
-                      child: Text(
-                        'Overslaan',
-                        style: TextStyle(
-                          color: Colors.grey[900],
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
+                    _buildSkipButton(),
                   ],
                   const SizedBox(height: 16),
                 ],

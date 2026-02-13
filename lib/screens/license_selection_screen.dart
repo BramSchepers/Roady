@@ -1,9 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../auth/user_language_repository.dart';
+import '../utils/onboarding_constants.dart';
 import '../widgets/onboarding_page_indicator.dart';
 
 class LicenseSelectionScreen extends StatelessWidget {
@@ -18,23 +20,26 @@ class LicenseSelectionScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // Background: white so overflow (large screens / scroll) shows white
-          Positioned.fill(
-            child: Container(
-              color: Colors.white,
-              child: SvgPicture.asset(
-                'assets/illustrations/Background_hero.svg',
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-                placeholderBuilder: (_) => const SizedBox.shrink(),
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+          if (!kIsWeb)
+            Positioned.fill(
+              child: Container(
+                color: Colors.white,
+                child: SvgPicture.asset(
+                  'assets/illustrations/Background_hero.svg',
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                  placeholderBuilder: (_) => const SizedBox.shrink(),
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
               ),
             ),
-          ),
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: EdgeInsets.symmetric(
+                horizontal: onboardingHorizontalPadding,
+                vertical: 24.0,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
