@@ -290,20 +290,15 @@ class _AuthScreenState extends State<AuthScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Center(
-              child: SvgPicture.asset(
-                'assets/images/logo-roady.svg',
-                height: 44,
+              child: Image.asset(
+                'assets/images/inlogscherm.png',
+                height: 200,
                 fit: BoxFit.contain,
-                placeholderBuilder: (_) => const Text('Roady',
-                    style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: _accentBlue)),
-                errorBuilder: (_, __, ___) => const Text('Roady',
-                    style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: _accentBlue)),
+                errorBuilder: (_, __, ___) => Image.asset(
+                  'assets/images/logo-roady.png',
+                  height: 44,
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
             const SizedBox(height: 20),
@@ -379,9 +374,8 @@ class _AuthScreenState extends State<AuthScreen> {
                 }
                 return null;
               },
-              textInputAction: _isSignUp
-                  ? TextInputAction.next
-                  : TextInputAction.done,
+              textInputAction:
+                  _isSignUp ? TextInputAction.next : TextInputAction.done,
             ),
             if (_isSignUp) ...[
               const SizedBox(height: 16),

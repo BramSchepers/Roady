@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 import '../models/energy_state.dart';
 import '../models/theory_models.dart';
 import '../repositories/theory_repository.dart';
@@ -10,11 +12,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   static const _heroBg = Color(0xFFe8f0e9);
   static const _accentBlue = Color(0xFF2563EB);
+
+  @override
+  void initState() {
+    super.initState();
+    // Uitstellen tot na de build-fase om FlutterError (setState/markNeedsBuild during build) te voorkomen.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      EnergyState().clearUnseenDashboardUpdates();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,8 +64,8 @@ class HomeScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      SvgPicture.asset(
-                        'assets/images/logo-roady.svg',
+                      Image.asset(
+                        'assets/images/logo-roady.png',
                         height: 32,
                         fit: BoxFit.contain,
                         errorBuilder: (_, __, ___) => const Text('Roady',
@@ -88,59 +104,140 @@ class HomeScreen extends StatelessWidget {
 
                   const SizedBox(height: 32),
 
-                  // Fuel Meter Section (Now RPM Gauge style)
-                  const FuelMeterCard(),
-
-                  const SizedBox(height: 32),
-
-                  Text(
-                    'Verder leren',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Navigation Grid
+                  // Op web: meter + knoppen in 1000px brede container, gecentreerd
                   Expanded(
-                    child: GridView.count(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 16,
-                      childAspectRatio: 1.1,
-                      children: [
-                        _HomeNavCard(
-                          title: 'Theorie',
-                          icon: Icons.menu_book,
-                          color: Colors.blue.shade100,
-                          iconColor: _accentBlue,
-                          onTap: () => context.go('/dashboard?tab=0'),
-                        ),
-                        _HomeNavCard(
-                          title: 'Oefenvragen',
-                          icon: Icons.quiz,
-                          color: Colors.teal.shade100,
-                          iconColor: Colors.teal.shade800,
-                          onTap: () => context.go('/dashboard?tab=1'),
-                        ),
-                        _HomeNavCard(
-                          title: 'Examen',
-                          icon: Icons.school,
-                          color: Colors.orange.shade100,
-                          iconColor: Colors.orange.shade800,
-                          onTap: () => context.go('/dashboard?tab=2'),
-                        ),
-                        _HomeNavCard(
-                          title: 'AI Coach',
-                          icon: Icons.smart_toy,
-                          color: Colors.purple.shade100,
-                          iconColor: Colors.purple.shade800,
-                          onTap: () => context.go('/dashboard?tab=3'),
-                        ),
-                      ],
-                    ),
+                    child: kIsWeb
+                        ? Center(
+                            child: LayoutBuilder(
+                              builder: (context, constraints) {
+                                return SizedBox(
+                                  width: 1000,
+                                  height: constraints.maxHeight,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      const FuelMeterCard(),
+                                      const SizedBox(height: 32),
+                                      Text(
+                                        'Verder leren',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleLarge
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black87,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Expanded(
+                                        child: GridView.count(
+                                          crossAxisCount: 2,
+                                          mainAxisSpacing: 20,
+                                          crossAxisSpacing: 20,
+                                          childAspectRatio: 1.05,
+                                          children: [
+                                            _HomeNavCard(
+                                              title: 'Theorie',
+                                              icon: Icons.menu_book,
+                                              color: Colors.blue.shade100,
+                                              iconColor: _accentBlue,
+                                              onTap: () =>
+                                                  context.go('/dashboard?tab=0'),
+                                            ),
+                                            _HomeNavCard(
+                                              title: 'Oefenvragen',
+                                              icon: Icons.quiz,
+                                              color: Colors.teal.shade100,
+                                              iconColor: Colors.teal.shade800,
+                                              onTap: () =>
+                                                  context.go('/dashboard?tab=1'),
+                                            ),
+                                            _HomeNavCard(
+                                              title: 'Examen',
+                                              icon: Icons.school,
+                                              color: Colors.orange.shade100,
+                                              iconColor: Colors.orange.shade800,
+                                              onTap: () =>
+                                                  context.go('/dashboard?tab=2'),
+                                            ),
+                                            _HomeNavCard(
+                                              title: 'AI Coach',
+                                              icon: Icons.smart_toy,
+                                              color: Colors.purple.shade100,
+                                              iconColor: Colors.purple.shade800,
+                                              onTap: () =>
+                                                  context.go('/dashboard?tab=3'),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          )
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const FuelMeterCard(),
+                              const SizedBox(height: 32),
+                              Text(
+                                'Verder leren',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
+                                    ),
+                              ),
+                              const SizedBox(height: 16),
+                              Expanded(
+                                child: GridView.count(
+                                  crossAxisCount: 2,
+                                  mainAxisSpacing: 16,
+                                  crossAxisSpacing: 16,
+                                  childAspectRatio: 1.1,
+                                  children: [
+                                    _HomeNavCard(
+                                      title: 'Theorie',
+                                      icon: Icons.menu_book,
+                                      color: Colors.blue.shade100,
+                                      iconColor: _accentBlue,
+                                      onTap: () =>
+                                          context.go('/dashboard?tab=0'),
+                                    ),
+                                    _HomeNavCard(
+                                      title: 'Oefenvragen',
+                                      icon: Icons.quiz,
+                                      color: Colors.teal.shade100,
+                                      iconColor: Colors.teal.shade800,
+                                      onTap: () =>
+                                          context.go('/dashboard?tab=1'),
+                                    ),
+                                    _HomeNavCard(
+                                      title: 'Examen',
+                                      icon: Icons.school,
+                                      color: Colors.orange.shade100,
+                                      iconColor: Colors.orange.shade800,
+                                      onTap: () =>
+                                          context.go('/dashboard?tab=2'),
+                                    ),
+                                    _HomeNavCard(
+                                      title: 'AI Coach',
+                                      icon: Icons.smart_toy,
+                                      color: Colors.purple.shade100,
+                                      iconColor: Colors.purple.shade800,
+                                      onTap: () =>
+                                          context.go('/dashboard?tab=3'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                   ),
                 ],
               ),
@@ -328,123 +425,168 @@ class FuelMeterCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = EnergyState();
-    final listenable =
-        Listenable.merge([state.progress, state.completedLessons]);
+    final listenable = Listenable.merge([
+      state.progress,
+      state.completedLessons,
+      state.passedExamsCount,
+    ]);
+    final isWeb = kIsWeb;
+    final padding = isWeb ? 32.0 : 20.0;
+    final gaugeSize = isWeb ? 400.0 : 220.0;
+    final titleFontSize = isWeb ? 20.0 : 16.0;
+    final radius = isWeb ? 24.0 : 20.0;
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(padding),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(radius),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(0.2),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Column(
+      child: Stack(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Column(
             children: [
-              const Text(
-                'Examengereedheid',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Examengereedheid',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: titleFontSize,
+                    ),
+                  ),
+                  _AnimatedStatusBadge(
+                    listenable: listenable,
+                    state: state,
+                  ),
+                ],
               ),
-              _AnimatedStatusBadge(
-                listenable: listenable,
-                state: state,
+              SizedBox(height: isWeb ? 24 : 20),
+
+              // RPM / Energy Gauge (op web groter bij breed scherm)
+              AnimatedBuilder(
+                animation: listenable,
+                builder: (context, _) {
+                  final stored = state.progress.value;
+                  final fromCompleted = _progressFromCompletedLessons(
+                      state.completedLessons.value,
+                      TheoryRepository.instance.getChaptersCachedSync());
+                  final effective =
+                      fromCompleted > stored ? fromCompleted : stored;
+                  if (fromCompleted > stored) {
+                    state.repairProgress(fromCompleted);
+                  }
+                  return EnergyGauge(
+                    percentage: effective,
+                    size: gaugeSize,
+                  );
+                },
+              ),
+              SizedBox(height: isWeb ? 32 : 28),
+              AnimatedBuilder(
+                animation: listenable,
+                builder: (context, _) {
+                  final stored = state.progress.value;
+                  final fromCompleted = _progressFromCompletedLessons(
+                      state.completedLessons.value,
+                      TheoryRepository.instance.getChaptersCachedSync());
+                  final effective =
+                      fromCompleted > stored ? fromCompleted : stored;
+
+                  return Text(
+                    effective >= 1.0
+                        ? 'Herhalen en oefenen maar!'
+                        : 'Voltooi meer cursussen om je tank te vullen!',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[700],
+                      fontStyle: FontStyle.italic,
+                    ),
+                    textAlign: TextAlign.center,
+                  );
+                },
+              ),
+              const SizedBox(height: 8),
+              TextButton.icon(
+                onPressed: () async {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: const Text('Voortgang resetten?'),
+                      content: const Text(
+                        'Alle voltooide lessen en je tank worden geleegd. Je kunt daarna alles opnieuw doornemen.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(ctx).pop(false),
+                          child: const Text('Annuleren'),
+                        ),
+                        FilledButton(
+                          onPressed: () => Navigator.of(ctx).pop(true),
+                          child: const Text('Reset'),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirmed == true && context.mounted) {
+                    await EnergyState().resetProgress();
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                              'Voortgang gereset. Je kunt opnieuw beginnen.'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  }
+                },
+                icon: const Icon(Icons.refresh, size: 18, color: Colors.grey),
+                label: const Text(
+                  'Reset voortgang',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
-
-          // RPM / Energy Gauge (zelfde effective progress)
-          AnimatedBuilder(
-            animation: listenable,
-            builder: (context, _) {
-              final stored = state.progress.value;
-              final fromCompleted = _progressFromCompletedLessons(
-                  state.completedLessons.value,
-                  TheoryRepository.instance.getChaptersCachedSync());
-              final effective = fromCompleted > stored ? fromCompleted : stored;
-              if (fromCompleted > stored) {
-                state.repairProgress(fromCompleted);
-              }
-              return EnergyGauge(
-                percentage: effective,
-                size: 220,
-              );
-            },
-          ),
-
-          const SizedBox(height: 28),
-          AnimatedBuilder(
-            animation: listenable,
-            builder: (context, _) {
-              final stored = state.progress.value;
-              final fromCompleted = _progressFromCompletedLessons(
-                  state.completedLessons.value,
-                  TheoryRepository.instance.getChaptersCachedSync());
-              final effective = fromCompleted > stored ? fromCompleted : stored;
-
-              return Text(
-                effective >= 1.0
-                    ? 'Herhalen en oefenen maar!'
-                    : 'Voltooi meer cursussen om je tank te vullen!',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[700],
-                  fontStyle: FontStyle.italic,
-                ),
-                textAlign: TextAlign.center,
-              );
-            },
-          ),
-          const SizedBox(height: 8),
-          TextButton.icon(
-            onPressed: () async {
-              final confirmed = await showDialog<bool>(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text('Voortgang resetten?'),
-                  content: const Text(
-                    'Alle voltooide lessen en je tank worden geleegd. Je kunt daarna alles opnieuw doornemen.',
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(ctx).pop(false),
-                      child: const Text('Annuleren'),
+          // Beker linksonder op de fuel-meterkaart
+          Positioned(
+            left: 0,
+            bottom: 0,
+            child: AnimatedBuilder(
+              animation: state.passedExamsCount,
+              builder: (context, _) {
+                final count = state.passedExamsCount.value;
+                if (count == 0) return const SizedBox.shrink();
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.emoji_events,
+                      size: kIsWeb ? 32 : 28,
+                      color: Colors.amber.shade700,
                     ),
-                    FilledButton(
-                      onPressed: () => Navigator.of(ctx).pop(true),
-                      child: const Text('Reset'),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$count',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: Colors.amber.shade800,
+                      ),
                     ),
                   ],
-                ),
-              );
-              if (confirmed == true && context.mounted) {
-                await EnergyState().resetProgress();
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content:
-                          Text('Voortgang gereset. Je kunt opnieuw beginnen.'),
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                }
-              }
-            },
-            icon: const Icon(Icons.refresh, size: 18, color: Colors.grey),
-            label: const Text(
-              'Reset voortgang',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
+                );
+              },
             ),
           ),
         ],
@@ -470,35 +612,43 @@ class _HomeNavCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isWeb = kIsWeb;
+    // Op web: knoppen 1000px breed totaal, 2 kolommen → grote kaartjes met groter icoon
+    final iconSize = isWeb ? 48.0 : 32.0;
+    final iconPadding = isWeb ? 20.0 : 16.0;
+    final titleGap = isWeb ? 12.0 : 12.0;
+    final fontSize = isWeb ? 18.0 : 16.0;
+    final radius = isWeb ? 20.0 : 20.0;
+
     return Material(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(radius),
       elevation: 6,
       shadowColor: Colors.black.withOpacity(0.2),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(radius),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(iconPadding),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.3),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 icon,
-                size: 32,
+                size: iconSize,
                 color: iconColor,
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: titleGap),
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 16,
+                fontSize: fontSize,
               ),
             ),
           ],

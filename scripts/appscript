@@ -191,6 +191,158 @@ function importSheetToFirestore() {
     Logger.log('Import klaar: ' + updated + ' hoofdstukken bijgewerkt.');
 }
 
+// ==================== OEFENVRAGEN (QUIZ QUESTIONS) ====================
+
+/**
+ * Exporteert de Firestore-collectie quizQuestions naar het actieve blad.
+ * Kolommen: id, text, imageUrl, options (antwoorden gescheiden door nieuwe regel), correctOptionIndex, explanation, type, category, pointsDeductionIfWrong, useInExam
+ */
+function exportQuizQuestionsToSheet() {
+    Logger.log('Oefenvragen export: start...');
+    var projectId = getProperty('PROJECT_ID');
+    var clientEmail = getProperty('CLIENT_EMAIL');
+    var privateKey = getProperty('PRIVATE_KEY').replace(/\\n/g, '\n');
+    var token = getAccessToken(clientEmail, privateKey);
+    var url = 'https://firestore.googleapis.com/v1/projects/' + projectId + '/databases/(default)/documents/quizQuestions';
+    var options = {
+        method: 'get',
+        headers: { 'Authorization': 'Bearer ' + token },
+        muteHttpExceptions: true,
+        timeout: 30
+    };
+    var response = UrlFetchApp.fetch(url, options);
+    if (response.getResponseCode() !== 200) {
+        SpreadsheetApp.getUi().alert('Fout bij ophalen oefenvragen: ' + response.getContentText());
+        return;
+    }
+    var data = JSON.parse(response.getContentText());
+    var documents = data.documents || [];
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    sheet.clear();
+    var headers = ['id', 'text', 'imageUrl', 'options', 'correctOptionIndex', 'explanation', 'type', 'category', 'pointsDeductionIfWrong', 'useInExam'];
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    if (documents.length === 0) {
+        sheet.getRange(2, 1).setValue('Geen oefenvragen in Firestore.');
+        Logger.log('Geen oefenvragen gevonden.');
+        return;
+    }
+    var rows = [];
+    documents.forEach(function (doc) {
+        var fields = doc.fields || {};
+        var docId = doc.name.split('/').pop();
+        var id = getStringValue(fields.id) || docId;
+        var text = getStringValue(fields.text) || '';
+        var imageUrl = getStringValue(fields.imageUrl) || '';
+        var optionsArr = getArrayValue(fields.options);
+        var optionsStr = optionsArr.map(function (v) { return getStringValue(v); }).join('\n');
+        var correctIdx = (fields.correctOptionIndex && fields.correctOptionIndex.integerValue !== undefined)
+            ? parseInt(fields.correctOptionIndex.integerValue, 10) : 0;
+        var explanation = getStringValue(fields.explanation) || '';
+        var type = getStringValue(fields.type) || 'multipleChoice';
+        var category = getStringValue(fields.category) || 'general';
+        var pointsDeduction = (fields.pointsDeductionIfWrong && fields.pointsDeductionIfWrong.integerValue !== undefined)
+            ? parseInt(fields.pointsDeductionIfWrong.integerValue, 10) : 1;
+        var useInExam = (fields.useInExam && fields.useInExam.integerValue !== undefined)
+            ? parseInt(fields.useInExam.integerValue, 10) : 0;
+        rows.push([id, text, imageUrl, optionsStr, correctIdx, explanation, type, category, pointsDeduction, useInExam]);
+    });
+    if (rows.length) sheet.getRange(2, 1, rows.length + 1, headers.length).setValues(rows);
+    sheet.autoResizeColumns(1, headers.length);
+    Logger.log('Oefenvragen export klaar: ' + rows.length + ' vragen.');
+}
+
+/**
+ * Importeert oefenvragen van het actieve blad naar Firestore (quizQuestions).
+ * Verwacht dezelfde kolommen als export. id is verplicht (gebruikt als document-ID).
+ */
+function importQuizQuestionsFromSheet() {
+    Logger.log('Oefenvragen import: start...');
+    var projectId = getProperty('PROJECT_ID');
+    var clientEmail = getProperty('CLIENT_EMAIL');
+    var privateKey = getProperty('PRIVATE_KEY').replace(/\\n/g, '\n');
+    var token = getAccessToken(clientEmail, privateKey);
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var data = sheet.getDataRange().getValues();
+    if (data.length < 2) {
+        SpreadsheetApp.getUi().alert('Geen data: minstens een headerrij en één datarij nodig.');
+        return;
+    }
+    var headers = data[0].map(function (h) { return String(h).toLowerCase().replace(/\s/g, '_'); });
+    var col = function (name) {
+        var i = headers.indexOf(name);
+        return i >= 0 ? i : headers.indexOf(name.replace(/_/g, ''));
+    };
+    var idCol = col('id'), textCol = col('text'), imageUrlCol = col('imageurl'), optionsCol = col('options');
+    var correctIdxCol = col('correctoptionindex'), explanationCol = col('explanation');
+    var typeCol = col('type'), categoryCol = col('category');
+    var pointsCol = col('pointsdeductionifwrong'), useInExamCol = col('useinexam');
+    if (idCol < 0 || textCol < 0) {
+        SpreadsheetApp.getUi().alert('Kolommen id en text zijn verplicht.');
+        return;
+    }
+    var baseUrl = 'https://firestore.googleapis.com/v1/projects/' + projectId + '/databases/(default)/documents/quizQuestions';
+    var updateMask = 'updateMask.fieldPaths=id&updateMask.fieldPaths=text&updateMask.fieldPaths=imageUrl&updateMask.fieldPaths=options&updateMask.fieldPaths=correctOptionIndex&updateMask.fieldPaths=explanation&updateMask.fieldPaths=type&updateMask.fieldPaths=category&updateMask.fieldPaths=pointsDeductionIfWrong&updateMask.fieldPaths=useInExam';
+    var imported = 0;
+    for (var r = 1; r < data.length; r++) {
+        var row = data[r];
+        var id = String(row[idCol] || '').trim();
+        if (!id) continue;
+        var text = row[textCol] != null ? String(row[textCol]).trim() : '';
+        var imageUrl = imageUrlCol >= 0 && row[imageUrlCol] != null ? String(row[imageUrlCol]).trim() : '';
+        var optionsStr = optionsCol >= 0 && row[optionsCol] != null ? String(row[optionsCol]) : '';
+        var optionsArr = optionsStr.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+        var correctIdx = correctIdxCol >= 0 && row[correctIdxCol] !== '' && row[correctIdxCol] != null
+            ? parseInt(row[correctIdxCol], 10) : 0;
+        var explanation = explanationCol >= 0 && row[explanationCol] != null ? String(row[explanationCol]).trim() : '';
+        var type = typeCol >= 0 && row[typeCol] != null ? String(row[typeCol]).trim() || 'multipleChoice' : 'multipleChoice';
+        var category = categoryCol >= 0 && row[categoryCol] != null ? String(row[categoryCol]).trim() || 'general' : 'general';
+        var pointsDeduction = pointsCol >= 0 && row[pointsCol] !== '' && row[pointsCol] != null
+            ? parseInt(row[pointsCol], 10) : 1;
+        var useInExam = useInExamCol >= 0 && row[useInExamCol] !== '' && row[useInExamCol] != null
+            ? parseInt(row[useInExamCol], 10) : 0;
+        var optionValues = optionsArr.map(function (o) { return { stringValue: o }; });
+        var payload = {
+            fields: {
+                id: { stringValue: id },
+                text: { stringValue: text },
+                imageUrl: { stringValue: imageUrl },
+                options: { arrayValue: { values: optionValues } },
+                correctOptionIndex: { integerValue: String(correctIdx) },
+                explanation: { stringValue: explanation },
+                type: { stringValue: type },
+                category: { stringValue: category },
+                pointsDeductionIfWrong: { integerValue: String(pointsDeduction) },
+                useInExam: { integerValue: String(useInExam) }
+            }
+        };
+        var docUrl = baseUrl + '/' + encodeURIComponent(id) + '?' + updateMask;
+        var resp = UrlFetchApp.fetch(docUrl, {
+            method: 'patch',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            payload: JSON.stringify(payload),
+            muteHttpExceptions: true,
+            timeout: 30
+        });
+        if (resp.getResponseCode() >= 200 && resp.getResponseCode() < 300) imported++;
+        else Logger.log('PATCH ' + id + ': ' + resp.getResponseCode() + ' ' + resp.getContentText());
+    }
+    Logger.log('Oefenvragen import klaar: ' + imported + ' vragen geïmporteerd.');
+}
+
+/**
+ * Toont een custom menu bij het openen van het spreadsheet.
+ */
+function onOpen() {
+    SpreadsheetApp.getUi()
+        .createMenu('Roady')
+        .addItem('Theorie: Export naar blad', 'exportFirestoreToSheet')
+        .addItem('Theorie: Importeer van blad', 'importSheetToFirestore')
+        .addSeparator()
+        .addItem('Oefenvragen: Export naar blad', 'exportQuizQuestionsToSheet')
+        .addItem('Oefenvragen: Importeer van blad', 'importQuizQuestionsFromSheet')
+        .addToUi();
+}
+
 function getProperty(key) {
     var v = PropertiesService.getScriptProperties().getProperty(key);
     if (!v) throw new Error('Script Property ontbreekt: ' + key + '. Zet PROJECT_ID, CLIENT_EMAIL, PRIVATE_KEY in Extensies > Apps Script > Scripteigenschappen.');

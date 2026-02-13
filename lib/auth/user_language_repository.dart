@@ -143,6 +143,21 @@ class UserLanguageRepository {
     ).catchError((_) {});
   }
 
+  /// Bepaalt de eerste ontbrekende onboarding-stap voor [uid].
+  /// Retourneert het pad waar de gebruiker naartoe moet.
+  Future<String> getNextOnboardingRoute(String uid) async {
+    final lang = await getLanguageOrFetch(uid);
+    if (lang == null || lang.isEmpty) return '/language';
+
+    final license = await getLicenseType(uid);
+    if (license == null || license.isEmpty) return '/license';
+
+    final region = await getExamRegion(uid);
+    if (region == null || region.isEmpty) return '/region';
+
+    return '/home';
+  }
+
   Future<String?> _getCachedLicenseType(String uid) async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('$_licenseTypePrefKeyPrefix$uid');

@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../auth/user_language_repository.dart';
+import '../widgets/onboarding_page_indicator.dart';
 
 class ExamRegionSelectionScreen extends StatelessWidget {
   const ExamRegionSelectionScreen({super.key});
@@ -35,12 +36,24 @@ class ExamRegionSelectionScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 32),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back_rounded),
+                      onPressed: () => context.go('/license'),
+                      color: _accentBlue,
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.white.withOpacity(0.8),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   Center(
-                    child: SvgPicture.asset(
-                      'assets/images/logo-roady.svg',
+                    child: Image.asset(
+                      'assets/images/logo-roady.png',
                       height: 40,
-                      placeholderBuilder: (_) => const Text('Roady',
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) => const Text('Roady',
                           style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
@@ -54,14 +67,6 @@ class ExamRegionSelectionScreen extends StatelessWidget {
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: Colors.black87,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Selecteer uw regio',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Colors.grey[600],
                         ),
                   ),
                   const SizedBox(height: 48),
@@ -96,6 +101,13 @@ class ExamRegionSelectionScreen extends StatelessWidget {
                     onTap: () {},
                   ),
                   const Spacer(),
+                  const Center(
+                    child: OnboardingPageIndicator(
+                      currentIndex: 2,
+                      totalSteps: 4,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 12),
@@ -107,13 +119,13 @@ class ExamRegionSelectionScreen extends StatelessWidget {
                     child: Row(
                       children: [
                         Icon(Icons.info_outline,
-                            size: 20, color: Colors.grey[600]),
+                            size: 20, color: Colors.grey[900]),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             'Brussel en Wallonië komen binnenkort beschikbaar!',
                             style: TextStyle(
-                              color: Colors.grey[700],
+                              color: Colors.grey[900],
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                             ),
@@ -195,7 +207,7 @@ class _RegionOptionCard extends StatelessWidget {
                       subtitle,
                       style: TextStyle(
                         fontSize: 14,
-                        color: isActive ? Colors.grey[600] : Colors.grey[400],
+                        color: isActive ? Colors.grey[900] : Colors.grey[400],
                       ),
                     ),
                   ],
@@ -209,7 +221,8 @@ class _RegionOptionCard extends StatelessWidget {
                 )
               else
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.grey[200],
                     borderRadius: BorderRadius.circular(8),

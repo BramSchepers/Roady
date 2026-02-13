@@ -101,9 +101,10 @@ class _SplashScreenState extends State<SplashScreen> {
                   ),
                   const SizedBox(height: 16),
                   // Logo
-                  SvgPicture.asset(
-                    'assets/images/logo-roady.svg',
+                  Image.asset(
+                    'assets/images/logo-roady.png',
                     height: 50,
+                    fit: BoxFit.contain,
                   ),
                   const SizedBox(height: 32),
                   // Slogan

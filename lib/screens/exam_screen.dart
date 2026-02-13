@@ -1,12 +1,96 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../models/quiz_models.dart';
 
-class ExamScreen extends StatelessWidget {
+class ExamScreen extends StatefulWidget {
   const ExamScreen({super.key});
 
   @override
+  State<ExamScreen> createState() => _ExamScreenState();
+}
+
+class _ExamScreenState extends State<ExamScreen> {
+  static const _accentBlue = Color(0xFF2563EB);
+  bool _ttsEnabled = true;
+
+  @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Examen Pagina', style: TextStyle(fontSize: 24)),
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 24),
+              Icon(Icons.school, size: 56, color: _accentBlue),
+              const SizedBox(height: 16),
+              Text(
+                'Theorie-examen',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '50 vragen · zoals het echte examen in Vlaanderen. 15 seconden per vraag.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.grey[700],
+                    ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.volume_up, size: 22, color: Colors.grey[700]),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Vraag voorlezen aanzetten voor het echte examen-gevoel',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Colors.black87,
+                            ),
+                      ),
+                    ),
+                    Switch(
+                      value: _ttsEnabled,
+                      onChanged: (v) => setState(() => _ttsEnabled = v),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 48),
+              FilledButton(
+                onPressed: () => context.push('/quiz', extra: {
+                  'mode': QuizMode.exam,
+                  'ttsEnabled': _ttsEnabled,
+                }),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: _accentBlue,
+                ),
+                child: const Text('Examen starten'),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => context.push('/exam-history'),
+                child: const Text('Examen historiek'),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

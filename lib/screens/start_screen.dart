@@ -30,30 +30,10 @@ class _StartScreenState extends State<StartScreen> {
       return;
     }
 
-    final language =
-        await UserLanguageRepository.instance.getLanguageOrFetch(user.uid);
+    final nextRoute =
+        await UserLanguageRepository.instance.getNextOnboardingRoute(user.uid);
     if (!mounted) return;
-    if (language == null || language.isEmpty) {
-      context.go('/language');
-      return;
-    }
-
-    final licenseType =
-        await UserLanguageRepository.instance.getLicenseType(user.uid);
-    if (!mounted) return;
-    if (licenseType == null || licenseType.isEmpty) {
-      context.go('/license');
-      return;
-    }
-
-    final examRegion =
-        await UserLanguageRepository.instance.getExamRegion(user.uid);
-    if (!mounted) return;
-    if (examRegion == null || examRegion.isEmpty) {
-      context.go('/region');
-    } else {
-      context.go('/home');
-    }
+    context.go(nextRoute);
   }
 
   @override
@@ -80,10 +60,11 @@ class _StartScreenState extends State<StartScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SvgPicture.asset(
-                    'assets/images/logo-roady.svg',
+                  Image.asset(
+                    'assets/images/logo-roady.png',
                     height: 48,
-                    placeholderBuilder: (_) => const Text('Roady',
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => const Text('Roady',
                         style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -102,7 +83,7 @@ class _StartScreenState extends State<StartScreen> {
                   Text(
                     'Bezig met laden...',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Colors.grey[600],
+                          color: Colors.grey[900],
                         ),
                   ),
                 ],

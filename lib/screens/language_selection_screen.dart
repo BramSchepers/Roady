@@ -4,12 +4,17 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../auth/user_language_repository.dart';
+import '../widgets/onboarding_page_indicator.dart';
 
 class LanguageSelectionScreen extends StatefulWidget {
-  const LanguageSelectionScreen({super.key});
+  const LanguageSelectionScreen({super.key, this.backNavigation = false});
+
+  /// True als de gebruiker via de terug-knop hier kwam (niet doorsturen naar volgende stap).
+  final bool backNavigation;
 
   @override
-  State<LanguageSelectionScreen> createState() => _LanguageSelectionScreenState();
+  State<LanguageSelectionScreen> createState() =>
+      _LanguageSelectionScreenState();
 }
 
 class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
@@ -24,6 +29,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
 
   Future<void> _checkAndNavigate() async {
     if (!mounted) return;
+    if (widget.backNavigation) return;
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       if (!mounted) return;
@@ -63,12 +69,24 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 32),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back_rounded),
+                      onPressed: () => context.go('/auth?back=1'),
+                      color: _accentBlue,
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.white.withOpacity(0.8),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   Center(
-                    child: SvgPicture.asset(
-                      'assets/images/logo-roady.svg',
+                    child: Image.asset(
+                      'assets/images/logo-roady.png',
                       height: 40,
-                      placeholderBuilder: (_) => const Text('Roady',
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) => const Text('Roady',
                           style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
@@ -82,25 +100,22 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold, color: Colors.black87),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Momenteel beschikbaar in het Nederlands',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.grey[600]),
-                  ),
                   const SizedBox(height: 48),
                   _LanguageOptionCard(
                     title: 'Nederlands',
                     subtitle: 'Dutch',
                     icon: Icons.language,
+                    flagEmoji: '🇳🇱',
                     isActive: true,
                     onTap: () async {
                       final uid = FirebaseAuth.instance.currentUser?.uid;
                       if (uid == null) return;
                       await UserLanguageRepository.instance
                           .setLanguage(uid, 'nl');
-                      if (context.mounted) context.go('/start');
+                      if (!context.mounted) return;
+                      final nextRoute = await UserLanguageRepository.instance
+                          .getNextOnboardingRoute(uid);
+                      if (context.mounted) context.go(nextRoute);
                     },
                   ),
                   const SizedBox(height: 16),
@@ -108,6 +123,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                     title: 'Français',
                     subtitle: 'Frans',
                     icon: Icons.language,
+                    flagEmoji: '🇫🇷',
                     isActive: false,
                     onTap: () {},
                   ),
@@ -116,10 +132,18 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                     title: 'English',
                     subtitle: 'Engels',
                     icon: Icons.language,
+                    flagEmoji: '🇬🇧',
                     isActive: false,
                     onTap: () {},
                   ),
                   const Spacer(),
+                  const Center(
+                    child: OnboardingPageIndicator(
+                      currentIndex: 0,
+                      totalSteps: 4,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 12),
@@ -131,13 +155,13 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                     child: Row(
                       children: [
                         Icon(Icons.info_outline,
-                            size: 20, color: Colors.grey[600]),
+                            size: 20, color: Colors.grey[900]),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             'Frans en Engels komen binnenkort beschikbaar!',
                             style: TextStyle(
-                              color: Colors.grey[700],
+                              color: Colors.grey[900],
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                             ),
@@ -161,6 +185,7 @@ class _LanguageOptionCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final IconData icon;
+  final String? flagEmoji;
   final bool isActive;
   final VoidCallback onTap;
 
@@ -168,6 +193,7 @@ class _LanguageOptionCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.icon,
+    this.flagEmoji,
     required this.isActive,
     required this.onTap,
   });
@@ -195,11 +221,17 @@ class _LanguageOptionCard extends StatelessWidget {
                       : Colors.grey[100],
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  icon,
-                  color: isActive ? accentColor : Colors.grey[400],
-                  size: 28,
-                ),
+                child: flagEmoji != null
+                    ? Text(
+                        flagEmoji!,
+                        style: const TextStyle(fontSize: 28),
+                        textAlign: TextAlign.center,
+                      )
+                    : Icon(
+                        icon,
+                        color: isActive ? accentColor : Colors.grey[400],
+                        size: 28,
+                      ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -219,7 +251,7 @@ class _LanguageOptionCard extends StatelessWidget {
                       subtitle,
                       style: TextStyle(
                         fontSize: 14,
-                        color: isActive ? Colors.grey[600] : Colors.grey[400],
+                        color: isActive ? Colors.grey[900] : Colors.grey[400],
                       ),
                     ),
                   ],
