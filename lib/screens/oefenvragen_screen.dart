@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../models/quiz_models.dart';
 
@@ -88,7 +87,6 @@ class _QuizSelectionCard extends StatelessWidget {
   final String title;
   final String description;
   final IconData? icon;
-  final String? iconAsset;
   final Color color;
   final VoidCallback onTap;
 
@@ -96,7 +94,6 @@ class _QuizSelectionCard extends StatelessWidget {
     required this.title,
     required this.description,
     this.icon,
-    this.iconAsset,
     required this.color,
     required this.onTap,
   });
@@ -136,20 +133,11 @@ class _QuizSelectionCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   alignment: Alignment.center,
-                  child: iconAsset != null
-                      ? SvgPicture.asset(
-                          iconAsset!,
-                          width: 40,
-                          height: 40,
-                          fit: BoxFit.contain,
-                          placeholderBuilder: (_) => Icon(icon ?? Icons.traffic, color: color, size: 32),
-                          errorBuilder: (_, __, ___) => Icon(icon ?? Icons.traffic, color: color, size: 32),
-                        )
-                      : Icon(
-                          icon!,
-                          color: color,
-                          size: 32,
-                        ),
+                  child: Icon(
+                    icon ?? Icons.traffic,
+                    color: color,
+                    size: 32,
+                  ),
                 ),
                 const SizedBox(width: 20),
                 Expanded(

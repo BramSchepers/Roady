@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../models/theory_models.dart';
@@ -51,19 +52,20 @@ class _TheoryScreenState extends State<TheoryScreen> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          Positioned.fill(
-            child: Container(
-              color: Colors.white,
-              child: SvgPicture.asset(
-                'assets/illustrations/Background_hero.svg',
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-                placeholderBuilder: (_) => const SizedBox.shrink(),
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+          if (!kIsWeb)
+            Positioned.fill(
+              child: Container(
+                color: Colors.white,
+                child: SvgPicture.asset(
+                  'assets/illustrations/Background_hero.svg',
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                  placeholderBuilder: (_) => const SizedBox.shrink(),
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
               ),
             ),
-          ),
           SafeArea(
             child: Center(
               child: Padding(

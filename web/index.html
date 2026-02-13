@@ -27,11 +27,11 @@
     body {
       margin: 0;
       height: 100%;
-      background-color: #e8f0e9;
+      background-color: #ffffff;
     }
 
     canvas {
-      background-color: #e8f0e9 !important;
+      background-color: #ffffff !important;
     }
 
     #flutter_loading {
@@ -42,13 +42,14 @@
       align-items: center;
       justify-content: center;
       gap: 24px;
-      background-color: #e8f0e9;
+      background-color: #ffffff;
       z-index: 9999;
     }
 
     #flutter_loading img {
-      width: 120px;
-      height: 120px;
+      width: 200px;
+      height: 200px;
+      object-fit: contain;
     }
 
     #flutter_loading .spinner {
@@ -68,7 +69,7 @@
 
 <body>
   <div id="flutter_loading">
-    <img src="icons/Icon-512.png" alt="Roady" />
+    <img src="icons/loading.png" alt="Roady" />
     <div class="spinner"></div>
   </div>
   <script src="flutter_bootstrap.js" async></script>
