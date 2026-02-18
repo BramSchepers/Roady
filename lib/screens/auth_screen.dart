@@ -235,8 +235,7 @@ class _AuthScreenState extends State<AuthScreen> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          if (!kIsWeb)
-            Positioned.fill(
+          Positioned.fill(
               child: Container(
                 color: Colors.white,
                 child: SvgPicture.asset(
@@ -294,7 +293,7 @@ class _AuthScreenState extends State<AuthScreen> {
             Center(
               child: Image.asset(
                 'assets/images/logo-roady.png',
-                height: 44,
+                height: kIsWeb ? 40 : 44,
                 fit: BoxFit.contain,
                 errorBuilder: (_, __, ___) => const Text('Roady',
                     style: TextStyle(

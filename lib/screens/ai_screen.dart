@@ -1,4 +1,7 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../utils/onboarding_constants.dart';
 
 class AiScreen extends StatefulWidget {
   const AiScreen({super.key});
@@ -38,10 +41,9 @@ class _AiScreenState extends State<AiScreen> with SingleTickerProviderStateMixin
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
+    final content = SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
           children: [
             const SizedBox(height: 32),
             // Animated AI icon
@@ -147,7 +149,47 @@ class _AiScreenState extends State<AiScreen> with SingleTickerProviderStateMixin
             ),
           ],
         ),
-      ),
+    );
+
+    if (kIsWeb && MediaQuery.sizeOf(context).width >= kNarrowViewportMaxWidth) {
+      return Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: Container(
+                color: Colors.white,
+                child: SvgPicture.asset(
+                  'assets/illustrations/Background_hero.svg',
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                  placeholderBuilder: (_) => const SizedBox.shrink(),
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
+              ),
+            ),
+            SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: kWebContentMaxWidth),
+                    child: ColoredBox(
+                      color: Colors.white,
+                      child: content,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return Scaffold(
+      backgroundColor: kIsWeb ? Colors.white : Colors.transparent,
+      body: SafeArea(child: content),
     );
   }
 }

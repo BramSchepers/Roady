@@ -39,8 +39,9 @@ class _OfflineDownloadScreenState extends State<OfflineDownloadScreen> {
         }
 
         for (var lesson in chapter.lessons) {
-          if (lesson.imageUrl != null && lesson.imageUrl!.startsWith('http')) {
-            urlsToDownload.add(lesson.imageUrl!);
+          final imgUrl = lesson.effectiveImageUrl;
+          if (imgUrl != null && imgUrl.startsWith('http')) {
+            urlsToDownload.add(imgUrl);
           }
         }
       }
@@ -155,8 +156,7 @@ class _OfflineDownloadScreenState extends State<OfflineDownloadScreen> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          if (!kIsWeb)
-            Positioned.fill(
+          Positioned.fill(
               child: Container(
                 color: Colors.white,
                 child: SvgPicture.asset(
@@ -173,7 +173,7 @@ class _OfflineDownloadScreenState extends State<OfflineDownloadScreen> {
           SafeArea(
             child: Padding(
               padding: EdgeInsets.symmetric(
-                horizontal: onboardingHorizontalPadding,
+                horizontal: onboardingHorizontalPaddingFor(context),
                 vertical: 24.0,
               ),
               child: Column(

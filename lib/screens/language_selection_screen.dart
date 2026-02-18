@@ -56,8 +56,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          if (!kIsWeb)
-            Positioned.fill(
+          Positioned.fill(
               child: Container(
                 color: Colors.white,
                 child: SvgPicture.asset(
@@ -73,11 +72,20 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
           SafeArea(
             child: Padding(
               padding: EdgeInsets.symmetric(
-                horizontal: onboardingHorizontalPadding,
+                horizontal: onboardingHorizontalPaddingFor(context),
                 vertical: 24.0,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: (kIsWeb &&
+                            MediaQuery.sizeOf(context).width >=
+                                kNarrowViewportMaxWidth)
+                        ? kOnboardingWebContentMaxWidth
+                        : double.infinity,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Align(
                     alignment: Alignment.centerLeft,
@@ -94,7 +102,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                   Center(
                     child: Image.asset(
                       'assets/images/logo-roady.png',
-                      height: kIsWeb ? 34 : 40,
+                      height: 40,
                       fit: BoxFit.contain,
                       errorBuilder: (_, __, ___) => const Text('Roady',
                           style: TextStyle(
@@ -153,7 +161,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                   const Center(
                     child: OnboardingPageIndicator(
                       currentIndex: 0,
-                      totalSteps: 4,
+                      totalSteps: kIsWeb ? 3 : 4,
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -185,6 +193,8 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                   ),
                   const SizedBox(height: 16),
                 ],
+                  ),
+                ),
               ),
             ),
           ),

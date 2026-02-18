@@ -1,18 +1,18 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../models/quiz_models.dart';
+import '../utils/onboarding_constants.dart';
 
 class OefenvragenScreen extends StatelessWidget {
   const OefenvragenScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent, // Background provided by Dashboard
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
+    final content = SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 16),
@@ -77,8 +77,48 @@ class OefenvragenScreen extends StatelessWidget {
               ),
             ],
           ),
+    );
+
+    final isWideWeb = kIsWeb && MediaQuery.sizeOf(context).width >= kNarrowViewportMaxWidth;
+    if (isWideWeb) {
+      return Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: Container(
+                color: Colors.white,
+                child: SvgPicture.asset(
+                  'assets/illustrations/Background_hero.svg',
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                  placeholderBuilder: (_) => const SizedBox.shrink(),
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
+              ),
+            ),
+            SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: kWebContentMaxWidth),
+                    child: ColoredBox(
+                      color: Colors.white,
+                      child: content,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
-      ),
+      );
+    }
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: SafeArea(child: content),
     );
   }
 }

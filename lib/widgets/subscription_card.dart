@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
+import '../utils/onboarding_constants.dart';
+
 class SubscriptionCard extends StatelessWidget {
   final String title;
   final String price;
@@ -81,7 +83,7 @@ class SubscriptionCard extends StatelessWidget {
           kIsWeb
               ? Center(
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 400),
+                    constraints: const BoxConstraints(maxWidth: kWebButtonMaxWidth),
                     child: SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(

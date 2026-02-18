@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../models/theory_models.dart';
 import '../models/energy_state.dart';
@@ -55,6 +56,67 @@ class _ChapterAccordionState extends State<ChapterAccordion>
     return _completedCount() == widget.chapter.lessons.length;
   }
 
+  /// Hardcoded: icoon per hoofdstuk (op id). Fallback op titel voor chapter_00/openbare weg.
+  static IconData? _getChapterIcon(TheoryChapter chapter) {
+    final id = chapter.id.toLowerCase();
+    final titleNl = (chapter.title['nl'] ?? '').toLowerCase();
+
+    // Op id
+    switch (id) {
+      case 'chapter_00':
+        return Icons.menu_book_rounded;
+      case 'chapter_01':
+        return Icons.route_rounded;
+      case 'chapter_02':
+        return Icons.merge_type_rounded; // Rijstroken, busstrook, verdrijvingsvlak
+      case 'chapter_03':
+        return Icons.directions_bike_rounded; // Fietspad, oversteekplaats
+      case 'chapter_04':
+        return Icons.traffic_rounded; // Autosnelweg
+      case 'chapter_05':
+        return Icons.speed_rounded; // Autoweg, snelheid, verkeersborden
+      case 'chapter_06':
+        return Icons.home_work_rounded; // Bebouwde kom, zone, woonerf
+      case 'chapter_07':
+        return Icons.directions_walk_rounded; // Voetpad, oversteekplaats voetgangers
+      case 'chapter_08':
+        return Icons.drive_eta_rounded; // Bestuurders van motorvoertuigen
+      case 'chapter_09':
+        return Icons.build_circle_rounded; // M.T.M. en M.B.T. personenauto
+      case 'chapter_10':
+        return Icons.car_crash_rounded;
+      case 'chapter_11':
+        return Icons.warning_amber_rounded;
+      case 'chapter_12':
+        return Icons.lightbulb_rounded;
+      case 'chapter_13':
+        return Icons.electric_car_rounded;
+      case 'chapter_14':
+        return Icons.eco_rounded;
+      case 'chapter_15':
+        return Icons.assignment_rounded;
+    }
+
+    // Fallback op titel (oude/alternatieve documenten)
+    if (titleNl == 'inleiding' || id == 'chapter_00') return Icons.menu_book_rounded;
+    if (titleNl == 'openbare weg' || titleNl == 'de openbare weg') {
+      return Icons.route_rounded;
+    }
+    return Icons.menu_book_rounded; // default voor onbekende hoofdstukken
+  }
+
+  /// Grotere afmetingen voor hoofdstuk-knoppen alleen op web.
+  static double get _iconSize => kIsWeb ? 64 : 48;
+  static double get _iconInnerSize => kIsWeb ? 36 : 28;
+  static EdgeInsets get _headerPadding =>
+      kIsWeb ? const EdgeInsets.fromLTRB(24, 20, 24, 16) : const EdgeInsets.fromLTRB(16, 16, 16, 12);
+  static double get _titleFontSize => kIsWeb ? 22 : 18;
+  static double get _progressFontSize => kIsWeb ? 16 : 14;
+  static double get _expandIconSize => kIsWeb ? 32 : 28;
+  static double get _lessonFontSize => kIsWeb ? 17 : 16;
+  static double get _lessonIconSize => kIsWeb ? 24 : 22;
+  static double get _lessonArrowSize => kIsWeb ? 14 : 12;
+
   @override
   Widget build(BuildContext context) {
     final completed = _completedCount();
@@ -66,6 +128,9 @@ class _ChapterAccordionState extends State<ChapterAccordion>
       builder: (context, completedIds, _) {
         return AnimatedContainer(
           duration: const Duration(milliseconds: 250),
+          constraints: kIsWeb
+              ? const BoxConstraints(minHeight: 96)
+              : null,
           decoration: isComplete
               ? BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
@@ -111,26 +176,44 @@ class _ChapterAccordionState extends State<ChapterAccordion>
                             ]
                           : null,
                     ),
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                    padding: _headerPadding,
                     child: Row(
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(10),
-                          child: SizedBox(
-                            width: 48,
-                            height: 48,
-                            child: CommonImage(
-                              imageUrl: widget.chapter.imageUrl,
-                              fit: BoxFit.cover,
-                            ),
+                          child: Builder(
+                            builder: (context) {
+                              final chapterIcon =
+                                  _getChapterIcon(widget.chapter);
+                              return SizedBox(
+                                width: _iconSize,
+                                height: _iconSize,
+                                child: chapterIcon != null
+                                    ? Container(
+                                        color: Theme.of(context)
+                                            .primaryColor
+                                            .withOpacity(0.12),
+                                        child: Icon(
+                                          chapterIcon,
+                                          size: _iconInnerSize,
+                                          color:
+                                              Theme.of(context).primaryColor,
+                                        ),
+                                      )
+                                    : CommonImage(
+                                        imageUrl: widget.chapter.imageUrl,
+                                        fit: BoxFit.cover,
+                                      ),
+                              );
+                            },
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        SizedBox(width: kIsWeb ? 16 : 12),
                         Expanded(
                           child: Text(
                             widget.chapter.getTitle(widget.currentLang),
-                            style: const TextStyle(
-                              fontSize: 18,
+                            style: TextStyle(
+                              fontSize: _titleFontSize,
                               fontWeight: FontWeight.bold,
                               color: Colors.black87,
                             ),
@@ -139,7 +222,7 @@ class _ChapterAccordionState extends State<ChapterAccordion>
                         Text(
                           '$completed / $total',
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: _progressFontSize,
                             fontWeight: FontWeight.w600,
                             color: Colors.grey[700],
                           ),
@@ -151,7 +234,7 @@ class _ChapterAccordionState extends State<ChapterAccordion>
                           curve: Curves.easeInOutCubic,
                           child: Icon(
                             Icons.expand_more,
-                            size: 28,
+                            size: _expandIconSize,
                             color: Theme.of(context).primaryColor,
                           ),
                         ),
@@ -228,7 +311,7 @@ class _ChapterAccordionState extends State<ChapterAccordion>
                                       lessonDone
                                           ? Icons.check_circle
                                           : Icons.radio_button_unchecked,
-                                      size: 22,
+                                      size: _lessonIconSize,
                                       color: lessonDone
                                           ? Colors.green[600]
                                           : Colors.grey[400],
@@ -238,7 +321,7 @@ class _ChapterAccordionState extends State<ChapterAccordion>
                                       child: Text(
                                         lesson.getTitle(widget.currentLang),
                                         style: TextStyle(
-                                          fontSize: 15,
+                                          fontSize: _lessonFontSize,
                                           color: lessonDone
                                               ? Colors.grey[600]
                                               : Colors.black87,
@@ -250,7 +333,7 @@ class _ChapterAccordionState extends State<ChapterAccordion>
                                     ),
                                     Icon(
                                       Icons.arrow_forward_ios,
-                                      size: 12,
+                                      size: _lessonArrowSize,
                                       color: Colors.grey[400],
                                     ),
                                   ],

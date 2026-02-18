@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../auth/user_language_repository.dart';
 import '../auth/user_profile_prefs.dart';
+import '../utils/onboarding_constants.dart';
 import '../widgets/subscription_card.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -117,8 +118,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
-        child: Column(
-          children: [
+        child: Builder(
+          builder: (context) {
+            final content = Column(
+              children: [
             const SizedBox(height: 20),
             // Profile Picture Placeholder
             Container(
@@ -312,7 +315,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             kIsWeb
                 ? Center(
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 400),
+                      constraints: const BoxConstraints(maxWidth: kWebButtonMaxWidth),
                       child: SizedBox(
                         width: double.infinity,
                         child: OutlinedButton(
@@ -357,7 +360,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                   ),
-          ],
+              ],
+            );
+            return (kIsWeb && MediaQuery.sizeOf(context).width >= kNarrowViewportMaxWidth)
+                ? Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: kWebContentMaxWidth),
+                      child: content,
+                    ),
+                  )
+                : content;
+          },
         ),
       ),
     );
