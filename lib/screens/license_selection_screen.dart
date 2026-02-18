@@ -20,8 +20,7 @@ class LicenseSelectionScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          if (!kIsWeb)
-            Positioned.fill(
+          Positioned.fill(
               child: Container(
                 color: Colors.white,
                 child: SvgPicture.asset(
@@ -37,11 +36,20 @@ class LicenseSelectionScreen extends StatelessWidget {
           SafeArea(
             child: Padding(
               padding: EdgeInsets.symmetric(
-                horizontal: onboardingHorizontalPadding,
+                horizontal: onboardingHorizontalPaddingFor(context),
                 vertical: 24.0,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: (kIsWeb &&
+                            MediaQuery.sizeOf(context).width >=
+                                kNarrowViewportMaxWidth)
+                        ? kOnboardingWebContentMaxWidth
+                        : double.infinity,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Align(
                     alignment: Alignment.centerLeft,
@@ -114,7 +122,7 @@ class LicenseSelectionScreen extends StatelessWidget {
                   const Center(
                     child: OnboardingPageIndicator(
                       currentIndex: 1,
-                      totalSteps: 4,
+                      totalSteps: kIsWeb ? 3 : 4,
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -147,6 +155,8 @@ class LicenseSelectionScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                 ],
+                  ),
+                ),
               ),
             ),
           ),

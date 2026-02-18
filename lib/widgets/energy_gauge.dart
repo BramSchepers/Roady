@@ -148,7 +148,11 @@ class _EnergyGaugeState extends State<EnergyGauge>
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Icon(Icons.local_gas_station, color: statusColor, size: 28),
+                    Icon(
+                      Icons.local_gas_station,
+                      color: statusColor,
+                      size: (size / 220.0) * 28, // mee met gauge: groter op web
+                    ),
                     const SizedBox(height: 4),
                     Text(
                       '${(displayValue * 100).round().clamp(0, 100)}%',

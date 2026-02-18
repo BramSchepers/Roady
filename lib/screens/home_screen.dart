@@ -5,10 +5,12 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import '../models/energy_state.dart';
 import '../models/theory_models.dart';
 import '../repositories/theory_repository.dart';
+import '../utils/onboarding_constants.dart';
 import '../utils/progress_color.dart';
 import '../widgets/energy_gauge.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
@@ -23,6 +25,152 @@ class _HomeScreenState extends State<HomeScreen> {
   static const _heroBg = Color(0xFFe8f0e9);
   static const _accentBlue = Color(0xFF2563EB);
 
+  static const _webNavIconSize = 32.0;
+  static const _webNavFontSize = 20.0;
+  static const _webNavTextColor = Color(0xFF282828);
+  static final _tealColor = Colors.teal.shade800;
+  static final _orangeColor = Colors.orange.shade800;
+  static final _purpleColor = Colors.purple.shade800;
+
+  /// Icoon behoudt kleur (blauw/teal/oranje/paars), tekst altijd _webNavTextColor (#282828).
+  Widget _buildWebNavItem(IconData icon, String label, VoidCallback onTap,
+      {bool isSelected = false, Color? iconColor}) {
+    final iconClr = iconColor ?? _webNavTextColor;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: TextButton.icon(
+        icon: Icon(icon, size: _webNavIconSize, color: iconClr),
+        label: Text(label,
+            style: TextStyle(
+                fontSize: _webNavFontSize,
+                color: _webNavTextColor,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal)),
+        onPressed: onTap,
+        style: TextButton.styleFrom(
+          foregroundColor: _webNavTextColor,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        ),
+      ),
+    );
+  }
+
+  double _webNavSideMargin(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    return (width * 0.12).clamp(24.0, 200.0);
+  }
+
+  PreferredSizeWidget? _buildWebAppBar(BuildContext context) {
+    final sideMargin = _webNavSideMargin(context);
+    return AppBar(
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      systemOverlayStyle: SystemUiOverlayStyle.dark,
+      title: Padding(
+        padding: EdgeInsets.only(left: sideMargin),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            InkWell(
+              onTap: () => context.go('/home'),
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                child: Image.asset(
+                  'assets/images/logo-roady.png',
+                  height: 40,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const Text('Roady',
+                      style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: _accentBlue)),
+                ),
+              ),
+            ),
+            const SizedBox(width: 24),
+            _buildWebNavItem(
+              Icons.menu_book,
+              'Theorie',
+              () => context.go('/dashboard?tab=0'),
+              iconColor: _accentBlue,
+            ),
+            _buildWebNavItem(
+              Icons.quiz,
+              'Oefenvragen',
+              () => context.go('/dashboard?tab=1'),
+              iconColor: _tealColor,
+            ),
+            _buildWebNavItem(
+              Icons.school,
+              'Examen',
+              () => context.go('/dashboard?tab=2'),
+              iconColor: _orangeColor,
+            ),
+            _buildWebNavItem(
+              Icons.smart_toy,
+              'AI',
+              () => context.go('/dashboard?tab=3'),
+              iconColor: _purpleColor,
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        Padding(
+          padding: EdgeInsets.only(right: sideMargin),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextButton.icon(
+                icon: Icon(Icons.person,
+                    size: _webNavIconSize, color: _webNavTextColor),
+                label: Text('Profiel',
+                    style: TextStyle(
+                        fontSize: _webNavFontSize, color: _webNavTextColor)),
+                onPressed: () => context.push('/profile'),
+                style: TextButton.styleFrom(
+                  foregroundColor: _webNavTextColor,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+              ),
+              TextButton.icon(
+                icon: Icon(Icons.shopping_cart,
+                    size: _webNavIconSize, color: _webNavTextColor),
+                label: Text('Shop',
+                    style: TextStyle(
+                        fontSize: _webNavFontSize, color: _webNavTextColor)),
+                onPressed: () => context.push('/shop'),
+                style: TextButton.styleFrom(
+                  foregroundColor: _webNavTextColor,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+              ),
+              TextButton.icon(
+                icon: Icon(Icons.logout,
+                    size: _webNavIconSize, color: _webNavTextColor),
+                label: Text('Uitloggen',
+                    style: TextStyle(
+                        fontSize: _webNavFontSize, color: _webNavTextColor)),
+                onPressed: () async {
+                  await FirebaseAuth.instance.signOut();
+                  if (context.mounted) context.go('/auth?mode=login');
+                },
+                style: TextButton.styleFrom(
+                  foregroundColor: _webNavTextColor,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -36,88 +184,98 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: kIsWeb ? _buildWebAppBar(context) : null,
       body: Stack(
         children: [
-          // Op web: achtergrond wordt door main builder volle breedte getoond
-          if (!kIsWeb)
-            Positioned.fill(
-              child: Container(
-                color: Colors.white,
-                child: SvgPicture.asset(
-                  'assets/illustrations/Background_hero.svg',
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                  placeholderBuilder: (_) => const SizedBox.shrink(),
-                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                ),
-              ),
+          Positioned.fill(
+            child: SvgPicture.asset(
+              'assets/illustrations/Background_hero.svg',
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+              placeholderBuilder: (_) => const ColoredBox(color: Colors.white),
+              errorBuilder: (_, __, ___) =>
+                  const ColoredBox(color: Colors.white),
             ),
-
+          ),
           SafeArea(
             child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              padding: () {
+                final width = MediaQuery.sizeOf(context).width;
+                final useWebDesktop =
+                    kIsWeb && width >= kNarrowViewportMaxWidth;
+                if (!useWebDesktop) {
+                  return const EdgeInsets.fromLTRB(24.0, 16.0, 24.0, 16.0);
+                }
+                // Op web (breed): symmetrische padding, zelfde breedte als theoriepagina
+                const maxContentWidth = kWebNavContentMaxWidth;
+                final horizontal = (width - maxContentWidth) / 2;
+                final h = horizontal.clamp(24.0, double.infinity);
+                return EdgeInsets.fromLTRB(h, 16.0, h, 16.0);
+              }(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Header / Logo
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Image.asset(
-                        'assets/images/logo-roady.png',
-                        height: 32,
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => const Text('Roady',
-                            style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: _accentBlue)),
-                      ),
-                      // Optional: Settings or Profile icon could go here
-                      Row(
-                        children: [
-                          IconButton(
-                            icon:
-                                const Icon(Icons.person, color: Colors.black87),
-                            onPressed: () => context.push('/profile'),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.shopping_cart,
-                                color: Colors.black87),
-                            onPressed: () => context.push('/shop'),
-                          ),
-                          IconButton(
-                            icon:
-                                const Icon(Icons.logout, color: Colors.black87),
-                            onPressed: () async {
-                              await FirebaseAuth.instance.signOut();
-                              if (context.mounted) {
-                                context.go('/auth?mode=login');
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                  // Header / Logo (alleen op mobiel; op web staat de nav in de AppBar)
+                  if (!kIsWeb)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Image.asset(
+                          'assets/images/logo-roady.png',
+                          height: 32,
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, __, ___) => const Text('Roady',
+                              style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: _accentBlue)),
+                        ),
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.person,
+                                  color: _webNavTextColor),
+                              onPressed: () => context.push('/profile'),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.shopping_cart,
+                                  color: _webNavTextColor),
+                              onPressed: () => context.push('/shop'),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.logout,
+                                  color: _webNavTextColor),
+                              onPressed: () async {
+                                await FirebaseAuth.instance.signOut();
+                                if (context.mounted) {
+                                  context.go('/auth?mode=login');
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
 
-                  const SizedBox(height: 32),
+                  if (!kIsWeb) const SizedBox(height: 32),
 
-                  // Hele pagina scrollbaar; op web: meter + knoppen in 1000px container
+                  // Hele pagina scrollbaar; op web (breed): meter + knoppen in 1000px container; smal = mobiele layout
                   Expanded(
-                    child: kIsWeb
+                    child: (kIsWeb &&
+                            MediaQuery.sizeOf(context).width >=
+                                kNarrowViewportMaxWidth)
                         ? Center(
                             child: LayoutBuilder(
                               builder: (context, constraints) {
-                                final w = constraints.maxWidth.clamp(0.0, 1000.0);
+                                final w = constraints.maxWidth
+                                    .clamp(0.0, kWebNavContentMaxWidth);
                                 const spacing = 28.0;
-                                const aspectRatio = 1.85;
+                                const aspectRatio =
+                                    2.14; // was 1.85 → knoppen ~25% kleiner
                                 final cellHeight =
                                     (w - spacing) / 2 / aspectRatio;
-                                final gridHeight =
-                                    2 * cellHeight + spacing;
+                                final gridHeight = 2 * cellHeight + spacing;
                                 return SizedBox(
                                   width: w,
                                   child: SingleChildScrollView(
@@ -169,7 +327,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 title: 'Examen',
                                                 icon: Icons.school,
                                                 color: Colors.orange.shade100,
-                                                iconColor: Colors.orange.shade800,
+                                                iconColor:
+                                                    Colors.orange.shade800,
                                                 onTap: () => context
                                                     .go('/dashboard?tab=2'),
                                               ),
@@ -177,7 +336,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 title: 'AI Coach',
                                                 icon: Icons.smart_toy,
                                                 color: Colors.purple.shade100,
-                                                iconColor: Colors.purple.shade800,
+                                                iconColor:
+                                                    Colors.purple.shade800,
                                                 onTap: () => context
                                                     .go('/dashboard?tab=3'),
                                               ),
@@ -213,12 +373,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                 LayoutBuilder(
                                   builder: (context, constraints) {
                                     const spacing = 16.0;
-                                    const aspectRatio = 1.1;
+                                    const aspectRatio =
+                                        1.27; // was 1.1 → knoppen ~25% kleiner
                                     final w = constraints.maxWidth;
                                     final cellHeight =
                                         (w - spacing) / 2 / aspectRatio;
-                                    final gridHeight =
-                                        2 * cellHeight + spacing;
+                                    final gridHeight = 2 * cellHeight + spacing;
                                     return SizedBox(
                                       height: gridHeight,
                                       child: GridView.count(
@@ -427,7 +587,8 @@ class _AnimatedStatusBadgeState extends State<_AnimatedStatusBadge>
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: const Color.fromARGB(255, 125, 125, 125), // Cool Grey 50 (Very light grey/almost white)
+            color: const Color.fromARGB(255, 125, 125,
+                125), // Cool Grey 50 (Very light grey/almost white)
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Colors.grey.shade200),
           ),
@@ -462,11 +623,12 @@ class FuelMeterCard extends StatelessWidget {
       state.completedLessons,
       state.passedExamsCount,
     ]);
-    final isWeb = kIsWeb;
-    final padding = isWeb ? 32.0 : 20.0;
-    final gaugeSize = isWeb ? 400.0 : 220.0;
-    final titleFontSize = isWeb ? 20.0 : 16.0;
-    final radius = isWeb ? 24.0 : 20.0;
+    final useDesktopWeb =
+        kIsWeb && MediaQuery.sizeOf(context).width >= kNarrowViewportMaxWidth;
+    final padding = useDesktopWeb ? 32.0 : 20.0;
+    final gaugeSize = useDesktopWeb ? 400.0 : 220.0;
+    final titleFontSize = useDesktopWeb ? 20.0 : 16.0;
+    final radius = useDesktopWeb ? 24.0 : 20.0;
 
     return Container(
       padding: EdgeInsets.all(padding),
@@ -501,7 +663,7 @@ class FuelMeterCard extends StatelessWidget {
                   ),
                 ],
               ),
-              SizedBox(height: isWeb ? 24 : 20),
+              SizedBox(height: useDesktopWeb ? 24 : 20),
 
               // RPM / Energy Gauge (op web groter bij breed scherm)
               AnimatedBuilder(
@@ -522,7 +684,7 @@ class FuelMeterCard extends StatelessWidget {
                   );
                 },
               ),
-              SizedBox(height: isWeb ? 32 : 28),
+              SizedBox(height: useDesktopWeb ? 32 : 28),
               AnimatedBuilder(
                 animation: listenable,
                 builder: (context, _) {
@@ -604,7 +766,11 @@ class FuelMeterCard extends StatelessWidget {
                   children: [
                     Icon(
                       Icons.emoji_events,
-                      size: kIsWeb ? 32 : 28,
+                      size: (kIsWeb &&
+                              MediaQuery.sizeOf(context).width >=
+                                  kNarrowViewportMaxWidth)
+                          ? 32
+                          : 28,
                       color: Colors.amber.shade700,
                     ),
                     const SizedBox(height: 2),
@@ -644,13 +810,14 @@ class _HomeNavCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isWeb = kIsWeb;
-    // Op web: knoppen zelf ~35% kleiner, iconen ongewijzigd
-    final iconSize = isWeb ? 36.0 : 32.0;
-    final iconPadding = isWeb ? 15.0 : 16.0;
-    final titleGap = isWeb ? 6.0 : 12.0;
-    final fontSize = isWeb ? 9.0 : 16.0;
-    final radius = isWeb ? 14.0 : 20.0;
+    final useDesktopWeb =
+        kIsWeb && MediaQuery.sizeOf(context).width >= kNarrowViewportMaxWidth;
+    // Iconen groter in de knoppen; op web (breed) nog groter
+    final iconSize = useDesktopWeb ? 50.0 : 40.0;
+    final iconPadding = useDesktopWeb ? 14.0 : 14.0;
+    final titleGap = useDesktopWeb ? 6.0 : 10.0;
+    final fontSize = useDesktopWeb ? 16.0 : 14.0;
+    final radius = useDesktopWeb ? 14.0 : 20.0;
 
     return Material(
       color: Colors.white,

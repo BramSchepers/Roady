@@ -43,8 +43,7 @@ class _StartScreenState extends State<StartScreen> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          if (!kIsWeb)
-            Positioned.fill(
+          Positioned.fill(
               child: Container(
                 color: Colors.white,
                 child: SvgPicture.asset(
@@ -64,7 +63,7 @@ class _StartScreenState extends State<StartScreen> {
                 children: [
                   Image.asset(
                     'assets/images/logo-roady.png',
-                    height: 48,
+                    height: kIsWeb ? 40 : 48,
                     fit: BoxFit.contain,
                     errorBuilder: (_, __, ___) => const Text('Roady',
                         style: TextStyle(

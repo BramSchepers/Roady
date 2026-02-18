@@ -1,0 +1,15 @@
+{
+  "name": "upload-theory-images",
+  "version": "1.0.0",
+  "description": "Upload theory images (.webp) to Firebase Storage and update Firestore with URLs",
+  "main": "upload.js",
+  "type": "module",
+  "scripts": {
+    "upload": "node upload.js"
+  },
+  "dependencies": {
+    "cloudinary": "^2.5.1",
+    "dotenv": "^16.4.5",
+    "firebase-admin": "^12.0.0"
+  }
+}

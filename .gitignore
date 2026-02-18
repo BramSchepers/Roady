@@ -50,4 +50,8 @@ app.*.map.json
 # Website – Supabase keys, env, bundler
 /website/js/config.js
 /website/.env
+
+# Upload script – Firebase credentials
+/scripts/upload-theory-images/.env
+/scripts/upload-theory-images/service-account-key.json
 /website/node_modules/

@@ -5,11 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'auth/auth_state.dart';
-import 'auth/user_language_repository.dart';
 import 'firebase_options.dart';
 import 'repositories/quiz_repository.dart';
 import 'screens/auth_screen.dart';
-import 'widgets/hero_background.dart';
 import 'screens/download_app_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'utils/mobile_web_detector.dart';
@@ -28,6 +26,25 @@ import 'screens/splash_screen.dart';
 import 'screens/start_screen.dart';
 
 Page<void> _slideWithBouncePage(GoRouterState state, Widget child) {
+  // Web: geen slide, alleen een korte fade-in van de inhoud (tekst, icoontjes).
+  if (kIsWeb) {
+    return CustomTransitionPage<void>(
+      key: state.pageKey,
+      child: child,
+      transitionDuration: const Duration(milliseconds: 220),
+      reverseTransitionDuration: const Duration(milliseconds: 180),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        return FadeTransition(
+          opacity: CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOut,
+          ),
+          child: child,
+        );
+      },
+    );
+  }
+  // Mobiel: slide met bounce zoals voorheen.
   return CustomTransitionPage<void>(
     key: state.pageKey,
     child: child,
@@ -80,23 +97,6 @@ class RoadyApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'Roady',
       debugShowCheckedModeBanner: false,
-      builder: (context, child) {
-        if (child == null) return const SizedBox.shrink();
-        if (kIsWeb) {
-          return Stack(
-            children: [
-              const Positioned.fill(child: HeroBackground()),
-              Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1000),
-                  child: child,
-                ),
-              ),
-            ],
-          );
-        }
-        return child;
-      },
       themeMode: ThemeMode.light,
       theme: ThemeData(
         useMaterial3: true,
@@ -122,47 +122,42 @@ class RoadyApp extends StatelessWidget {
       redirect: (BuildContext context, GoRouterState state) async {
         final path = state.uri.path;
 
-        // On web: redirect mobile/narrow viewport to download-app unless opted in
+        // On web: skip offline-download (alleen relevant voor native app)
+        if (kIsWeb && path == '/offline-download') return '/home';
+
+        // On web: redirect mobile/narrow viewport to download-app (app only, no web fallback)
         if (kIsWeb && path != '/download-app') {
           final width = MediaQuery.sizeOf(context).width;
           final looksMobile = isMobileUserAgent() || width < 768;
-          if (looksMobile) {
-            final optedIn = await DownloadAppScreen.getWebOptedIn();
-            if (!optedIn) return '/download-app';
-          }
+          if (looksMobile) return '/download-app';
         }
 
         final isLoggedIn = authState.isLoggedIn;
 
-        // Ingelogde gebruiker: direct naar dashboard/onboarding, geen welkomstscherm
-        if (isLoggedIn) {
-          final uid = authState.user!.uid;
-          // Van splash of auth/start: direct naar de juiste bestemming
-          if (path == '/splash' || path == '/auth' || path == '/' || path == '/start') {
-            if (path == '/auth' && state.uri.queryParameters['back'] == '1') {
-              return null; // Bewust terug naar auth
-            }
-            return UserLanguageRepository.instance.getNextOnboardingRoute(uid);
+        if (path == '/splash') return null;
+
+        if (!isLoggedIn) {
+          if (path == '/home' ||
+              path == '/dashboard' ||
+              path == '/shop' ||
+              path == '/license' ||
+              path == '/language' ||
+              path == '/region' ||
+              path == '/offline-download' ||
+              path == '/start' ||
+              path == '/quiz' ||
+              path == '/exam-history' ||
+              path.startsWith('/exam-review')) {
+            return '/auth';
           }
           return null;
         }
 
-        // Niet ingelogd: beschermde routes naar auth
-        if (path == '/splash') return null;
-
-        if (path == '/home' ||
-            path == '/dashboard' ||
-            path == '/shop' ||
-            path == '/license' ||
-            path == '/language' ||
-            path == '/region' ||
-            path == '/offline-download' ||
-            path == '/start' ||
-            path == '/quiz' ||
-            path == '/exam-history' ||
-            path.startsWith('/exam-review')) {
-          return '/auth';
+        // Ingelogde user op /auth mag blijven als die bewust "terug" deed (back-knop)
+        if (path == '/auth' && state.uri.queryParameters['back'] == '1') {
+          return null;
         }
+        if (path == '/auth' || path == '/') return '/start';
         return null;
       },
       routes: <RouteBase>[

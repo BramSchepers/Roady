@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 // --- Data Models ---
 
 class TheoryLesson {
@@ -5,13 +7,21 @@ class TheoryLesson {
   final String lottieAsset;
   final Map<String, dynamic> content;
   final String? imageUrl;
+  final String? imageUrlWeb;
 
   TheoryLesson({
     required this.id,
     required this.lottieAsset,
     required this.content,
     this.imageUrl,
+    this.imageUrlWeb,
   });
+
+  /// URL voor weergave: web gebruikt imageUrlWeb (full), mobiel imageUrl (small).
+  String? get effectiveImageUrl =>
+      (kIsWeb && imageUrlWeb != null && imageUrlWeb!.isNotEmpty)
+          ? imageUrlWeb
+          : imageUrl;
 
   String getTitle(String lang) =>
       content[lang]?['title'] ?? content['nl']['title'];
@@ -38,6 +48,7 @@ class TheoryLesson {
           ? content
           : {'nl': {'title': '', 'description': ''}},
       imageUrl: map['imageUrl'] as String?,
+      imageUrlWeb: map['imageUrlWeb'] as String?,
     );
   }
 }

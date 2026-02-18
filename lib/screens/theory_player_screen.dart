@@ -1,6 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dotlottie_loader/dotlottie_loader.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:lottie/lottie.dart';
 import '../models/theory_models.dart';
@@ -78,7 +80,7 @@ class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
     for (final offset in [1, -1]) {
       final index = currentIndex + offset;
       if (index < 0 || index >= widget.chapter.lessons.length) continue;
-      final url = widget.chapter.lessons[index].imageUrl;
+      final url = widget.chapter.lessons[index].effectiveImageUrl;
       if (url != null &&
           url.isNotEmpty &&
           (url.startsWith('http://') || url.startsWith('https://'))) {
@@ -102,7 +104,7 @@ class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
         await _leaveAndMarkCurrent();
       },
       child: Scaffold(
-        backgroundColor: Colors.grey[50],
+        backgroundColor: kIsWeb ? Colors.white : Colors.grey[50],
         appBar: AppBar(
           title: Text(widget.chapter.getTitle(_currentLang)),
           centerTitle: true,
@@ -114,107 +116,137 @@ class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
             onPressed: () => _leaveAndMarkCurrent(),
           ),
         ),
-        body: Column(
+        body: Stack(
           children: [
-            // Voortgangsindicator
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: LinearProgressIndicator(
-                value: (_currentPage + 1) / widget.chapter.lessons.length,
-                backgroundColor: Colors.grey[200],
-                color: const Color(0xFF2563EB), // Roady blauw
-                minHeight: 6,
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                itemCount: widget.chapter.lessons.length,
-                onPageChanged: (index) {
-                  setState(() => _currentPage = index);
-
-                  // Sla pending op als de app crasht, maar negeer snelle spurious events bij start (<500ms)
-                  if (DateTime.now().difference(_startTime).inMilliseconds >
-                      500) {
-                    if (index < widget.chapter.lessons.length) {
-                      EnergyState().savePendingViewedLessonId(
-                          widget.chapter.lessons[index].id);
-                    }
-                  }
-
-                  _preloadAdjacentImages(index);
-                },
-                itemBuilder: (context, index) {
-                  final lesson = widget.chapter.lessons[index];
-                  return _buildLessonCard(lesson);
-                },
-              ),
-            ),
-
-            // Navigatie knoppen
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  if (_currentPage > 0)
-                    TextButton.icon(
-                      onPressed: () async {
-                        await _markLessonComplete(_currentPage);
-                        if (!mounted) return;
-                        setState(() => _currentPage--);
-                        EnergyState().savePendingViewedLessonId(
-                            widget.chapter.lessons[_currentPage].id);
-                        _pageController.previousPage(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                        );
-                      },
-                      icon: const Icon(Icons.arrow_back),
-                      label: const Text('Vorige'),
-                    )
-                  else
-                    const SizedBox(width: 100), // Spacer
-
-                  Text(
-                    '${_currentPage + 1} / ${widget.chapter.lessons.length}',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.bold,
-                    ),
+            // SVG achtergrond zichtbaar aan de buitenste randen
+            Positioned.fill(
+                child: Container(
+                  color: Colors.white,
+                  child: SvgPicture.asset(
+                    'assets/illustrations/Background_hero.svg',
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                    placeholderBuilder: (_) => const SizedBox.shrink(),
+                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                   ),
+                ),
+              ),
+            // Content met ~1/4 marge links/rechts op web
+            SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: kIsWeb
+                        ? MediaQuery.sizeOf(context).width * 0.25
+                        : 0,
+                  ),
+                  child: Column(
+                    children: [
+                      // Voortgangsindicator
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: LinearProgressIndicator(
+                          value: (_currentPage + 1) / widget.chapter.lessons.length,
+                          backgroundColor: Colors.grey[200],
+                          color: const Color(0xFF2563EB), // Roady blauw
+                          minHeight: 6,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
 
-                  if (_currentPage < widget.chapter.lessons.length - 1)
-                    FilledButton.icon(
-                      onPressed: () async {
-                        await _markLessonComplete(_currentPage);
-                        if (!mounted) return;
-                        setState(() => _currentPage++);
-                        EnergyState().savePendingViewedLessonId(
-                            widget.chapter.lessons[_currentPage].id);
-                        _pageController.nextPage(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                        );
-                      },
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF2563EB),
+                      Expanded(
+                        child: PageView.builder(
+                          controller: _pageController,
+                          itemCount: widget.chapter.lessons.length,
+                          onPageChanged: (index) {
+                            setState(() => _currentPage = index);
+
+                            // Sla pending op als de app crasht, maar negeer snelle spurious events bij start (<500ms)
+                            if (DateTime.now().difference(_startTime).inMilliseconds >
+                                500) {
+                              if (index < widget.chapter.lessons.length) {
+                                EnergyState().savePendingViewedLessonId(
+                                    widget.chapter.lessons[index].id);
+                              }
+                            }
+
+                            _preloadAdjacentImages(index);
+                          },
+                          itemBuilder: (context, index) {
+                            final lesson = widget.chapter.lessons[index];
+                            return _buildLessonCard(lesson);
+                          },
+                        ),
                       ),
-                      icon: const Icon(Icons.arrow_forward),
-                      label: const Text('Volgende'),
-                    )
-                  else
-                    FilledButton.icon(
-                      onPressed: () => _leaveAndMarkCurrent(),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: Colors.green,
+
+                      // Navigatie knoppen
+                      Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            if (_currentPage > 0)
+                              TextButton.icon(
+                                onPressed: () async {
+                                  await _markLessonComplete(_currentPage);
+                                  if (!mounted) return;
+                                  setState(() => _currentPage--);
+                                  EnergyState().savePendingViewedLessonId(
+                                      widget.chapter.lessons[_currentPage].id);
+                                  _pageController.previousPage(
+                                    duration: const Duration(milliseconds: 300),
+                                    curve: Curves.easeInOut,
+                                  );
+                                },
+                                icon: const Icon(Icons.arrow_back),
+                                label: const Text('Vorige'),
+                              )
+                            else
+                              const SizedBox(width: 100), // Spacer
+
+                            Text(
+                              '${_currentPage + 1} / ${widget.chapter.lessons.length}',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+
+                            if (_currentPage < widget.chapter.lessons.length - 1)
+                              FilledButton.icon(
+                                onPressed: () async {
+                                  await _markLessonComplete(_currentPage);
+                                  if (!mounted) return;
+                                  setState(() => _currentPage++);
+                                  EnergyState().savePendingViewedLessonId(
+                                      widget.chapter.lessons[_currentPage].id);
+                                  _pageController.nextPage(
+                                    duration: const Duration(milliseconds: 300),
+                                    curve: Curves.easeInOut,
+                                  );
+                                },
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: const Color(0xFF2563EB),
+                                ),
+                                icon: const Icon(Icons.arrow_forward),
+                                label: const Text('Volgende'),
+                              )
+                            else
+                              FilledButton.icon(
+                                onPressed: () => _leaveAndMarkCurrent(),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                ),
+                                icon: const Icon(Icons.check),
+                                label: const Text('Afronden'),
+                              ),
+                          ],
+                        ),
                       ),
-                      icon: const Icon(Icons.check),
-                      label: const Text('Afronden'),
-                    ),
-                ],
+                    ],
+                  ),
+                ),
               ),
             ),
           ],
@@ -224,7 +256,7 @@ class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
   }
 
   Widget _buildLessonMedia(TheoryLesson lesson) {
-    final imageUrl = lesson.imageUrl;
+    final imageUrl = lesson.effectiveImageUrl;
     if (imageUrl != null &&
         imageUrl.isNotEmpty &&
         (imageUrl.startsWith('http://') || imageUrl.startsWith('https://'))) {
