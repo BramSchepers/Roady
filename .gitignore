@@ -54,4 +54,5 @@ app.*.map.json
 # Upload script – Firebase credentials
 /scripts/upload-theory-images/.env
 /scripts/upload-theory-images/service-account-key.json
+/scripts/upload-theory-images/*-firebase-adminsdk-*.json
 /website/node_modules/
