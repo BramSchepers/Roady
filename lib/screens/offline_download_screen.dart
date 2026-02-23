@@ -27,8 +27,8 @@ class _OfflineDownloadScreenState extends State<OfflineDownloadScreen> {
     });
 
     try {
-      // 1. Haal alle hoofdstukken op
-      final chapters = await TheoryRepository.instance.getChapters();
+      // 1. Haal verse hoofdstukken/lessen van server, dan URLs verzamelen
+      final chapters = await TheoryRepository.instance.refreshChaptersFromServer();
 
       // 2. Verzamel alle URLs
       final Set<String> urlsToDownload = {};

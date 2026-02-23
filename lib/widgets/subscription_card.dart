@@ -79,63 +79,60 @@ class SubscriptionCard extends StatelessWidget {
                   ],
                 ),
               )),
-          const SizedBox(height: 16),
-          kIsWeb
-              ? Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: kWebButtonMaxWidth),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: isComingSoon ? null : () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: isComingSoon
-                              ? Colors.grey[300]
-                              : (isCurrent ? Colors.grey[200] : textColor),
-                          foregroundColor: isComingSoon
-                              ? Colors.grey[600]
-                              : (isCurrent ? Colors.black : Colors.white),
-                          disabledBackgroundColor: Colors.grey[300],
-                          disabledForegroundColor: Colors.grey[600],
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+          if (!isCurrent) ...[
+            const SizedBox(height: 16),
+            kIsWeb
+                ? Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                          maxWidth: kWebButtonMaxWidth),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: isComingSoon ? null : () {},
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isComingSoon
+                                ? Colors.grey[300]
+                                : textColor,
+                            foregroundColor: isComingSoon
+                                ? Colors.grey[600]
+                                : Colors.white,
+                            disabledBackgroundColor: Colors.grey[300],
+                            disabledForegroundColor: Colors.grey[600],
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text(
+                            isComingSoon ? 'Coming soon' : 'Kies $title',
                           ),
                         ),
-                        child: Text(
-                          isComingSoon
-                              ? 'Coming soon'
-                              : (isCurrent ? 'Huidig plan' : 'Kies $title'),
+                      ),
+                    ),
+                  )
+                : SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: isComingSoon ? null : () {},
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            isComingSoon ? Colors.grey[300] : textColor,
+                        foregroundColor:
+                            isComingSoon ? Colors.grey[600] : Colors.white,
+                        disabledBackgroundColor: Colors.grey[300],
+                        disabledForegroundColor: Colors.grey[600],
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                    ),
-                  ),
-                )
-              : SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: isComingSoon ? null : () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: isComingSoon
-                          ? Colors.grey[300]
-                          : (isCurrent ? Colors.grey[200] : textColor),
-                      foregroundColor: isComingSoon
-                          ? Colors.grey[600]
-                          : (isCurrent ? Colors.black : Colors.white),
-                      disabledBackgroundColor: Colors.grey[300],
-                      disabledForegroundColor: Colors.grey[600],
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                      child: Text(
+                        isComingSoon ? 'Coming soon' : 'Kies $title',
                       ),
                     ),
-                    child: Text(
-                      isComingSoon
-                          ? 'Coming soon'
-                          : (isCurrent ? 'Huidig plan' : 'Kies $title'),
-                    ),
                   ),
-                ),
+          ],
         ],
       ),
     );

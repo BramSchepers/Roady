@@ -30,7 +30,11 @@ class _TheoryScreenState extends State<TheoryScreen> {
     super.initState();
     _completedListener = () => setState(() {});
     EnergyState().completedLessons.addListener(_completedListener!);
+    // Toon eerst cache (snel), haal daarna verse lessen van server en update UI
     TheoryRepository.instance.getChapters().then((c) {
+      if (mounted) setState(() => _chapters = c);
+    });
+    TheoryRepository.instance.refreshChaptersFromServer().then((c) {
       if (mounted) setState(() => _chapters = c);
     });
   }
@@ -61,6 +65,26 @@ class _TheoryScreenState extends State<TheoryScreen> {
     return result;
   }
 
+  /// Aantal voltooide en totaal aantal lessen voor één groep (categorie).
+  ({int completed, int total}) _groupProgress(int groupIndex) {
+    final groupChapters = _chaptersForGroup(groupIndex);
+    int total = 0;
+    int completed = 0;
+    final completedIds = EnergyState().completedLessons.value;
+    for (final ch in groupChapters) {
+      for (final lesson in ch.lessons) {
+        total++;
+        if (completedIds.contains(lesson.id)) completed++;
+      }
+    }
+    return (completed: completed, total: total);
+  }
+
+  bool _isGroupComplete(int groupIndex) {
+    final p = _groupProgress(groupIndex);
+    return p.total > 0 && p.completed == p.total;
+  }
+
   @override
   Widget build(BuildContext context) {
     final chapters = _chapters ?? [];
@@ -84,30 +108,40 @@ class _TheoryScreenState extends State<TheoryScreen> {
             ),
           ),
           SafeArea(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: kIsWeb
-                        ? kWebNavContentMaxWidth
-                        : 420,
-                  ),
-                  child: ColoredBox(
-                    color: Colors.white,
-                    child: _chapters == null
-                        ? const Center(
-                            child: Padding(
-                              padding: EdgeInsets.all(24),
-                              child: CircularProgressIndicator(),
-                            ),
-                          )
-                        : _selectedGroupIndex != null
-                            ? _buildGroupChaptersView(
-                                context,
-                                totalLessons,
-                              )
-                            : _buildGroupsOverview(context),
+            child: Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: kIsWeb
+                          ? kWebNavContentMaxWidth
+                          : 420,
+                    ),
+                    child: Container(
+                      clipBehavior: Clip.antiAlias,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(32),
+                          topRight: Radius.circular(32),
+                        ),
+                      ),
+                      child: _chapters == null
+                          ? const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(24),
+                                child: CircularProgressIndicator(),
+                              ),
+                            )
+                          : _selectedGroupIndex != null
+                              ? _buildGroupChaptersView(
+                                  context,
+                                  totalLessons,
+                                )
+                              : _buildGroupsOverview(context),
+                    ),
                   ),
                 ),
               ),
@@ -118,6 +152,11 @@ class _TheoryScreenState extends State<TheoryScreen> {
     );
   }
 
+  Future<void> _refreshChapters() async {
+    final c = await TheoryRepository.instance.refreshChaptersFromServer();
+    if (mounted) setState(() => _chapters = c);
+  }
+
   /// Overzicht van 6 groepen: web = grid max 4 kolommen, mobiel = lijst onder elkaar.
   Widget _buildGroupsOverview(BuildContext context) {
     if (kIsWeb) {
@@ -125,35 +164,47 @@ class _TheoryScreenState extends State<TheoryScreen> {
         builder: (context, constraints) {
           final width = constraints.maxWidth;
           final crossAxisCount = width > 800 ? 4 : (width > 500 ? 3 : 2);
-          return GridView.builder(
-            padding: const EdgeInsets.all(28),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxisCount,
-              childAspectRatio: 0.78,
-              crossAxisSpacing: 28,
-              mainAxisSpacing: 28,
+          return RefreshIndicator(
+            onRefresh: _refreshChapters,
+            child: GridView.builder(
+              padding: const EdgeInsets.all(28),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                childAspectRatio: 0.78,
+                crossAxisSpacing: 28,
+                mainAxisSpacing: 28,
+              ),
+              itemCount: theoryGroups.length,
+              itemBuilder: (context, index) {
+                final progress = _groupProgress(index);
+                return TheoryGroupCard(
+                  group: theoryGroups[index],
+                  onStart: () => setState(() => _selectedGroupIndex = index),
+                  completedCount: progress.completed,
+                  totalCount: progress.total,
+                );
+              },
             ),
-            itemCount: theoryGroups.length,
-            itemBuilder: (context, index) {
-              return TheoryGroupCard(
-                group: theoryGroups[index],
-                onStart: () => setState(() => _selectedGroupIndex = index),
-              );
-            },
           );
         },
       );
     }
-    return ListView.separated(
-      padding: const EdgeInsets.all(20),
-      itemCount: theoryGroups.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        return TheoryGroupCard(
-          group: theoryGroups[index],
-          onStart: () => setState(() => _selectedGroupIndex = index),
-        );
-      },
+    return RefreshIndicator(
+      onRefresh: _refreshChapters,
+      child: ListView.separated(
+        padding: const EdgeInsets.all(20),
+        itemCount: theoryGroups.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          final progress = _groupProgress(index);
+          return TheoryGroupCard(
+            group: theoryGroups[index],
+            onStart: () => setState(() => _selectedGroupIndex = index),
+            completedCount: progress.completed,
+            totalCount: progress.total,
+          );
+        },
+      ),
     );
   }
 
@@ -164,6 +215,7 @@ class _TheoryScreenState extends State<TheoryScreen> {
   ) {
     final groupChapters = _chaptersForGroup(_selectedGroupIndex!);
     final group = theoryGroups[_selectedGroupIndex!];
+    final isGroupComplete = _isGroupComplete(_selectedGroupIndex!);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -189,24 +241,129 @@ class _TheoryScreenState extends State<TheoryScreen> {
             ],
           ),
         ),
-        Expanded(
-          child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-            itemCount: groupChapters.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 16),
-            itemBuilder: (context, index) {
-              final chapter = groupChapters[index];
-              return ChapterAccordion(
-                key: ValueKey(chapter.id),
-                chapter: chapter,
-                currentLang: _currentLang,
-                totalLessonsInApp: totalLessonsInApp,
-                onChapterCompleted: (c) => _showCompletionAnimation(context, c),
-              );
-            },
+        if (isGroupComplete)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+            child: Material(
+              color: Colors.green.shade50,
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade100,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.emoji_events_rounded,
+                        color: Colors.green.shade800,
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Categorie voltooid!',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green.shade900,
+                              fontSize: 15,
+                            ),
+                          ),
+                          Text(
+                            'Je hebt alle lessen van deze categorie doorlopen.',
+                            style: TextStyle(
+                              color: Colors.green.shade800,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
+        Expanded(
+          child: groupChapters.isEmpty
+              ? _buildEmptyGroupState(context)
+              : RefreshIndicator(
+                  onRefresh: _refreshChapters,
+                  child: ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                    itemCount: groupChapters.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 16),
+                    itemBuilder: (context, index) {
+                      final chapter = groupChapters[index];
+                      return ChapterAccordion(
+                        key: ValueKey(chapter.id),
+                        chapter: chapter,
+                        currentLang: _currentLang,
+                        totalLessonsInApp: totalLessonsInApp,
+                        onChapterCompleted: (c) =>
+                            _showCompletionAnimation(context, c),
+                      );
+                    },
+                  ),
+                ),
         ),
       ],
+    );
+  }
+
+  /// Toont een duidelijke melding + vernieuwknop als er geen lessen in deze categorie zijn.
+  Widget _buildEmptyGroupState(BuildContext context) {
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 48, 24, 24),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.cloud_off_rounded,
+                size: 56,
+                color: Colors.grey.shade400,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Geen lessen beschikbaar',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade700,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Controleer je internet en trek omlaag om te vernieuwen, of wacht even tot de inhoud is geladen.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey.shade600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                onPressed: _refreshChapters,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Vernieuwen'),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

@@ -50,8 +50,9 @@ void main() {
     }
     // #endregion
 
-    // Verify that our splash screen text is present
-    expect(find.text('Welkom bij Roady'), findsOneWidget);
+    // Verify that our splash screen text is present (Welkom bij + Start avontuur op mobiel)
+    expect(find.text('Welkom bij'), findsOneWidget);
+    expect(find.text('Start avontuur'), findsOneWidget);
 
     // #region agent log
     try {

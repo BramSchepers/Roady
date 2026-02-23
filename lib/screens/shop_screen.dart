@@ -17,16 +17,28 @@ class ShopScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () => context.pop(),
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 16.0),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.black87),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/dashboard');
+              }
+            },
+          ),
         ),
-        title: const Text(
-          'Shop',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
+        title: const Padding(
+          padding: EdgeInsets.only(left: 8.0),
+          child: Text(
+            'Shop',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
           ),
         ),
       ),
@@ -35,7 +47,7 @@ class ShopScreen extends StatelessWidget {
         child: isWideWeb
             ? Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: kWebContentMaxWidth),
+                  constraints: const BoxConstraints(maxWidth: kShopContentMaxWidth),
                   child: _buildShopContent(),
                 ),
               )

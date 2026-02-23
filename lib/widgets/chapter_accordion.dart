@@ -116,6 +116,13 @@ class _ChapterAccordionState extends State<ChapterAccordion>
   static double get _lessonFontSize => kIsWeb ? 17 : 16;
   static double get _lessonIconSize => kIsWeb ? 24 : 22;
   static double get _lessonArrowSize => kIsWeb ? 14 : 12;
+  /// Op mobiel: kleinere stijl voor voltooide lessen (minimale rijhoogte).
+  static double get _lessonCompletedFontSize => kIsWeb ? 17 : 14;
+  static const _lessonTilePadding =
+      EdgeInsets.symmetric(horizontal: 16, vertical: 12);
+  static EdgeInsets get _lessonTilePaddingCompleted => kIsWeb
+      ? const EdgeInsets.symmetric(horizontal: 16, vertical: 12)
+      : const EdgeInsets.symmetric(horizontal: 16, vertical: 6);
 
   @override
   Widget build(BuildContext context) {
@@ -258,6 +265,8 @@ class _ChapterAccordionState extends State<ChapterAccordion>
                         itemBuilder: (context, index) {
                           final lesson = widget.chapter.lessons[index];
                           final lessonDone = completedIds.contains(lesson.id);
+                          // Op mobiel: voltooide lessen compacter (minder ruimte); tik opent nog steeds de les.
+                          final isMinimized = !kIsWeb && lessonDone;
                           return Material(
                             color: Colors.transparent,
                             child: InkWell(
@@ -300,28 +309,32 @@ class _ChapterAccordionState extends State<ChapterAccordion>
                                   });
                                 }
                               },
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: isMinimized
+                                    ? _lessonTilePaddingCompleted
+                                    : _lessonTilePadding,
                                 child: Row(
                                   children: [
                                     Icon(
                                       lessonDone
                                           ? Icons.check_circle
                                           : Icons.radio_button_unchecked,
-                                      size: _lessonIconSize,
+                                      size: isMinimized
+                                          ? (_lessonIconSize - 2)
+                                          : _lessonIconSize,
                                       color: lessonDone
                                           ? Colors.green[600]
                                           : Colors.grey[400],
                                     ),
-                                    const SizedBox(width: 12),
+                                    SizedBox(width: isMinimized ? 8 : 12),
                                     Expanded(
                                       child: Text(
                                         lesson.getTitle(widget.currentLang),
                                         style: TextStyle(
-                                          fontSize: _lessonFontSize,
+                                          fontSize: isMinimized
+                                              ? _lessonCompletedFontSize
+                                              : _lessonFontSize,
                                           color: lessonDone
                                               ? Colors.grey[600]
                                               : Colors.black87,
@@ -329,11 +342,17 @@ class _ChapterAccordionState extends State<ChapterAccordion>
                                               ? FontWeight.w500
                                               : FontWeight.w600,
                                         ),
+                                        maxLines: isMinimized ? 1 : null,
+                                        overflow: isMinimized
+                                            ? TextOverflow.ellipsis
+                                            : null,
                                       ),
                                     ),
                                     Icon(
                                       Icons.arrow_forward_ios,
-                                      size: _lessonArrowSize,
+                                      size: isMinimized
+                                          ? (_lessonArrowSize - 2)
+                                          : _lessonArrowSize,
                                       color: Colors.grey[400],
                                     ),
                                   ],

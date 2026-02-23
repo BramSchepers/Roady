@@ -207,8 +207,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (!useWebDesktop) {
                   return const EdgeInsets.fromLTRB(24.0, 16.0, 24.0, 16.0);
                 }
-                // Op web (breed): symmetrische padding, zelfde breedte als theoriepagina
-                const maxContentWidth = kWebNavContentMaxWidth;
+                // Op web (breed): smallere content dan rest van site (fuel meter + knoppen)
+                const maxContentWidth = kHomeContentMaxWidth;
                 final horizontal = (width - maxContentWidth) / 2;
                 final h = horizontal.clamp(24.0, double.infinity);
                 return EdgeInsets.fromLTRB(h, 16.0, h, 16.0);
@@ -269,7 +269,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: LayoutBuilder(
                               builder: (context, constraints) {
                                 final w = constraints.maxWidth
-                                    .clamp(0.0, kWebNavContentMaxWidth);
+                                    .clamp(0.0, kHomeContentMaxWidth);
                                 const spacing = 28.0;
                                 const aspectRatio =
                                     2.14; // was 1.85 → knoppen ~25% kleiner

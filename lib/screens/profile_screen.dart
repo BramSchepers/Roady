@@ -106,12 +106,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Profiel'),
+        title: const Padding(
+          padding: EdgeInsets.only(left: 8.0),
+          child: Text('Profiel'),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => context.pop(),
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 16.0),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/dashboard');
+              }
+            },
+          ),
         ),
         titleTextStyle: const TextStyle(
             color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20),
@@ -365,7 +377,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             return (kIsWeb && MediaQuery.sizeOf(context).width >= kNarrowViewportMaxWidth)
                 ? Center(
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: kWebContentMaxWidth),
+                      constraints: const BoxConstraints(maxWidth: kProfileContentMaxWidth),
                       child: content,
                     ),
                   )

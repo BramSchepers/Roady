@@ -10,79 +10,113 @@ class OefenvragenScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final content = SingleChildScrollView(
+    final isWideWeb =
+        kIsWeb && MediaQuery.sizeOf(context).width >= kNarrowViewportMaxWidth;
+
+    final List<Widget> cardList = [
+      _QuizSelectionCard(
+        title: 'Verkeersborden',
+        description: 'Oefen specifiek op borden en hun betekenis.',
+        color: Colors.blue,
+        icon: Icons.traffic,
+        onTap: () => context.push('/quiz', extra: QuizMode.trafficSigns),
+      ),
+      _QuizSelectionCard(
+        title: 'Per Hoofdstuk',
+        description: 'Toets je kennis per onderwerp.',
+        icon: Icons.menu_book,
+        color: Colors.orange,
+        onTap: () => context.push('/quiz', extra: QuizMode.chapter),
+      ),
+      _QuizSelectionCard(
+        title: 'Willekeurig',
+        description: 'Een mix van alle soorten vragen.',
+        icon: Icons.shuffle,
+        color: Colors.purple,
+        onTap: () => context.push('/quiz', extra: QuizMode.random),
+      ),
+      _QuizSelectionCard(
+        title: 'Zware overtredingen',
+        description: 'Oefen enkel de zware overtredingen',
+        icon: Icons.warning_amber_rounded,
+        color: Colors.red,
+        onTap: () => context.push('/quiz', extra: QuizMode.random),
+      ),
+    ];
+
+    // Web: titel + ondertitel gecentreerd, 4 categorieën onder elkaar en gecentreerd
+    const double cardWidth = 700;
+    final Widget webContent = Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 16),
-              Text(
-                'Oefenen',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Kies een categorie om te starten',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.grey[700],
-                    ),
-              ),
-              const SizedBox(height: 32),
-              _QuizSelectionCard(
-                title: 'Verkeersborden',
-                description: 'Oefen specifiek op borden en hun betekenis.',
-                color: Colors.blue,
-                icon: Icons.traffic,
-                onTap: () {
-                  context.push('/quiz', extra: QuizMode.trafficSigns);
-                },
-              ),
-              const SizedBox(height: 16),
-
-              _QuizSelectionCard(
-                title: 'Per Hoofdstuk',
-                description: 'Toets je kennis per onderwerp.',
-                icon: Icons.menu_book,
-                color: Colors.orange,
-                onTap: () {
-                  context.push('/quiz', extra: QuizMode.chapter);
-                },
-              ),
-              const SizedBox(height: 16),
-
-              _QuizSelectionCard(
-                title: 'Willekeurig',
-                description: 'Een mix van alle soorten vragen.',
-                icon: Icons.shuffle,
-                color: Colors.purple,
-                onTap: () {
-                  context.push('/quiz', extra: QuizMode.random);
-                },
-              ),
-              
-              const SizedBox(height: 16),
-               _QuizSelectionCard(
-                title: 'Zware overtredingen',
-                description: 'Oefen enkel de zware overtredingen',
-                icon: Icons.warning_amber_rounded,
-                color: Colors.red,
-                onTap: () {
-                  // For now, mapping this to random or adding a new mode if supported
-                  // Using Random for now as it includes hazard questions in our mock
-                  context.push('/quiz', extra: QuizMode.random); 
-                },
-              ),
-            ],
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const SizedBox(height: 16),
+          Text(
+            'Oefenen',
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
           ),
+          const SizedBox(height: 8),
+          Text(
+            'Kies een categorie om te starten',
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Colors.grey[700],
+                ),
+          ),
+          const SizedBox(height: 32),
+          ...cardList.map(
+            (c) => Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: SizedBox(
+                width: cardWidth,
+                height: 110,
+                child: c,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
 
-    final isWideWeb = kIsWeb && MediaQuery.sizeOf(context).width >= kNarrowViewportMaxWidth;
+    // Mobiel: volledige content (titel + knoppen onder elkaar)
+    final Widget mobileContent = SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: 16),
+          Text(
+            'Oefenen',
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Kies een categorie om te starten',
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Colors.grey[700],
+                ),
+          ),
+          const SizedBox(height: 32),
+          ...cardList.map((c) => Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: c,
+              )),
+        ],
+      ),
+    );
+
     if (isWideWeb) {
+      // Witte balk over volledige hoogte (van boven tot beneden), inhoud scrollt erbinnen
       return Scaffold(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
         body: Stack(
           children: [
             Positioned.fill(
@@ -99,17 +133,42 @@ class OefenvragenScreen extends StatelessWidget {
               ),
             ),
             SafeArea(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: kWebContentMaxWidth),
-                    child: ColoredBox(
-                      color: Colors.white,
-                      child: content,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final h = constraints.maxHeight;
+                  final w = constraints.maxWidth;
+                  const topMargin = 10.0; // marge boven witte balk (alleen web)
+                  const radius = 32.0; // boxing radius bovenhoeken (alleen web)
+                  final barWidth =
+                      (w - 40).clamp(0.0, kWebNavContentMaxWidth.toDouble());
+                  return Padding(
+                    padding: const EdgeInsets.only(top: topMargin),
+                    child: SizedBox(
+                      width: w,
+                      height: h - topMargin,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: barWidth,
+                            height: h - topMargin,
+                            clipBehavior: Clip.antiAlias,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(radius),
+                                topRight: Radius.circular(radius),
+                              ),
+                            ),
+                            child: SingleChildScrollView(
+                              child: webContent,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
             ),
           ],
@@ -118,7 +177,7 @@ class OefenvragenScreen extends StatelessWidget {
     }
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: SafeArea(child: content),
+      body: SafeArea(child: mobileContent),
     );
   }
 }

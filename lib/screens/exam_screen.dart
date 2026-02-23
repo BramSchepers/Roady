@@ -44,44 +44,85 @@ class _ExamScreenState extends State<ExamScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade300),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.volume_up, size: 22, color: Colors.grey[700]),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Vraag voorlezen aanzetten voor het echte examen-gevoel',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.black87,
+              isWideWeb
+                  ? Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 420),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.volume_up,
+                                  size: 22, color: Colors.grey[700]),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'Vraag voorlezen aanzetten voor het echte examen-gevoel',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(color: Colors.black87),
+                                ),
+                              ),
+                              Switch(
+                                value: _ttsEnabled,
+                                onChanged: (v) =>
+                                    setState(() => _ttsEnabled = v),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    )
+                  : Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.volume_up,
+                              size: 22, color: Colors.grey[700]),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Vraag voorlezen aanzetten voor het echte examen-gevoel',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(color: Colors.black87),
                             ),
+                          ),
+                          Switch(
+                            value: _ttsEnabled,
+                            onChanged: (v) =>
+                                setState(() => _ttsEnabled = v),
+                          ),
+                        ],
                       ),
                     ),
-                    Switch(
-                      value: _ttsEnabled,
-                      onChanged: (v) => setState(() => _ttsEnabled = v),
-                    ),
-                  ],
-                ),
-              ),
               const SizedBox(height: 48),
               isWideWeb
                   ? Center(
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: kWebButtonMaxWidth),
+                        constraints: const BoxConstraints(maxWidth: 340),
                         child: FilledButton(
                           onPressed: () => context.push('/quiz', extra: {
                             'mode': QuizMode.exam,
                             'ttsEnabled': _ttsEnabled,
                           }),
                           style: FilledButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 18, horizontal: 24),
                             backgroundColor: _accentBlue,
                             minimumSize: const Size(double.infinity, 0),
                           ),
@@ -104,11 +145,15 @@ class _ExamScreenState extends State<ExamScreen> {
               isWideWeb
                   ? Center(
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: kWebButtonMaxWidth),
+                        constraints: const BoxConstraints(maxWidth: 340),
                         child: SizedBox(
                           width: double.infinity,
                           child: TextButton(
                             onPressed: () => context.push('/exam-history'),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 16, horizontal: 24),
+                            ),
                             child: const Text('Examen historiek'),
                           ),
                         ),
@@ -142,14 +187,24 @@ class _ExamScreenState extends State<ExamScreen> {
               ),
             ),
             SafeArea(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: kWebContentMaxWidth),
-                    child: ColoredBox(
-                      color: Colors.white,
-                      child: bodyContent,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: kWebContentMaxWidth),
+                      child: Container(
+                        clipBehavior: Clip.antiAlias,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(32),
+                            topRight: Radius.circular(32),
+                          ),
+                        ),
+                        child: bodyContent,
+                      ),
                     ),
                   ),
                 ),

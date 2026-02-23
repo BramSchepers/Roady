@@ -129,23 +129,43 @@ class _AiScreenState extends State<AiScreen> with SingleTickerProviderStateMixin
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 40),
-            // Feature teasers
-            _ComingSoonFeature(
-              icon: Icons.quiz_outlined,
-              title: 'Vraag uitleg',
-              subtitle: 'Begrijp antwoorden beter met AI-uitleg',
-            ),
-            const SizedBox(height: 12),
-            _ComingSoonFeature(
-              icon: Icons.trending_up,
-              title: 'Persoonlijke tips',
-              subtitle: 'Studie-advies op basis van je voortgang',
-            ),
-            const SizedBox(height: 12),
-            _ComingSoonFeature(
-              icon: Icons.chat_bubble_outline,
-              title: 'Verkeersvragen',
-              subtitle: 'Stel vragen over verkeersregels en situaties',
+            // Feature teasers (zelfde breedte als oefenvragen-kaarten op web)
+            LayoutBuilder(
+              builder: (context, constraints) {
+                const blockWidth = 700.0;
+                final useFixedWidth = constraints.maxWidth > blockWidth;
+                final blockColumn = Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _ComingSoonFeature(
+                      icon: Icons.quiz_outlined,
+                      title: 'Vraag uitleg',
+                      subtitle: 'Begrijp antwoorden beter met AI-uitleg',
+                    ),
+                    const SizedBox(height: 12),
+                    _ComingSoonFeature(
+                      icon: Icons.trending_up,
+                      title: 'Persoonlijke tips',
+                      subtitle: 'Studie-advies op basis van je voortgang',
+                    ),
+                    const SizedBox(height: 12),
+                    _ComingSoonFeature(
+                      icon: Icons.chat_bubble_outline,
+                      title: 'Verkeersvragen',
+                      subtitle: 'Stel vragen over verkeersregels en situaties',
+                    ),
+                  ],
+                );
+                if (useFixedWidth) {
+                  return Center(
+                    child: SizedBox(
+                      width: blockWidth,
+                      child: blockColumn,
+                    ),
+                  );
+                }
+                return blockColumn;
+              },
             ),
           ],
         ),
@@ -170,17 +190,39 @@ class _AiScreenState extends State<AiScreen> with SingleTickerProviderStateMixin
               ),
             ),
             SafeArea(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: kWebContentMaxWidth),
-                    child: ColoredBox(
-                      color: Colors.white,
-                      child: content,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  const topMargin = 10.0;
+                  const radius = 32.0;
+                  final h = constraints.maxHeight - topMargin;
+                  return Padding(
+                    padding: const EdgeInsets.only(top: topMargin),
+                    child: SizedBox(
+                      height: h,
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                                maxWidth: kWebContentMaxWidth),
+                            child: Container(
+                              height: h,
+                              clipBehavior: Clip.antiAlias,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(radius),
+                                  topRight: Radius.circular(radius),
+                                ),
+                              ),
+                              child: content,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
             ),
           ],

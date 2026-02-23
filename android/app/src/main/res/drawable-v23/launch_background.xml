@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Laadscherm: app-achtergrond (gradient zoals Background_hero) met R_roady_opstart logo -->
+<!-- Laadscherm: app-achtergrond + logo in vaste grootte (kleiner, API 23+) -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@drawable/splash_background_gradient" />
-    <item>
+    <item
+        android:width="120dp"
+        android:height="120dp"
+        android:gravity="center">
         <bitmap
             android:gravity="center"
             android:src="@drawable/r_roady_opstart" />

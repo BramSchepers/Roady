@@ -12,8 +12,9 @@ class QuizRepository {
   static const String _collectionId = 'quizQuestions';
 
   /// Fetches questions from Firestore based on the QuizMode.
+  /// Set [forceFromServer] to true to bypass cache and sync with latest questions (e.g. on quiz open).
   Future<List<QuizQuestion>> getQuestionsByMode(QuizMode mode,
-      {String? chapterId}) async {
+      {String? chapterId, bool forceFromServer = false}) async {
     try {
       Query query = _firestore.collection(_collectionId);
 
@@ -34,7 +35,12 @@ class QuizRepository {
           break;
       }
 
-      final snapshot = await query.get();
+      final options = forceFromServer
+          ? const GetOptions(source: Source.server)
+          : null;
+      final snapshot = options != null
+          ? await query.get(options)
+          : await query.get();
       final questions = <QuizQuestion>[];
       for (final doc in snapshot.docs) {
         try {

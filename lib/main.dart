@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'auth/auth_state.dart';
 import 'firebase_options.dart';
 import 'repositories/quiz_repository.dart';
+import 'repositories/theory_repository.dart';
 import 'screens/auth_screen.dart';
 import 'screens/download_app_screen.dart';
 import 'screens/dashboard_screen.dart';
@@ -81,6 +82,9 @@ void main() async {
 
   // Seed initial quiz questions if needed
   await QuizRepository.instance.seedInitialData();
+
+  // Sync lessen en vragen van server (web + mobiel), niet blokkerend
+  TheoryRepository.instance.refreshChaptersFromServer();
 
   final authState = AuthState();
   runApp(RoadyApp(authState: authState));

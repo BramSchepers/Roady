@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Laadscherm: witte achtergrond met Roady mascot -->
+<!-- Laadscherm: app-achtergrond (gradient zoals Background_hero) met R_roady_opstart logo -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@android:color/white" />
+    <item android:drawable="@drawable/splash_background_gradient" />
     <item>
         <bitmap
             android:gravity="center"
-            android:src="@drawable/r_inlogscherm" />
+            android:src="@drawable/r_roady_opstart" />
     </item>
 </layer-list>

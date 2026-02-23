@@ -29,5 +29,14 @@ const double kWebContentMaxWidth = 1575.0;
 /// Max content width for nav bar; aligned with theory page white area.
 const double kWebNavContentMaxWidth = 1575.0;
 
+/// Max content width for home page (fuel meter + nav cards). Smaller than nav so the white cards feel narrower.
+const double kHomeContentMaxWidth = 1000.0;
+
+/// Max content width for profile page on web. Narrower than full width so content doesn’t stretch too much.
+const double kProfileContentMaxWidth = 640.0;
+
+/// Max content width for shop page on web. Narrower so subscription cards don't stretch too much.
+const double kShopContentMaxWidth = 640.0;
+
 /// Max button width on web (200-300px).
 const double kWebButtonMaxWidth = 280.0;

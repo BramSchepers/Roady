@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -10,6 +11,7 @@ import '../models/exam_attempt.dart';
 import '../models/quiz_models.dart';
 import '../repositories/exam_history_repository.dart';
 import '../repositories/quiz_repository.dart';
+import '../utils/onboarding_constants.dart';
 
 class QuizScreen extends StatefulWidget {
   final QuizMode mode;
@@ -97,6 +99,7 @@ class _QuizScreenState extends State<QuizScreen>
     final questions = await QuizRepository.instance.getQuestionsByMode(
       widget.mode,
       chapterId: widget.categoryId,
+      forceFromServer: true, // Altijd verse vragen van server voor sync
     );
     if (mounted) {
       setState(() {
@@ -380,85 +383,56 @@ class _QuizScreenState extends State<QuizScreen>
 
     final question = _questions[_currentIndex];
     final canTapAnswer = !_isExamMode || _ttsReady;
+    final isWideWeb =
+        kIsWeb && MediaQuery.sizeOf(context).width >= kNarrowViewportMaxWidth;
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Text(
-          _isExamMode
-              ? '${(_examTimerRemaining ?? _examTimerSeconds) ~/ 60}:${((_examTimerRemaining ?? _examTimerSeconds) % 60).toString().padLeft(2, '0')}'
-              : 'Oefenen',
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => context.pop(),
-        ),
-        actions: _isExamMode
-            ? [
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.volume_up, size: 20, color: Colors.grey[700]),
-                      const SizedBox(width: 4),
-                      Switch(
-                        value: _ttsEnabled,
-                        onChanged: (v) => setState(() => _ttsEnabled = v),
-                      ),
-                    ],
-                  ),
-                ),
-              ]
-            : null,
-      ),
-      body: Column(
-        children: [
-          // Top bar: exam = alleen tijd-cooldown (blauw); oefenen = vraagvoortgang
-          _isExamMode
-              ? (_examTimerRemaining != null
-                  ? AnimatedBuilder(
-                      animation: _timerBarController,
-                      builder: (context, _) => LinearProgressIndicator(
-                        value: 1.0 - _timerBarController.value,
-                        backgroundColor: Colors.grey[200],
-                        minHeight: 6,
-                        valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
-                      ),
-                    )
-                  : LinearProgressIndicator(
-                      value: 1.0,
+    final bodyContent = Column(
+      children: [
+        // Top bar: exam = alleen tijd-cooldown (blauw); oefenen = vraagvoortgang
+        _isExamMode
+            ? (_examTimerRemaining != null
+                ? AnimatedBuilder(
+                    animation: _timerBarController,
+                    builder: (context, _) => LinearProgressIndicator(
+                      value: 1.0 - _timerBarController.value,
                       backgroundColor: Colors.grey[200],
                       minHeight: 6,
                       valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
-                    ))
-              : LinearProgressIndicator(
-                  value: (_currentIndex + 1) / _questions.length,
-                  backgroundColor: Colors.grey[200],
-                  minHeight: 6,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    Theme.of(context).colorScheme.primary,
-                  ),
+                    ),
+                  )
+                : LinearProgressIndicator(
+                    value: 1.0,
+                    backgroundColor: Colors.grey[200],
+                    minHeight: 6,
+                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
+                  ))
+            : LinearProgressIndicator(
+                value: (_currentIndex + 1) / _questions.length,
+                backgroundColor: Colors.grey[200],
+                minHeight: 6,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  Theme.of(context).colorScheme.primary,
                 ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (question.imageUrl != null) ...[
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        height: 200,
-                        color: Colors.grey[200],
-                        child: CachedNetworkImage(
+              ),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (question.imageUrl != null) ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      height: 200,
+                      constraints: BoxConstraints(
+                        maxHeight: 200,
+                        maxWidth: isWideWeb ? 600 : double.infinity,
+                      ),
+                      color: Colors.grey[200],
+                      child: CachedNetworkImage(
                           imageUrl: question.imageUrl!,
-                          fit: BoxFit
-                              .contain, // or cover depending on aspect ratio
+                          fit: BoxFit.contain,
                           placeholder: (context, url) => const Center(
                             child: CircularProgressIndicator(),
                           ),
@@ -468,12 +442,12 @@ class _QuizScreenState extends State<QuizScreen>
                             color: Colors.grey,
                           ),
                         ),
-                      ),
                     ),
-                    const SizedBox(height: 16),
-                  ],
-                  Text(
-                    question.text,
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                Text(
+                  question.text,
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -675,7 +649,90 @@ class _QuizScreenState extends State<QuizScreen>
             ),
           ),
         ],
+    );
+
+    return Scaffold(
+      backgroundColor: isWideWeb ? Colors.transparent : Colors.white,
+      appBar: AppBar(
+        title: Text(
+          _isExamMode
+              ? '${(_examTimerRemaining ?? _examTimerSeconds) ~/ 60}:${((_examTimerRemaining ?? _examTimerSeconds) % 60).toString().padLeft(2, '0')}'
+              : 'Oefenen',
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => context.pop(),
+        ),
+        actions: _isExamMode
+            ? [
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.volume_up, size: 20, color: Colors.grey[700]),
+                      const SizedBox(width: 4),
+                      Switch(
+                        value: _ttsEnabled,
+                        onChanged: (v) => setState(() => _ttsEnabled = v),
+                      ),
+                    ],
+                  ),
+                ),
+              ]
+            : null,
       ),
+      body: isWideWeb
+          ? Stack(
+              children: [
+                Positioned.fill(
+                  child: Container(
+                    color: Colors.white,
+                    child: SvgPicture.asset(
+                      'assets/illustrations/Background_hero.svg',
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                      placeholderBuilder: (_) => const SizedBox.shrink(),
+                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                    ),
+                  ),
+                ),
+                SafeArea(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      const topMargin = 10.0;
+                      const radius = 32.0;
+                      final w = MediaQuery.sizeOf(context).width;
+                      final contentWidth = w * 0.5;
+                      final h = constraints.maxHeight - topMargin;
+                      return Padding(
+                        padding: const EdgeInsets.only(top: topMargin),
+                        child: Center(
+                          child: Container(
+                            width: contentWidth,
+                            height: h,
+                            clipBehavior: Clip.antiAlias,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(radius),
+                                topRight: Radius.circular(radius),
+                              ),
+                            ),
+                            child: bodyContent,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            )
+          : bodyContent,
     );
   }
 }
