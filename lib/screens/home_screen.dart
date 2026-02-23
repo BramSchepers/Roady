@@ -188,14 +188,12 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: SvgPicture.asset(
-              'assets/illustrations/Background_hero.svg',
+            child: Image.asset(
+              'assets/images/background.webp',
               fit: BoxFit.cover,
               width: double.infinity,
               height: double.infinity,
-              placeholderBuilder: (_) => const ColoredBox(color: Colors.white),
-              errorBuilder: (_, __, ___) =>
-                  const ColoredBox(color: Colors.white),
+              errorBuilder: (_, __, ___) => const ColoredBox(color: Colors.white),
             ),
           ),
           SafeArea(

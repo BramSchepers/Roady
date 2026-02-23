@@ -122,12 +122,11 @@ class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
             Positioned.fill(
                 child: Container(
                   color: Colors.white,
-                  child: SvgPicture.asset(
-                    'assets/illustrations/Background_hero.svg',
+                  child: Image.asset(
+                    'assets/images/background.webp',
                     fit: BoxFit.cover,
                     width: double.infinity,
                     height: double.infinity,
-                    placeholderBuilder: (_) => const SizedBox.shrink(),
                     errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                   ),
                 ),
@@ -175,7 +174,7 @@ class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
                           },
                           itemBuilder: (context, index) {
                             final lesson = widget.chapter.lessons[index];
-                            return _buildLessonCard(lesson);
+                            return _buildLessonCard(context, lesson);
                           },
                         ),
                       ),
@@ -262,7 +261,7 @@ class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
         (imageUrl.startsWith('http://') || imageUrl.startsWith('https://'))) {
       return CachedNetworkImage(
         imageUrl: imageUrl,
-        fit: BoxFit.contain,
+        fit: BoxFit.cover,
         placeholder: (context, url) => const Padding(
           padding: EdgeInsets.all(24.0),
           child: ImageLoadingPlaceholder(
@@ -313,7 +312,14 @@ class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
     );
   }
 
-  Widget _buildLessonCard(TheoryLesson lesson) {
+  Widget _buildLessonCard(BuildContext context, TheoryLesson lesson) {
+    final isMobile = !kIsWeb;
+    final titleFontSize = isMobile ? 22.0 : 27.0;
+    final bodyFontSize = isMobile ? 16.0 : 18.0;
+    final h1FontSize = isMobile ? 19.0 : 22.0;
+    final h2FontSize = isMobile ? 18.0 : 20.0;
+    final h3FontSize = isMobile ? 17.0 : 19.0;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
@@ -330,12 +336,12 @@ class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 1. Afbeelding (als URL) of animatie / Lottie
-          Expanded(
-            flex: 4,
+          // 1. Afbeelding: container evengroot als foto (vaste aspectratio, geen lege ruimte)
+          AspectRatio(
+            aspectRatio: 16 / 9,
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.blue[50],
+                color: Colors.white,
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(24)),
               ),
@@ -344,21 +350,20 @@ class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
             ),
           ),
 
-          // 2. Tekst Content
+          // 2. Tekst Content (direct onder de foto)
           Expanded(
-            flex: 3,
             child: Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       lesson.getTitle(_currentLang),
-                      style: const TextStyle(
-                        fontSize: 27,
+                      style: TextStyle(
+                        fontSize: titleFontSize,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF0F172A),
+                        color: const Color(0xFF0F172A),
                         height: 1.2,
                       ),
                     ),
@@ -368,19 +373,19 @@ class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
                       selectable: true,
                       styleSheet: MarkdownStyleSheet(
                         p: TextStyle(
-                          fontSize: 18,
+                          fontSize: bodyFontSize,
                           fontWeight: FontWeight.w500,
                           color: Colors.grey[800],
                           height: 1.6,
                         ),
                         strong: TextStyle(
-                          fontSize: 18,
+                          fontSize: bodyFontSize,
                           color: Colors.grey[900],
                           fontWeight: FontWeight.bold,
                           height: 1.6,
                         ),
                         em: TextStyle(
-                          fontSize: 18,
+                          fontSize: bodyFontSize,
                           color: Colors.grey[800],
                           fontStyle: FontStyle.italic,
                           fontWeight: FontWeight.w500,
@@ -388,25 +393,25 @@ class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
                         ),
                         listIndent: 24,
                         listBullet: TextStyle(
-                          fontSize: 18,
+                          fontSize: bodyFontSize,
                           fontWeight: FontWeight.w500,
                           color: Colors.grey[800],
                           height: 1.6,
                         ),
                         h1: TextStyle(
-                          fontSize: 22,
+                          fontSize: h1FontSize,
                           fontWeight: FontWeight.bold,
                           color: const Color(0xFF0F172A),
                           height: 1.3,
                         ),
                         h2: TextStyle(
-                          fontSize: 20,
+                          fontSize: h2FontSize,
                           fontWeight: FontWeight.bold,
                           color: const Color(0xFF0F172A),
                           height: 1.3,
                         ),
                         h3: TextStyle(
-                          fontSize: 19,
+                          fontSize: h3FontSize,
                           fontWeight: FontWeight.w600,
                           color: const Color(0xFF0F172A),
                           height: 1.3,

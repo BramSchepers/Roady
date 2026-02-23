@@ -23,12 +23,11 @@ class LicenseSelectionScreen extends StatelessWidget {
           Positioned.fill(
               child: Container(
                 color: Colors.white,
-                child: SvgPicture.asset(
-                  'assets/illustrations/Background_hero.svg',
+                child: Image.asset(
+                  'assets/images/background.webp',
                   fit: BoxFit.cover,
                   width: double.infinity,
                   height: double.infinity,
-                  placeholderBuilder: (_) => const SizedBox.shrink(),
                   errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                 ),
               ),

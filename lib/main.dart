@@ -129,11 +129,11 @@ class RoadyApp extends StatelessWidget {
         // On web: skip offline-download (alleen relevant voor native app)
         if (kIsWeb && path == '/offline-download') return '/home';
 
-        // On web: redirect mobile/narrow viewport to download-app (app only, no web fallback)
-        if (kIsWeb && path != '/download-app') {
-          final width = MediaQuery.sizeOf(context).width;
-          final looksMobile = isMobileUserAgent() || width < 768;
-          if (looksMobile) return '/download-app';
+        // On web: redirect echte mobiele browsers naar download-app (geen redirect op viewportbreedte)
+        if (kIsWeb) {
+          if (path != '/download-app' && isMobileUserAgent()) return '/download-app';
+          // Stuur desktop/niet-mobiel weer naar home als ze op /download-app zitten (na resize/refresh)
+          if (path == '/download-app' && !isMobileUserAgent()) return '/home';
         }
 
         final isLoggedIn = authState.isLoggedIn;

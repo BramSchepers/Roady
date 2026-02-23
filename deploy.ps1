@@ -19,7 +19,7 @@ Write-Host "  Flutter web bouwen (base-href /auth/)..." -ForegroundColor Yellow
 Set-Location $root
 & flutter pub get
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-& flutter build web --base-href /auth/
+& flutter build web --base-href /auth/ --source-maps --source-maps
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 # 3. Flutter build in firebase_hosting/auth/ zetten

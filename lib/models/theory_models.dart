@@ -93,7 +93,7 @@ class TheoryChapter {
     return TheoryChapter(
       id: map['id'] as String? ?? '',
       title: titleMap,
-      imageUrl: map['imageUrl'] as String? ?? 'assets/illustrations/Background_hero.svg',
+      imageUrl: map['imageUrl'] as String? ?? 'assets/images/background.webp',
       lessons: lessonsList,
     );
   }
