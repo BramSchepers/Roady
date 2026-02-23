@@ -1,8 +1,5 @@
-import 'package:dotlottie_loader/dotlottie_loader.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:lottie/lottie.dart';
 import '../models/theory_models.dart';
 import '../models/energy_state.dart';
 import '../repositories/theory_repository.dart';
@@ -376,25 +373,8 @@ class _TheoryScreenState extends State<TheoryScreen> {
       builder: (context) => Positioned.fill(
         child: Stack(
           children: [
-            // Confetti alleen op web (mobiele variant later weer toevoegen)
-            if (kIsWeb)
-              Positioned.fill(
-                child: DotLottieLoader.fromAsset(
-                  'assets/lottie/Confetti.lottie',
-                  frameBuilder: (context, dotlottie) {
-                    if (dotlottie != null &&
-                        dotlottie.animations.isNotEmpty) {
-                      return Lottie.memory(
-                        dotlottie.animations.values.first,
-                        fit: BoxFit.cover,
-                        repeat: false,
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
-                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                ),
-              ),
+            // Confetti verwijderd op verzoek
+
             // Geanimeerde blauwe vinkje
             CompletionAnimationWidget(
               onComplete: () {

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 /// Volle-breedte hero-achtergrond voor de web-app (gebruikt in main builder).
 class HeroBackground extends StatelessWidget {
