@@ -263,6 +263,38 @@
     });
   }
 
+  // Pricing Toggle (Monthly / Yearly)
+  const pricingSwitch = document.getElementById('pricing-switch');
+  const monthlyLabel = document.getElementById('monthly-label');
+  const yearlyLabel = document.getElementById('yearly-label');
+  const pricingAmounts = document.querySelectorAll('.pricing-card__amount[data-monthly]');
+  const pricingPeriods = document.querySelectorAll('.pricing-card__period[data-monthly]');
+
+  if (pricingSwitch && monthlyLabel && yearlyLabel) {
+    pricingSwitch.addEventListener('change', function () {
+      const isYearly = pricingSwitch.checked;
+
+      // Update labels active state
+      if (isYearly) {
+        monthlyLabel.classList.remove('pricing-toggle__label--active');
+        yearlyLabel.classList.add('pricing-toggle__label--active');
+      } else {
+        monthlyLabel.classList.add('pricing-toggle__label--active');
+        yearlyLabel.classList.remove('pricing-toggle__label--active');
+      }
+
+      // Update prices
+      pricingAmounts.forEach(function (amount) {
+        amount.innerHTML = isYearly ? amount.dataset.yearly : amount.dataset.monthly;
+      });
+
+      // Update periods
+      pricingPeriods.forEach(function (period) {
+        period.textContent = isYearly ? period.dataset.yearly : period.dataset.monthly;
+      });
+    });
+  }
+
   // Pricing carousel (mobile only)
   const pricingGrid = document.querySelector('.pricing__grid');
   const pricingCards = document.querySelectorAll('.pricing-card');

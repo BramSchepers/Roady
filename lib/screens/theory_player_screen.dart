@@ -7,6 +7,8 @@ import 'package:lottie/lottie.dart';
 import '../models/theory_models.dart';
 import '../models/energy_state.dart';
 import '../widgets/image_loading_placeholder.dart';
+import '../utils/image_utils.dart';
+import '../utils/onboarding_constants.dart';
 
 class TheoryPlayerScreen extends StatefulWidget {
   final TheoryChapter chapter;
@@ -132,13 +134,10 @@ class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
               ),
             // Content met ~1/4 marge links/rechts op web
             SafeArea(
-              child: Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: kIsWeb
-                        ? MediaQuery.sizeOf(context).width * 0.25
-                        : 0,
-                  ),
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: kIsWeb ? 900 : double.infinity),
                   child: Column(
                     children: [
                       // Voortgangsindicator
@@ -258,32 +257,38 @@ class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
     if (imageUrl != null &&
         imageUrl.isNotEmpty &&
         (imageUrl.startsWith('http://') || imageUrl.startsWith('https://'))) {
-      return CachedNetworkImage(
-        imageUrl: imageUrl,
-        fit: BoxFit.cover,
-        placeholder: (context, url) => const Padding(
-          padding: EdgeInsets.all(24.0),
-          child: ImageLoadingPlaceholder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-        ),
-        errorWidget: (context, url, error) => Padding(
-          padding: const EdgeInsets.all(24),
-          child: DotLottieLoader.fromAsset(
-            lesson.lottieAsset,
-            frameBuilder: (BuildContext context, dotlottie) {
-              if (dotlottie != null && dotlottie.animations.isNotEmpty) {
-                return Lottie.memory(
-                  dotlottie.animations.values.first,
-                  fit: BoxFit.contain,
-                );
-              }
-              return const Center(child: CircularProgressIndicator());
-            },
-            errorBuilder: (_, __, ___) => const Icon(
-              Icons.image_not_supported,
-              size: 64,
-              color: Colors.grey,
+      return MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: () => showFullImage(context, imageUrl),
+          child: CachedNetworkImage(
+            imageUrl: imageUrl,
+            fit: BoxFit.cover,
+            placeholder: (context, url) => const Padding(
+              padding: EdgeInsets.all(24.0),
+              child: ImageLoadingPlaceholder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+            ),
+            errorWidget: (context, url, error) => Padding(
+              padding: const EdgeInsets.all(24),
+              child: DotLottieLoader.fromAsset(
+                lesson.lottieAsset,
+                frameBuilder: (BuildContext context, dotlottie) {
+                  if (dotlottie != null && dotlottie.animations.isNotEmpty) {
+                    return Lottie.memory(
+                      dotlottie.animations.values.first,
+                      fit: BoxFit.contain,
+                    );
+                  }
+                  return const Center(child: CircularProgressIndicator());
+                },
+                errorBuilder: (_, __, ___) => const Icon(
+                  Icons.image_not_supported,
+                  size: 64,
+                  color: Colors.grey,
+                ),
+              ),
             ),
           ),
         ),
@@ -313,6 +318,7 @@ class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
 
   Widget _buildLessonCard(BuildContext context, TheoryLesson lesson) {
     final isMobile = !kIsWeb;
+    final isWideWeb = kIsWeb && MediaQuery.sizeOf(context).width >= kNarrowViewportMaxWidth;
     final titleFontSize = isMobile ? 22.0 : 27.0;
     final bodyFontSize = isMobile ? 16.0 : 18.0;
     final h1FontSize = isMobile ? 19.0 : 22.0;
@@ -336,18 +342,31 @@ class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // 1. Afbeelding: container evengroot als foto (vaste aspectratio, geen lege ruimte)
-          AspectRatio(
-            aspectRatio: 16 / 9,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(24)),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: _buildLessonMedia(lesson),
-            ),
-          ),
+          isWideWeb
+              ? AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(24)),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: _buildLessonMedia(lesson),
+                  ),
+                )
+              : AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(24)),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: _buildLessonMedia(lesson),
+                  ),
+                ),
 
           // 2. Tekst Content (direct onder de foto)
           Expanded(

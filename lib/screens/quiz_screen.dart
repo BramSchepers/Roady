@@ -11,6 +11,7 @@ import '../models/quiz_models.dart';
 import '../repositories/exam_history_repository.dart';
 import '../repositories/quiz_repository.dart';
 import '../utils/onboarding_constants.dart';
+import '../utils/image_utils.dart';
 
 class QuizScreen extends StatefulWidget {
   final QuizMode mode;
@@ -420,27 +421,38 @@ class _QuizScreenState extends State<QuizScreen>
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 if (question.imageUrl != null) ...[
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      height: 200,
-                      constraints: BoxConstraints(
-                        maxHeight: 200,
-                        maxWidth: isWideWeb ? 600 : double.infinity,
-                      ),
-                      color: Colors.grey[200],
-                      child: CachedNetworkImage(
-                          imageUrl: question.imageUrl!,
-                          fit: BoxFit.contain,
-                          placeholder: (context, url) => const Center(
-                            child: CircularProgressIndicator(),
+                  MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: () => showFullImage(context, question.imageUrl!),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          constraints: BoxConstraints(
+                            maxHeight: isWideWeb ? 500 : 250,
+                            maxWidth: isWideWeb ? 800 : double.infinity,
                           ),
-                          errorWidget: (context, url, error) => const Icon(
-                            Icons.image_not_supported,
-                            size: 50,
-                            color: Colors.grey,
+                          color: Colors.grey[200],
+                          child: CachedNetworkImage(
+                            imageUrl: question.imageUrl!,
+                            fit: BoxFit.contain,
+                            placeholder: (context, url) => const SizedBox(
+                              height: 200,
+                              child: Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                            ),
+                            errorWidget: (context, url, error) => const SizedBox(
+                              height: 200,
+                              child: Icon(
+                                Icons.image_not_supported,
+                                size: 50,
+                                color: Colors.grey,
+                              ),
+                            ),
                           ),
                         ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
