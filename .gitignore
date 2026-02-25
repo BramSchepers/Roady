@@ -56,3 +56,6 @@ app.*.map.json
 /scripts/upload-theory-images/service-account-key.json
 /scripts/upload-theory-images/*-firebase-adminsdk-*.json
 /website/node_modules/
+
+#Afbeeldingen niet uploaden veel te groot
+assets/images/theorie/
