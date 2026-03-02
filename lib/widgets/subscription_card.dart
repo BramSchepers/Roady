@@ -12,6 +12,8 @@ class SubscriptionCard extends StatelessWidget {
   final bool isCurrent;
   final bool isPopular;
   final bool isComingSoon;
+  /// Optioneel: kaart visueel dimmen (bijv. Basic wanneer Pro actief is).
+  final bool isDimmed;
 
   const SubscriptionCard({
     super.key,
@@ -23,6 +25,7 @@ class SubscriptionCard extends StatelessWidget {
     this.isCurrent = false,
     this.isPopular = false,
     this.isComingSoon = false,
+    this.isDimmed = false,
   });
 
   @override
@@ -89,7 +92,7 @@ class SubscriptionCard extends StatelessWidget {
                       child: SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: isComingSoon ? null : () {},
+                          onPressed: (isComingSoon || isDimmed) ? null : () {},
                           style: ElevatedButton.styleFrom(
                             backgroundColor: isComingSoon
                                 ? Colors.grey[300]
@@ -114,7 +117,7 @@ class SubscriptionCard extends StatelessWidget {
                 : SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: isComingSoon ? null : () {},
+                      onPressed: (isComingSoon || isDimmed) ? null : () {},
                       style: ElevatedButton.styleFrom(
                         backgroundColor:
                             isComingSoon ? Colors.grey[300] : textColor,
@@ -139,7 +142,10 @@ class SubscriptionCard extends StatelessWidget {
 
     return Stack(
       children: [
-        Opacity(opacity: isComingSoon ? 0.6 : 1, child: content),
+        Opacity(
+          opacity: isComingSoon || isDimmed ? 0.6 : 1,
+          child: content,
+        ),
         if (isPopular)
           Positioned(
             top: 0,

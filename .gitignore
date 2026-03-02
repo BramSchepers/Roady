@@ -59,3 +59,4 @@ app.*.map.json
 
 #Afbeeldingen niet uploaden veel te groot
 assets/images/theorie/
+assets/images/theorie/template.psd

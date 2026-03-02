@@ -27,6 +27,11 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 # 3. Flutter build in firebase_hosting/auth/ zetten
 New-Item -ItemType Directory -Force "$root\firebase_hosting\auth" | Out-Null
 Copy-Item -Path "$root\build\web\*" -Destination "$root\firebase_hosting\auth\" -Recurse -Force
+
+# 3b. Fix asset nesting (copy assets/assets/* to assets/)
+if (Test-Path "$root\firebase_hosting\auth\assets\assets") {
+    Copy-Item -Path "$root\firebase_hosting\auth\assets\assets\*" -Destination "$root\firebase_hosting\auth\assets\" -Recurse -Force
+}
 Write-Host "  Flutter web gekopieerd naar firebase_hosting\auth\" -ForegroundColor Green
 
 # 4. Deploy naar Firebase

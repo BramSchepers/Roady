@@ -11,6 +11,7 @@ import 'repositories/theory_repository.dart';
 import 'screens/auth_screen.dart';
 import 'screens/download_app_screen.dart';
 import 'screens/dashboard_screen.dart';
+import 'services/revenuecat_service.dart';
 import 'utils/mobile_web_detector.dart';
 import 'screens/exam_region_selection_screen.dart';
 import 'screens/home_screen.dart';
@@ -87,7 +88,24 @@ void main() async {
   TheoryRepository.instance.refreshChaptersFromServer();
 
   final authState = AuthState();
+
+  // Initialize RevenueCat on supported platforms (iOS/Android); sync user on auth changes
+  if (RevenueCatService.isSupported) {
+    await RevenueCatService.instance.initialize(appUserId: authState.user?.uid);
+    authState.addListener(() => _syncRevenueCatUser(authState));
+  }
+
   runApp(RoadyApp(authState: authState));
+}
+
+Future<void> _syncRevenueCatUser(AuthState authState) async {
+  if (!RevenueCatService.isSupported) return;
+  final uid = authState.user?.uid;
+  if (uid != null) {
+    await RevenueCatService.instance.logIn(uid);
+  } else {
+    await RevenueCatService.instance.logOut();
+  }
 }
 
 class RoadyApp extends StatelessWidget {

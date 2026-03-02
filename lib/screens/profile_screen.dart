@@ -2,10 +2,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 
 import '../auth/user_language_repository.dart';
 import '../auth/user_profile_prefs.dart';
+import '../services/revenuecat_service.dart';
 import '../utils/onboarding_constants.dart';
+import '../utils/revenuecat_constants.dart';
 import '../widgets/subscription_card.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -20,12 +23,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _licenseLoaded = false;
   String? _language;
   bool _languageLoaded = false;
+  bool _isPro = false;
+  bool _proLoaded = false;
 
   @override
   void initState() {
     super.initState();
     _loadLicenseType();
     _loadLanguage();
+    _loadProStatus();
+    if (RevenueCatService.isSupported) {
+      RevenueCatService.instance.customerInfoUpdates.listen((_) {
+        if (mounted) _loadProStatus();
+      });
+    }
+  }
+
+  Future<void> _loadProStatus() async {
+    if (!RevenueCatService.isSupported) {
+      if (mounted) setState(() => _proLoaded = true);
+      return;
+    }
+    try {
+      final isPro = await RevenueCatService.instance.hasProEntitlement();
+      if (mounted) setState(() {
+        _isPro = isPro;
+        _proLoaded = true;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _proLoaded = true);
+    }
+  }
+
+  Future<void> _presentCustomerCenter() async {
+    if (!RevenueCatService.isSupported) return;
+    try {
+      await RevenueCatUI.presentCustomerCenter();
+      if (mounted) _loadProStatus();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Fout: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _loadLanguage() async {
@@ -313,65 +354,137 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Show only the current subscription (assuming Free for now)
-            SubscriptionCard(
-              title: 'Gratis',
-              price: '€0 / maand',
-              features: const ['Basis theorie', 'Beperkte examens'],
-              color: Colors.blue.shade50,
-              textColor: Colors.blue.shade900,
-              isCurrent: true,
-            ),
-
-            const SizedBox(height: 24),
-            kIsWeb
-                ? Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: kWebButtonMaxWidth),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton(
-                          onPressed: () => context.go('/shop'),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            side: const BorderSide(color: Color(0xFF2563EB)),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: const Text(
-                            'Upgrade Abonnement',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Color(0xFF2563EB),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  )
-                : SizedBox(
+            // Show current subscription from RevenueCat when supported, else default to Free
+            if (_proLoaded) ...[
+              if (_isPro)
+                SubscriptionCard(
+                  title: entitlementRoadyPro,
+                  price: 'Actief',
+                  features: const [
+                    'Onbeperkte examens',
+                    'Alle oefeningen',
+                  ],
+                  color: Colors.orange.shade50,
+                  textColor: Colors.orange.shade900,
+                  isCurrent: true,
+                )
+              else
+                SubscriptionCard(
+                  title: 'Gratis',
+                  price: '€0',
+                  features: const ['Basis theorie', 'Beperkte examens'],
+                  color: Colors.blue.shade50,
+                  textColor: Colors.blue.shade900,
+                  isCurrent: true,
+                ),
+              const SizedBox(height: 16),
+              if (RevenueCatService.isSupported)
+                if (_isPro)
+                  SizedBox(
                     width: double.infinity,
-                    child: OutlinedButton(
-                      onPressed: () => context.go('/shop'),
+                    child: OutlinedButton.icon(
+                      onPressed: _presentCustomerCenter,
+                      icon: const Icon(Icons.settings),
+                      label: const Text('Beheer abonnement'),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        side: const BorderSide(color: Color(0xFF2563EB)),
+                        side: BorderSide(color: Colors.orange.shade300),
+                        foregroundColor: Colors.orange.shade800,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: const Text(
-                        'Upgrade Abonnement',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Color(0xFF2563EB),
-                          fontWeight: FontWeight.bold,
-                        ),
+                    ),
+                  )
+                else
+                  kIsWeb
+                      ? Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                                maxWidth: kWebButtonMaxWidth),
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton(
+                                onPressed: () => context.go('/shop'),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 16),
+                                  side: const BorderSide(
+                                      color: Color(0xFF2563EB)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Upgrade Abonnement',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Color(0xFF2563EB),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        )
+                      : SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton(
+                            onPressed: () => context.go('/shop'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 16),
+                              side: const BorderSide(
+                                  color: Color(0xFF2563EB)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: const Text(
+                              'Upgrade Abonnement',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Color(0xFF2563EB),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        )
+              else
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () => context.go('/shop'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: const BorderSide(color: Color(0xFF2563EB)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'Upgrade Abonnement',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Color(0xFF2563EB),
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
+                ),
+            ]
+            else
+              // Fallback while Pro status loads
+              SubscriptionCard(
+                title: 'Gratis',
+                price: '€0',
+                features: const ['Basis theorie', 'Beperkte examens'],
+                color: Colors.blue.shade50,
+                textColor: Colors.blue.shade900,
+                isCurrent: true,
+              ),
+
+            const SizedBox(height: 24),
               ],
             );
             return (kIsWeb && MediaQuery.sizeOf(context).width >= kNarrowViewportMaxWidth)

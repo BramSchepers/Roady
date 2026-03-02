@@ -27,7 +27,7 @@ dotenv.config();
 
 // Config: lokale map → Firestore document ID
 const CHAPTER_MAPPING = {
-  chapter_01: 'chapter_01',
+  chapter_02: 'chapter_02',
   // chapter_01: 'volgend_hoofdstuk',
 };
 
@@ -101,7 +101,7 @@ async function uploadToCloudinary(localPath, publicId) {
 }
 
 async function run() {
-  const baseDir = resolve(__dirname, '../../assets/images/theorie');
+  const baseDir = resolve(__dirname, '../../assets/images/theorie/');
 
   initCloudinary();
   await initFirebase();

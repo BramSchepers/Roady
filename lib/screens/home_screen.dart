@@ -20,8 +20,8 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  static const _heroBg = Color(0xFFe8f0e9);
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   static const _accentBlue = Color(0xFF2563EB);
 
   static const _webNavIconSize = 32.0;
@@ -30,6 +30,11 @@ class _HomeScreenState extends State<HomeScreen> {
   static final _tealColor = Colors.teal.shade800;
   static final _orangeColor = Colors.orange.shade800;
   static final _purpleColor = Colors.purple.shade800;
+
+  bool _webMenuOpen = false;
+  static const _webMenuPanelWidth = 300.0;
+  late AnimationController _webMenuController;
+  late Animation<double> _webMenuAnimation;
 
   /// Icoon behoudt kleur (blauw/teal/oranje/paars), tekst altijd _webNavTextColor (#282828).
   Widget _buildWebNavItem(IconData icon, String label, VoidCallback onTap,
@@ -60,6 +65,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   PreferredSizeWidget? _buildWebAppBar(BuildContext context) {
     final sideMargin = _webNavSideMargin(context);
+    final width = MediaQuery.sizeOf(context).width;
+    final isNarrowWeb = kIsWeb && width < kWebNavBarBreakpoint;
+
     return AppBar(
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.transparent,
@@ -87,84 +95,98 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            const SizedBox(width: 24),
-            _buildWebNavItem(
-              Icons.menu_book,
-              'Theorie',
-              () => context.go('/dashboard?tab=0'),
-              iconColor: _accentBlue,
-            ),
-            _buildWebNavItem(
-              Icons.quiz,
-              'Oefenvragen',
-              () => context.go('/dashboard?tab=1'),
-              iconColor: _tealColor,
-            ),
-            _buildWebNavItem(
-              Icons.school,
-              'Examen',
-              () => context.go('/dashboard?tab=2'),
-              iconColor: _orangeColor,
-            ),
-            _buildWebNavItem(
-              Icons.smart_toy,
-              'AI',
-              () => context.go('/dashboard?tab=3'),
-              iconColor: _purpleColor,
-            ),
+            if (!isNarrowWeb) ...[
+              const SizedBox(width: 24),
+              _buildWebNavItem(
+                Icons.menu_book,
+                'Theorie',
+                () => context.go('/dashboard?tab=0'),
+                iconColor: _accentBlue,
+              ),
+              _buildWebNavItem(
+                Icons.quiz,
+                'Oefenvragen',
+                () => context.go('/dashboard?tab=1'),
+                iconColor: _tealColor,
+              ),
+              _buildWebNavItem(
+                Icons.school,
+                'Examen',
+                () => context.go('/dashboard?tab=2'),
+                iconColor: _orangeColor,
+              ),
+              _buildWebNavItem(
+                Icons.smart_toy,
+                'AI',
+                () => context.go('/dashboard?tab=3'),
+                iconColor: _purpleColor,
+              ),
+            ],
           ],
         ),
       ),
       actions: [
         Padding(
           padding: EdgeInsets.only(right: sideMargin),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextButton.icon(
-                icon: Icon(Icons.person,
-                    size: _webNavIconSize, color: _webNavTextColor),
-                label: Text('Profiel',
-                    style: TextStyle(
-                        fontSize: _webNavFontSize, color: _webNavTextColor)),
-                onPressed: () => context.push('/profile'),
-                style: TextButton.styleFrom(
-                  foregroundColor: _webNavTextColor,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: isNarrowWeb
+              ? IconButton(
+                  icon: const Icon(Icons.menu,
+                      color: _webNavTextColor, size: 32),
+                  onPressed: () {
+                    setState(() => _webMenuOpen = true);
+                    _webMenuController.forward();
+                  },
+                )
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextButton.icon(
+                      icon: Icon(Icons.person,
+                          size: _webNavIconSize, color: _webNavTextColor),
+                      label: Text('Profiel',
+                          style: TextStyle(
+                              fontSize: _webNavFontSize,
+                              color: _webNavTextColor)),
+                      onPressed: () => context.push('/profile'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: _webNavTextColor,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                      ),
+                    ),
+                    TextButton.icon(
+                      icon: Icon(Icons.shopping_cart,
+                          size: _webNavIconSize, color: _webNavTextColor),
+                      label: Text('Shop',
+                          style: TextStyle(
+                              fontSize: _webNavFontSize,
+                              color: _webNavTextColor)),
+                      onPressed: () => context.push('/shop'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: _webNavTextColor,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                      ),
+                    ),
+                    TextButton.icon(
+                      icon: Icon(Icons.logout,
+                          size: _webNavIconSize, color: _webNavTextColor),
+                      label: Text('Uitloggen',
+                          style: TextStyle(
+                              fontSize: _webNavFontSize,
+                              color: _webNavTextColor)),
+                      onPressed: () async {
+                        await FirebaseAuth.instance.signOut();
+                        if (context.mounted) context.go('/auth?mode=login');
+                      },
+                      style: TextButton.styleFrom(
+                        foregroundColor: _webNavTextColor,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              TextButton.icon(
-                icon: Icon(Icons.shopping_cart,
-                    size: _webNavIconSize, color: _webNavTextColor),
-                label: Text('Shop',
-                    style: TextStyle(
-                        fontSize: _webNavFontSize, color: _webNavTextColor)),
-                onPressed: () => context.push('/shop'),
-                style: TextButton.styleFrom(
-                  foregroundColor: _webNavTextColor,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                ),
-              ),
-              TextButton.icon(
-                icon: Icon(Icons.logout,
-                    size: _webNavIconSize, color: _webNavTextColor),
-                label: Text('Uitloggen',
-                    style: TextStyle(
-                        fontSize: _webNavFontSize, color: _webNavTextColor)),
-                onPressed: () async {
-                  await FirebaseAuth.instance.signOut();
-                  if (context.mounted) context.go('/auth?mode=login');
-                },
-                style: TextButton.styleFrom(
-                  foregroundColor: _webNavTextColor,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                ),
-              ),
-            ],
-          ),
         ),
       ],
     );
@@ -173,6 +195,14 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _webMenuController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+    );
+    _webMenuAnimation = CurvedAnimation(
+      parent: _webMenuController,
+      curve: Curves.easeInOut,
+    );
     // Uitstellen tot na de build-fase om FlutterError (setState/markNeedsBuild during build) te voorkomen.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       EnergyState().clearUnseenDashboardUpdates();
@@ -180,11 +210,25 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  void dispose() {
+    _webMenuController.dispose();
+    super.dispose();
+  }
+
+  void _closeWebMenu() {
+    _webMenuController.reverse().then((_) {
+      if (mounted) setState(() => _webMenuOpen = false);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: kIsWeb ? _buildWebAppBar(context) : null,
-      body: Stack(
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: Colors.white,
+          appBar: kIsWeb ? _buildWebAppBar(context) : null,
+          body: Stack(
         children: [
           Positioned.fill(
             child: Image.asset(
@@ -434,6 +478,142 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+    ),
+    if (kIsWeb && _webMenuOpen) _buildWebMenuOverlay(context),
+      ],
+    );
+  }
+
+  Widget _buildWebMenuOverlay(BuildContext context) {
+    return Stack(
+      children: [
+        GestureDetector(
+          onTap: _closeWebMenu,
+          child: Container(
+            color: Colors.black54,
+            width: double.infinity,
+            height: double.infinity,
+          ),
+        ),
+        AnimatedBuilder(
+          animation: _webMenuAnimation,
+          builder: (context, child) {
+            return Positioned(
+              right: -_webMenuPanelWidth +
+                  _webMenuAnimation.value * _webMenuPanelWidth,
+              top: 0,
+              bottom: 0,
+              width: _webMenuPanelWidth,
+              child: child!,
+            );
+          },
+          child: Material(
+            elevation: 8,
+            color: Colors.white,
+            child: SafeArea(
+              left: false,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8.0, vertical: 8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.close,
+                              color: _webNavTextColor),
+                          onPressed: _closeWebMenu,
+                        ),
+                      ],
+                    ),
+                  ),
+                  _buildWebMenuTile(
+                    context,
+                    Icons.menu_book,
+                    'Theorie',
+                    _accentBlue,
+                    () => context.go('/dashboard?tab=0'),
+                  ),
+                  _buildWebMenuTile(
+                    context,
+                    Icons.quiz,
+                    'Oefenvragen',
+                    _tealColor,
+                    () => context.go('/dashboard?tab=1'),
+                  ),
+                  _buildWebMenuTile(
+                    context,
+                    Icons.school,
+                    'Examen',
+                    _orangeColor,
+                    () => context.go('/dashboard?tab=2'),
+                  ),
+                  _buildWebMenuTile(
+                    context,
+                    Icons.smart_toy,
+                    'AI',
+                    _purpleColor,
+                    () => context.go('/dashboard?tab=3'),
+                  ),
+                  _buildWebMenuTile(
+                    context,
+                    Icons.person,
+                    'Profiel',
+                    _webNavTextColor,
+                    () => context.push('/profile'),
+                  ),
+                  _buildWebMenuTile(
+                    context,
+                    Icons.shopping_cart,
+                    'Shop',
+                    _webNavTextColor,
+                    () => context.push('/shop'),
+                  ),
+                  _buildWebMenuTile(
+                    context,
+                    Icons.logout,
+                    'Uitloggen',
+                    _webNavTextColor,
+                    () async {
+                      await FirebaseAuth.instance.signOut();
+                      if (context.mounted) {
+                        _closeWebMenu();
+                        context.go('/auth?mode=login');
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWebMenuTile(
+    BuildContext context,
+    IconData icon,
+    String label,
+    Color iconColor,
+    VoidCallback onTap,
+  ) {
+    return ListTile(
+      leading: Icon(icon, color: iconColor, size: _webNavIconSize),
+      title: Text(
+        label,
+        style: const TextStyle(
+          fontSize: _webNavFontSize,
+          color: _webNavTextColor,
+        ),
+      ),
+      onTap: () {
+        _closeWebMenu();
+        onTap();
+      },
     );
   }
 }
@@ -447,18 +627,21 @@ double _progressFromCompletedLessons(
     total += c.lessons.length;
   }
   if (total == 0) return 0.0;
-  double p = 0.0;
+  int matched = 0;
   for (var id in completedIds) {
     for (var c in chapters) {
       for (var lesson in c.lessons) {
         if (lesson.id == id) {
-          p += 1 / total;
+          matched++;
           break;
         }
       }
     }
   }
-  return p > 1.0 ? 1.0 : p;
+  if (matched >= total) return 1.0;
+  final p = matched / total;
+  if (p >= 0.99) return 1.0;
+  return p;
 }
 
 String _getStatusText(double effective) {
@@ -576,7 +759,11 @@ class _AnimatedStatusBadgeState extends State<_AnimatedStatusBadge>
             TheoryRepository.instance.getChaptersCachedSync());
         final effective = fromCompleted > stored ? fromCompleted : stored;
         if (fromCompleted > stored) {
-          widget.state.repairProgress(fromCompleted);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (widget.state.progress.value < fromCompleted) {
+              widget.state.repairProgress(fromCompleted);
+            }
+          });
         }
 
         final color = _getStatusColor(effective);
@@ -673,7 +860,11 @@ class FuelMeterCard extends StatelessWidget {
                   final effective =
                       fromCompleted > stored ? fromCompleted : stored;
                   if (fromCompleted > stored) {
-                    state.repairProgress(fromCompleted);
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (state.progress.value < fromCompleted) {
+                        state.repairProgress(fromCompleted);
+                      }
+                    });
                   }
                   return EnergyGauge(
                     percentage: effective,

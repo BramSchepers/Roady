@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 /// Breakpoint onder welke we mobiele layout gebruiken.
 const double kNarrowViewportMaxWidth = 768.0;
 
+/// Breakpoint voor web nav bar: onder deze breedte toont de balk alleen logo + hamburger.
+const double kWebNavBarBreakpoint = 1650.0;
+
 /// Horizontale padding voor onboarding-schermen op web (zelfde breedte als taalkeuze).
 /// Contentbreedte = 1000 - 2*143 ≈ 714px (~15% smaller dan bij 80px padding).
 const double kOnboardingWebHorizontalPadding = 143.0;
