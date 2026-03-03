@@ -225,6 +225,7 @@ a {
   z-index: 100;
   background: var(--color-white);
   box-shadow: var(--shadow-sm);
+  font-family: var(--font-family);
 }
 
 .header__inner {
@@ -279,6 +280,7 @@ img.logo__img {
 }
 
 .nav__link {
+  font-family: var(--font-family);
   font-weight: 600;
   color: var(--color-gray-dark);
   transition: color 0.2s;
@@ -433,6 +435,7 @@ img.logo__img {
 
 .theme-toggle__label {
   position: absolute;
+  font-family: var(--font-family);
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -559,7 +562,7 @@ img.logo__img {
   pointer-events: none;
 }
 
-.hero > .container {
+.hero>.container {
   position: relative;
   z-index: 1;
 }
@@ -766,8 +769,15 @@ img.logo__img {
 }
 
 @keyframes heroBounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-12px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-12px);
+  }
 }
 
 .hero__mockup--laptop {
@@ -887,60 +897,6 @@ img.logo__img {
   }
 }
 
-/* Device – Hero phone mockup */
-.device {
-  border-radius: var(--radius-xl);
-  background: var(--color-gray-dark);
-  box-shadow: var(--shadow-lg);
-}
-
-.device--phone {
-  width: 220px;
-  padding: 12px;
-  border-radius: 32px;
-}
-
-.device__screen {
-  background: var(--color-white);
-  border-radius: 24px;
-  overflow: hidden;
-  aspect-ratio: 9/19;
-}
-
-.device__ui {
-  padding: 24px 16px;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.device__streak {
-  font-size: var(--font-size-sm);
-  font-weight: 700;
-}
-
-.device__progress {
-  height: 8px;
-  background: var(--color-gray-light);
-  border-radius: 4px;
-  width: 60%;
-}
-
-.device__cards {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.device__card {
-  height: 60px;
-  background: var(--color-blue);
-  opacity: 0.6;
-  border-radius: var(--radius-sm);
-}
-
 /* ========================================
    Section Titles
    ======================================== */
@@ -967,12 +923,65 @@ img.logo__img {
 }
 
 /* ========================================
+   Legal / Privacy Pages
+   ======================================== */
+
+.legal {
+  padding: var(--space-3xl) 0 var(--space-3xl);
+  background: var(--color-white);
+}
+
+.legal__title {
+  font-size: var(--font-size-3xl);
+  font-weight: 800;
+  text-align: left;
+  color: var(--color-gray-dark);
+  margin-bottom: var(--space-xs);
+}
+
+.legal__meta {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-medium);
+  margin-bottom: var(--space-xl);
+}
+
+.legal__section {
+  margin-bottom: var(--space-xl);
+}
+
+.legal__section h2 {
+  font-size: var(--font-size-xl);
+  font-weight: 800;
+  margin-bottom: var(--space-sm);
+  color: var(--color-gray-dark);
+}
+
+.legal__section p {
+  margin-bottom: var(--space-sm);
+  color: var(--color-gray-dark);
+}
+
+.legal__section ul {
+  margin: 0 0 var(--space-sm);
+  padding-left: 1.5rem;
+  color: var(--color-gray-dark);
+}
+
+.legal__section li {
+  margin-bottom: 0.35rem;
+}
+
+/* ========================================
    Mockups Section
    ======================================== */
 
 .mockups {
-  padding: var(--space-3xl) 0;
+  padding: var(--space-3xl) 0 var(--space-xl) 0;
   background: var(--color-white);
+}
+
+.mockups .section__subtitle {
+  margin-bottom: var(--space-lg);
 }
 
 .mockups__grid {
@@ -982,196 +991,35 @@ img.logo__img {
   gap: var(--space-2xl);
 }
 
-/* iPhone mockup */
-.mockup {
-  border-radius: var(--radius-xl);
-  background: var(--color-gray-dark);
-  box-shadow: var(--shadow-lg);
-  position: relative;
-}
-
-.mockup.animate-on-scroll {
-  opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
-}
-
-.mockup.animate-on-scroll.is-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.mockup.animate-on-scroll:nth-child(1) {
-  transition-delay: 0s;
-}
-
-.mockup.animate-on-scroll:nth-child(2) {
-  transition-delay: 0.1s;
-}
-
-.mockup.animate-on-scroll:nth-child(3) {
-  transition-delay: 0.2s;
-}
-
-.mockup--iphone {
-  width: 260px;
-  padding: 14px;
-  border-radius: 40px;
-}
-
-.mockup__notch {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100px;
-  height: 24px;
-  background: var(--color-gray-dark);
-  border-radius: 0 0 16px 16px;
-  z-index: 1;
-}
-
-.mockup__screen {
-  background: var(--color-white);
-  border-radius: 28px;
-  overflow: hidden;
-  aspect-ratio: 9/19;
-}
-
-.mockup__ui {
-  padding: 40px 20px 24px;
-  height: 100%;
+.mockups__lottie-wrap {
   display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.mockup__header {
-  display: flex;
-  justify-content: space-between;
-  font-size: var(--font-size-sm);
-  font-weight: 700;
-}
-
-.mockup__streak {
-  color: var(--color-gray-dark);
-}
-
-.mockup__xp {
-  color: var(--color-blue-dark);
-}
-
-.mockup__question {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.mockup__bar {
-  height: 12px;
-  background: var(--color-gray-light);
-  border-radius: 6px;
+  justify-content: center;
+  align-items: center;
   width: 100%;
 }
 
-.mockup__bar--short {
-  width: 70%;
-}
-
-/* MacBook mockup */
-.mockup--macbook {
-  width: 100%;
-  max-width: 500px;
-  padding: 12px 12px 0;
-  border-radius: 12px 12px 0 0;
-}
-
-.mockup--macbook .mockup__screen {
-  aspect-ratio: 16/10;
-  border-radius: 4px;
-}
-
-/* Tablet mockup – portrait/vertical */
-.mockup--tablet {
-  width: 260px;
+.mockups__lottie {
+  width: 40%;
+  height: auto;
   max-width: 100%;
-  padding: 12px;
-  border-radius: 16px;
+  display: block;
 }
 
-.mockup--tablet .mockup__screen {
-  aspect-ratio: 3/4;
-  border-radius: 8px;
-}
-
-.mockup__camera--tablet {
-  width: 6px;
-  height: 6px;
-  margin-bottom: 8px;
-}
-
-.mockup__ui--tablet {
-  padding: 32px 24px;
-}
-
-.mockup__camera {
-  width: 8px;
-  height: 8px;
-  background: var(--color-gray-medium);
-  border-radius: 50%;
-  margin: 0 auto 8px;
-}
-
-.mockup__base {
-  height: 20px;
-  background: var(--color-gray-dark);
-  margin: 0 -12px;
-  border-radius: 0 0 8px 8px;
-}
-
-.mockup__ui--desktop {
-  flex-direction: row;
-  padding: 24px;
-}
-
-.mockup__sidebar {
-  width: 80px;
-  background: var(--color-gray-light);
-  border-radius: var(--radius-sm);
-}
-
-.mockup__content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  margin-left: 20px;
-}
-
-.mockup__stats {
-  display: flex;
-  gap: 12px;
-}
-
-.mockup__stat {
-  width: 80px;
-  height: 40px;
-  background: var(--color-blue);
-  opacity: 0.7;
-  border-radius: var(--radius-sm);
-}
-
-.mockup__cards {
-  display: flex;
-  gap: 12px;
-}
-
-.mockup__card {
-  flex: 1;
-  height: 80px;
-  background: var(--color-gray-light);
-  border-radius: var(--radius-sm);
+@media (max-width: 639px) {
+  .mockups {
+    padding: var(--space-2xl) 0;
+  }
+  .mockups__grid {
+    gap: var(--space-lg);
+  }
+  .mockups__lottie-wrap {
+    width: 100%;
+    padding: 0 var(--space-xs);
+  }
+  .mockups__lottie {
+    width: 92%;
+    max-width: 360px;
+  }
 }
 
 /* ========================================
@@ -1179,7 +1027,7 @@ img.logo__img {
    ======================================== */
 
 .features {
-  padding: var(--space-3xl) 0;
+  padding: var(--space-xl) 0 var(--space-3xl) 0;
 }
 
 /* Feature-sectie: titel en ondertitel diagonaal invliegen */
@@ -1273,16 +1121,16 @@ img.logo__img {
 }
 
 .feature-card__title {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-xl);
   font-weight: 800;
   margin-bottom: var(--space-sm);
   color: var(--color-gray-dark);
 }
 
 .feature-card__desc {
-  font-size: var(--font-size-base);
-  color: var(--color-gray-medium);
-  line-height: 1.6;
+  font-size: var(--font-size-lg);
+  color: var(--color-gray-dark);
+  line-height: 1.65;
 }
 
 /* ========================================
@@ -1360,16 +1208,16 @@ img.logo__img {
   box-shadow: var(--shadow-sm);
 }
 
-.switch input:checked + .switch__slider {
+.switch input:checked+.switch__slider {
   background-color: var(--color-blue);
   border-color: var(--color-blue);
 }
 
-.switch input:focus + .switch__slider {
+.switch input:focus+.switch__slider {
   box-shadow: 0 0 1px var(--color-blue);
 }
 
-.switch input:checked + .switch__slider:before {
+.switch input:checked+.switch__slider:before {
   transform: translateX(24px);
 }
 
@@ -1403,7 +1251,8 @@ img.logo__img {
   gap: var(--space-lg);
   max-width: 1100px;
   margin: 0 auto;
-  padding-bottom: var(--space-2xl); /* Added bottom padding */
+  padding-bottom: var(--space-2xl);
+  /* Added bottom padding */
 }
 
 .pricing-card {
@@ -1455,7 +1304,8 @@ img.logo__img {
   background: rgba(255, 255, 255, 0.6);
   z-index: 1;
   pointer-events: none;
-  border-radius: var(--radius-lg); /* Match parent radius */
+  border-radius: var(--radius-lg);
+  /* Match parent radius */
 }
 
 /* Ensure the badge is above the white haze so it's readable */
@@ -1622,6 +1472,24 @@ img.logo__img {
     scroll-snap-stop: always;
   }
 
+  /* Minder hoge pricing-sectie en kaarten op mobiel,
+     zodat toggle + één kaart vaker in één scherm passen */
+  .pricing {
+    padding: var(--space-2xl) 0 0;
+  }
+
+  .pricing-toggle {
+    margin-bottom: var(--space-lg);
+  }
+
+  .pricing-card {
+    padding: var(--space-lg);
+  }
+
+  .pricing-card__features {
+    margin-bottom: var(--space-lg);
+  }
+
   /* Carousel navigation */
   .pricing__nav {
     display: flex;
@@ -1772,7 +1640,7 @@ img.logo__img {
   }
 
   .hero__mockup--laptop {
-    max-width: 520px;
+    max-width: 550px;
     width: 100%;
   }
 
@@ -1802,18 +1670,6 @@ img.logo__img {
     justify-content: center;
     align-items: flex-end;
     gap: var(--space-2xl);
-  }
-
-  .mockup--iphone {
-    width: 200px;
-  }
-
-  .mockup--tablet {
-    width: 220px;
-  }
-
-  .mockup--macbook {
-    max-width: 380px;
   }
 
   .features__grid {
@@ -1933,4 +1789,103 @@ img.logo__img {
     visibility: visible;
     transform: translateY(0);
   }
+}
+
+/* -----------------------------------------
+   Cookie banner (GDPR-compliant, low-friction)
+   ----------------------------------------- */
+.cookie-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1rem 1.25rem;
+  background: var(--color-white);
+  color: var(--color-gray-dark);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  line-height: 1.45;
+  z-index: 9999;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem 1rem;
+  transition: transform 0.35s ease, opacity 0.35s ease;
+}
+
+[data-theme="dark"] .cookie-banner {
+  background: var(--color-footer-bg);
+  color: var(--color-gray-dark);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.35);
+}
+
+.cookie-banner.is-hidden {
+  transform: translateY(100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cookie-banner__text {
+  flex: 1 1 280px;
+  max-width: 520px;
+  margin: 0;
+}
+
+.cookie-banner__text a {
+  color: var(--color-cta-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.cookie-banner__text a:hover {
+  color: var(--color-cta-primary-hover);
+}
+
+.cookie-banner__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cookie-banner__btn {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  border: none;
+}
+
+.cookie-banner__btn--accept {
+  background: var(--color-cta-primary);
+  color: var(--color-white);
+  box-shadow: 0 2px 0 var(--color-cta-primary-dark);
+}
+
+.cookie-banner__btn--accept:hover {
+  background: var(--color-cta-primary-hover);
+}
+
+.cookie-banner__btn--reject {
+  background: transparent;
+  color: var(--color-gray-dark);
+  border: 2px solid var(--color-gray-medium);
+}
+
+.cookie-banner__btn--reject:hover {
+  border-color: var(--color-gray-dark);
+  background: var(--color-gray-hover);
+}
+
+[data-theme="dark"] .cookie-banner__btn--reject {
+  border-color: var(--color-gray-medium);
+}
+
+[data-theme="dark"] .cookie-banner__btn--reject:hover {
+  background: var(--color-gray-hover);
 }

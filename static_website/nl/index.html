@@ -115,13 +115,14 @@
           <h1 class="hero__title">Slaag sneller voor je rijbewijs</h1>
           <p class="hero__subtitle">Start gratis en oefen waar je wilt – op je telefoon of laptop.</p>
           <div class="hero__ctas">
-            <a href="../auth/#/?plan=free" class="btn btn--primary btn--lg hero__cta" target="_self">Start nu gratis</a>
+            <a href="../auth/#/?mode=login" class="btn btn--primary btn--lg hero__cta" target="_self">Start nu gratis</a>
             <a href="#crossplatform" class="btn btn--ghost btn--lg hero__cta">Ontdek de app</a>
           </div>
         </div>
         <div class="hero__mockups">
           <div class="hero__mockups-group">
-            <img src="../assets/images/rechtergsm_roady.png" alt="Roady op telefoon" class="hero__mockup hero__mockup--single" width="280" height="auto" />
+            <img src="../assets/images/rechtergsm_roady.png" alt="Roady op telefoon"
+              class="hero__mockup hero__mockup--single" width="280" height="auto" />
             <span class="hero__mockup-shadow" aria-hidden="true"></span>
           </div>
         </div>
@@ -136,57 +137,14 @@
           <br><small>(internetverbinding vereist)</small>
         </p>
         <div class="mockups__grid">
-          <div class="mockup mockup--iphone">
-            <div class="mockup__notch"></div>
-            <div class="mockup__screen">
-              <div class="mockup__ui">
-                <div class="mockup__header">
-                  <span class="mockup__streak">🔥 14 dagen</span>
-                  <span class="mockup__xp">+50 XP</span>
-                </div>
-                <div class="mockup__question">
-                  <div class="mockup__bar"></div>
-                  <div class="mockup__bar mockup__bar--short"></div>
-                  <div class="mockup__bar mockup__bar--short"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="mockup mockup--tablet">
-            <div class="mockup__camera mockup__camera--tablet"></div>
-            <div class="mockup__screen">
-              <div class="mockup__ui mockup__ui--tablet">
-                <div class="mockup__header">
-                  <span class="mockup__streak">🔥 14 dagen</span>
-                  <span class="mockup__xp">+50 XP</span>
-                </div>
-                <div class="mockup__question">
-                  <div class="mockup__bar"></div>
-                  <div class="mockup__bar mockup__bar--short"></div>
-                  <div class="mockup__bar mockup__bar--short"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="mockup mockup--macbook">
-            <div class="mockup__camera"></div>
-            <div class="mockup__screen">
-              <div class="mockup__ui mockup__ui--desktop">
-                <div class="mockup__sidebar"></div>
-                <div class="mockup__content">
-                  <div class="mockup__stats">
-                    <div class="mockup__stat"></div>
-                    <div class="mockup__stat"></div>
-                    <div class="mockup__stat"></div>
-                  </div>
-                  <div class="mockup__cards">
-                    <div class="mockup__card"></div>
-                    <div class="mockup__card"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="mockup__base"></div>
+          <div class="mockups__lottie-wrap">
+            <lottie-player class="mockups__lottie"
+              src="../assets/lottie/switchendevices.json"
+              background="transparent"
+              speed="1"
+              loop
+              autoplay>
+            </lottie-player>
           </div>
         </div>
       </div>
@@ -200,30 +158,36 @@
         <div class="features__grid">
           <article class="feature-card">
             <div class="feature-card__icon">
-              <lottie-player src="../assets/illustrations/lottie/no_internet.json" background="transparent" speed="1" style="width: 100%; height: 100%;" loop autoplay></lottie-player>
+              <lottie-player src="../assets/illustrations/lottie/no_internet.json" background="transparent" speed="1"
+                style="width: 100%; height: 100%;" loop autoplay></lottie-player>
             </div>
             <h3 class="feature-card__title">Offline Gebruik</h3>
-            <p class="feature-card__desc">Leer overal, ook zonder internet. Download de inhoud en oefenening voor onderweg – in de
+            <p class="feature-card__desc">Leer overal, ook zonder internet. Download de inhoud en oefenening voor
+              onderweg – in de
               trein, wachtkamer of gewoon thuis.</p>
           </article>
           <article class="feature-card">
             <div class="feature-card__icon">
-              <lottie-player src="../assets/illustrations/lottie/exam.json" background="transparent" speed="1" style="width: 100%; height: 100%;" loop autoplay></lottie-player>
+              <lottie-player src="../assets/illustrations/lottie/exam.json" background="transparent" speed="1"
+                style="width: 100%; height: 100%;" loop autoplay></lottie-player>
             </div>
             <h3 class="feature-card__title">Officiële Examen simulaties</h3>
-            <p class="feature-card__desc">Oefen met examens die exact lijken op het echte theorie-examen. Zo ben je 100% 
+            <p class="feature-card__desc">Oefen met examens die exact lijken op het echte theorie-examen. Zo ben je 100%
               voorbereid op de grote dag.</p>
           </article>
           <article class="feature-card">
             <div class="feature-card__icon">
-              <lottie-player src="../assets/illustrations/lottie/crossplatform.json" background="transparent" speed="1" style="width: 100%; height: 100%;" loop autoplay></lottie-player>
+              <lottie-player src="../assets/illustrations/lottie/crossplatform.json" background="transparent" speed="1"
+                style="width: 100%; height: 100%;" loop autoplay></lottie-player>
             </div>
             <h3 class="feature-card__title">Cross-platform Synchronisatie</h3>
-            <p class="feature-card__desc">Start op je telefoon, ga verder op je laptop. Je voortgang volgt je overal – je kan direct terug oppikken waar je gebleven was</p>
+            <p class="feature-card__desc">Start op je telefoon, ga verder op je laptop. Je voortgang volgt je overal –
+              je kan direct terug oppikken waar je gebleven was</p>
           </article>
           <article class="feature-card">
             <div class="feature-card__icon">
-              <lottie-player src="../assets/illustrations/lottie/persoonlijk.json" background="transparent" speed="1" style="width: 100%; height: 100%;" loop autoplay></lottie-player>
+              <lottie-player src="../assets/illustrations/lottie/persoonlijk.json" background="transparent" speed="1"
+                style="width: 100%; height: 100%;" loop autoplay></lottie-player>
             </div>
             <h3 class="feature-card__title">Gepersonaliseerde Leerpaden</h3>
             <p class="feature-card__desc">We passen de oefeningen aan op jouw zwakke punten. Leer slimmer, niet harder.
@@ -237,15 +201,17 @@
     <section class="pricing scroll-fade" id="pricing">
       <div class="container">
         <h2 class="section__title">Kies je abonnement</h2>
-        
+
         <!-- Pricing Toggle -->
         <div class="pricing-toggle">
           <span class="pricing-toggle__label" id="monthly-label">1 Maand</span>
           <label class="switch">
-            <input type="checkbox" id="pricing-switch" aria-label="Wissel tussen maandelijks en jaarlijks betalen" checked>
+            <input type="checkbox" id="pricing-switch" aria-label="Wissel tussen maandelijks en jaarlijks betalen"
+              checked>
             <span class="switch__slider"></span>
           </label>
-          <span class="pricing-toggle__label pricing-toggle__label--active" id="yearly-label">1 Jaar <span class="pricing-toggle__discount">-50%</span></span>
+          <span class="pricing-toggle__label pricing-toggle__label--active" id="yearly-label">1 Jaar <span
+              class="pricing-toggle__discount">-50%</span></span>
         </div>
 
         <div class="pricing__grid">
@@ -267,10 +233,12 @@
             <span class="pricing-card__badge">Aanbevolen</span>
             <h3 class="pricing-card__title">Pro</h3>
             <p class="pricing-card__price">
-              <span class="pricing-card__amount" data-monthly="4,99 €" data-yearly="<span class='price-original'>€29,99</span> €14,99">
+              <span class="pricing-card__amount" data-monthly="4,99 €"
+                data-yearly="<span class='price-original'>€29,99</span> €14,99">
                 <span class='price-original'>€29,99</span> €14,99
-              </span> 
-              <span class="pricing-card__period" data-monthly="/ maand" data-yearly="/ jaar">/ jaar</span><span class="pricing-toggle__discount">-50%</span>
+              </span>
+              <span class="pricing-card__period" data-monthly="/ maand" data-yearly="/ jaar">/ jaar</span><span
+                class="pricing-toggle__discount">-50%</span>
             </p>
             <span class="pricing-card__no-renewal">Geen automatische verlenging</span>
             <ul class="pricing-card__features">
@@ -286,7 +254,8 @@
               Pro</a>
           </article>
           <article class="pricing-card pricing-card--coming-soon">
-            <span class="pricing-card__badge" style="background: var(--color-gray-medium); color: var(--color-white);">Coming Soon</span>
+            <span class="pricing-card__badge"
+              style="background: var(--color-gray-medium); color: var(--color-white);">Coming Soon</span>
             <h3 class="pricing-card__title">Met AI</h3>
             <p class="pricing-card__price">
               <span class="pricing-card__amount" data-monthly="--" data-yearly="--">--</span>
@@ -304,7 +273,8 @@
               <li>Ai bepaalt jouw type van moeilijke vragen</li>
             </ul>
             <a href="#" class="pricing-card__details">Meer details →</a>
-            <a href="../auth/#/?plan=ai" class="btn btn--primary btn--lg pricing-card__cta" target="_self" style="opacity: 0.5; pointer-events: none;">Kies Met
+            <a href="../auth/#/?plan=ai" class="btn btn--primary btn--lg pricing-card__cta" target="_self"
+              style="opacity: 0.5; pointer-events: none;">Kies Met
               AI</a>
           </article>
         </div>
@@ -333,7 +303,7 @@
               width="293" height="47">
           </div>
           <div class="footer__links">
-            <a href="#">Privacy</a>
+            <a href="privacy.html">Privacy</a>
             <a href="#">Algemene Voorwaarden</a>
           </div>
           <p class="footer__copy">&copy; <span class="footer__year"></span> Roady. Alle rechten voorbehouden.</p>

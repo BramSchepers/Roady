@@ -1,12 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:go_router/go_router.dart';
 
 import 'auth/auth_state.dart';
 import 'firebase_options.dart';
 import 'repositories/quiz_repository.dart';
+import 'services/analytics_consent_service.dart';
 import 'repositories/theory_repository.dart';
 import 'screens/auth_screen.dart';
 import 'screens/download_app_screen.dart';
@@ -24,6 +27,7 @@ import 'screens/profile_screen.dart';
 import 'models/quiz_models.dart';
 import 'screens/quiz_screen.dart';
 import 'screens/shop_screen.dart';
+import 'screens/analytics_consent_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/start_screen.dart';
 
@@ -74,7 +78,34 @@ Page<void> _simplePage(GoRouterState state, Widget child) {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Firebase only supports Web, Android, iOS. On Windows/macOS/Linux desktop the channel has no handler.
+  final isSupportedPlatform = kIsWeb ||
+      defaultTargetPlatform == TargetPlatform.android ||
+      defaultTargetPlatform == TargetPlatform.iOS;
+  if (!isSupportedPlatform) {
+    throw UnsupportedError(
+      'Firebase is not supported on this platform. Run the app on Android, iOS, or Web (Chrome).',
+    );
+  }
+
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  } on PlatformException catch (e) {
+    if (e.code == 'channel-error') {
+      throw UnsupportedError(
+        'Firebase could not connect. Run on Android, iOS, or Web (Chrome). '
+        'If on Web, ensure you use Chrome and that Firebase scripts load in web/index.html.',
+      );
+    }
+    rethrow;
+  }
+
+  // Analytics: disabled by default; enable only after user consent (iOS/Android). Web uses cookie banner.
+  if (!kIsWeb) {
+    await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(false);
+    await AnalyticsConsentService.instance.applyStoredConsent();
+  }
 
   // Enable Firestore offline persistence on web only (mobile has it by default).
   if (kIsWeb) {
@@ -194,6 +225,11 @@ class RoadyApp extends StatelessWidget {
           path: '/splash',
           pageBuilder: (context, state) =>
               _simplePage(state, const SplashScreen()),
+        ),
+        GoRoute(
+          path: '/analytics-consent',
+          pageBuilder: (context, state) =>
+              _simplePage(state, const AnalyticsConsentScreen()),
         ),
         GoRoute(
           path: '/download-app',

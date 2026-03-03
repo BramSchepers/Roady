@@ -6,6 +6,102 @@
 (function () {
   'use strict';
 
+  // --- Cookie consent (GDPR) & Google Analytics ---
+  var COOKIE_CONSENT_KEY = 'roady_cookie_consent';
+  var GA_MEASUREMENT_ID = 'G-XWQEMETC2S'; // GA4 – only loaded after user accepts cookies
+
+  var cookieText = {
+    nl: {
+      message: 'We gebruiken cookies om het verkeer te meten en de site te verbeteren. Geen persoonlijke gegevens worden gedeeld met derden.',
+      privacy: 'Privacy',
+      accept: 'Accepteren',
+      reject: 'Weigeren'
+    },
+    fr: {
+      message: 'Nous utilisons des cookies pour mesurer le trafic et améliorer le site. Aucune donnée personnelle n\'est partagée avec des tiers.',
+      privacy: 'Confidentialité',
+      accept: 'Accepter',
+      reject: 'Refuser'
+    }
+  };
+
+  function getCookieText() {
+    var lang = (document.documentElement.getAttribute('lang') || 'nl').toLowerCase();
+    return cookieText[lang] || cookieText.nl;
+  }
+
+  function getConsent() {
+    try {
+      return localStorage.getItem(COOKIE_CONSENT_KEY);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function setConsent(value) {
+    try {
+      localStorage.setItem(COOKIE_CONSENT_KEY, value);
+    } catch (e) {}
+  }
+
+  function loadGoogleAnalytics() {
+    if (!GA_MEASUREMENT_ID || typeof window.gtag !== 'undefined') return;
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { window.dataLayer.push(arguments); }
+    window.gtag('js', new Date());
+    window.gtag('config', GA_MEASUREMENT_ID, { anonymize_ip: true });
+    var script = document.createElement('script');
+    script.async = true;
+    script.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_MEASUREMENT_ID;
+    document.head.appendChild(script);
+  }
+
+  function hideBanner(banner) {
+    if (!banner) return;
+    banner.classList.add('is-hidden');
+    setTimeout(function () {
+      if (banner.parentNode) banner.parentNode.removeChild(banner);
+    }, 400);
+  }
+
+  function initCookieBanner() {
+    if (getConsent() !== null) {
+      if (getConsent() === 'accepted' && GA_MEASUREMENT_ID) loadGoogleAnalytics();
+      return;
+    }
+
+    var t = getCookieText();
+    var banner = document.createElement('div');
+    banner.className = 'cookie-banner';
+    banner.setAttribute('role', 'dialog');
+    banner.setAttribute('aria-label', t.accept + ' / ' + t.reject + ' cookies');
+
+    var privacyUrl = document.querySelector('a[href*="rivacy"], a[href*="rivacité"]') || document.querySelector('.footer__links a');
+    var privacyHref = privacyUrl ? (privacyUrl.getAttribute('href') || '#') : '#';
+
+    banner.innerHTML =
+      '<p class="cookie-banner__text">' + t.message + ' <a href="' + privacyHref + '">' + t.privacy + '</a>.</p>' +
+      '<div class="cookie-banner__actions">' +
+      '<button type="button" class="cookie-banner__btn cookie-banner__btn--reject">' + t.reject + '</button>' +
+      '<button type="button" class="cookie-banner__btn cookie-banner__btn--accept">' + t.accept + '</button>' +
+      '</div>';
+
+    banner.querySelector('.cookie-banner__btn--accept').addEventListener('click', function () {
+      setConsent('accepted');
+      if (GA_MEASUREMENT_ID) loadGoogleAnalytics();
+      hideBanner(banner);
+    });
+
+    banner.querySelector('.cookie-banner__btn--reject').addEventListener('click', function () {
+      setConsent('rejected');
+      hideBanner(banner);
+    });
+
+    document.body.appendChild(banner);
+  }
+
+  initCookieBanner();
+
   // Theme toggle (dark mode switch)
   var themeToggle = document.getElementById('theme-toggle');
   var html = document.documentElement;

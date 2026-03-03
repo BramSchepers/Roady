@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "280920543254",
+    "project_id": "goroady-22332",
+    "storage_bucket": "goroady-22332.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:280920543254:android:8c7de34fec5347c05b2537",
+        "android_client_info": {
+          "package_name": "com.example.roady"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "280920543254-43du8407mdvpkleug9v8svdmqf0qki47.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD8s13jDwa4rA0iR04hBu4xTxBgua-W25Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "280920543254-43du8407mdvpkleug9v8svdmqf0qki47.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

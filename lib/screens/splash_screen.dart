@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart'; // Nodig voor kIsWeb
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../services/analytics_consent_service.dart';
+
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -46,15 +48,23 @@ class _SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
-  void _navigateAway() {
+  Future<void> _navigateAway() async {
     if (!mounted) return;
     final state = GoRouterState.of(context);
     final query = state.uri.query;
-    if (query.isNotEmpty) {
-      context.go('/auth?$query');
-    } else {
-      context.go('/auth');
+    final path = query.isNotEmpty ? '/auth?$query' : '/auth';
+
+    // On iOS/Android: show analytics consent once if not yet chosen.
+    if (!kIsWeb) {
+      final hasChoice = await AnalyticsConsentService.instance.hasConsentChoice();
+      if (!hasChoice && mounted) {
+        context.go(query.isNotEmpty ? '/analytics-consent?$query' : '/analytics-consent');
+        return;
+      }
     }
+
+    if (!mounted) return;
+    context.go(path);
   }
 
   Widget _buildWebFallback() {

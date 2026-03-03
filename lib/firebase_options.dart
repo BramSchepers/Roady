@@ -2,10 +2,19 @@
 // Or copy your web config from Firebase Console > Project settings > Your apps
 
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
 
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
-    return web;
+    if (kIsWeb) return web;
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+        return android;
+      case TargetPlatform.iOS:
+        return ios;
+      default:
+        return web;
+    }
   }
 
   static const FirebaseOptions web = FirebaseOptions(
@@ -15,6 +24,26 @@ class DefaultFirebaseOptions {
     projectId: 'goroady-22332',
     authDomain: 'goroady-22332.firebaseapp.com',
     storageBucket: 'goroady-22332.firebasestorage.app',
+    measurementId: 'G-WJX3MLCC6L',
   );
 
+  static const FirebaseOptions android = FirebaseOptions(
+    apiKey: 'AIzaSyD8s13jDwa4rA0iR04hBu4xTxBgua-W25Y',
+    appId: '1:280920543254:android:8c7de34fec5347c05b2537',
+    messagingSenderId: '280920543254',
+    projectId: 'goroady-22332',
+    authDomain: 'goroady-22332.firebaseapp.com',
+    storageBucket: 'goroady-22332.firebasestorage.app',
+  );
+
+  /// iOS: voeg een iOS-app toe in Firebase Console en run daarna
+  /// `dart run flutterfire_cli:flutterfire configure` om de echte waarden te krijgen.
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyDxQGYPhJ3GODFJOcnmENX6GGTObvUBLEI',
+    appId: '1:280920543254:ios:placeholder',
+    messagingSenderId: '280920543254',
+    projectId: 'goroady-22332',
+    authDomain: 'goroady-22332.firebaseapp.com',
+    storageBucket: 'goroady-22332.firebasestorage.app',
+  );
 }

@@ -175,7 +175,7 @@ class _ShopScreenState extends State<ShopScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const Text(
-          'Kies jouw plan',
+          'Kies je abonnement',
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
@@ -184,7 +184,7 @@ class _ShopScreenState extends State<ShopScreen> {
         ),
         const SizedBox(height: 8),
         const Text(
-          'Upgrade voor meer mogelijkheden',
+          'De leukste manier om je theorie-examen te halen.',
           style: TextStyle(
             fontSize: 16,
             color: Colors.grey,
@@ -279,12 +279,13 @@ class _ShopScreenState extends State<ShopScreen> {
         else
           const SizedBox(height: 8),
         SubscriptionCard(
-          title: 'Basic',
+          title: 'Standaard',
           price: '€0',
           features: const [
-            'Alles offline beschikbaar',
+            'Alle theorie lessen',
             'Geen reclame',
-            'Beperkte oefeningen',
+            'Alles offline downloadbaar',
+            'Enkele oefenvragen',
           ],
           color: Colors.blue.shade50,
           textColor: Colors.blue.shade900,
@@ -298,8 +299,12 @@ class _ShopScreenState extends State<ShopScreen> {
           title: 'Pro',
           price: _isYearlySelected ? '€14,99 / jaar (−50%)' : '€4,99 / maand',
           features: const [
-            'Onbeperkte examens (meer dan 1000 vragen)',
-            'Alle oefeningen',
+            'Alle theorie lessen',
+            'Geen reclame',
+            'Alles offline downloadbaar',
+            'Alle oefenvragen',
+            'Examensimulatie (met stem)',
+            'Oefenvragen op grote fouten',
           ],
           color: Colors.orange.shade50,
           textColor: Colors.orange.shade900,
@@ -311,9 +316,14 @@ class _ShopScreenState extends State<ShopScreen> {
           title: 'Premium AI',
           price: '--',
           features: const [
-            'Alles in Pro',
-            'AI Coach ondersteuning',
-            'Persoonlijke leerroute'
+            'Alle theorie lessen',
+            'Geen reclame',
+            'Alles offline downloadbaar',
+            'Alle oefenvragen',
+            'Examensimulatie (met stem)',
+            'Oefenvragen op grote fouten',
+            'Ai bepaalt je zwakke hoofdstukken',
+            'Ai bepaalt jouw type van moeilijke vragen',
           ],
           color: Colors.purple.shade50,
           textColor: Colors.purple.shade900,
