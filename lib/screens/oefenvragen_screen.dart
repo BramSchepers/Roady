@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../models/quiz_models.dart';
+import '../repositories/saved_questions_repository.dart';
 import '../utils/onboarding_constants.dart';
 
 class OefenvragenScreen extends StatelessWidget {
@@ -40,6 +41,30 @@ class OefenvragenScreen extends StatelessWidget {
         icon: Icons.warning_amber_rounded,
         color: Colors.red,
         onTap: () => context.push('/quiz', extra: QuizMode.random),
+      ),
+      _QuizSelectionCard(
+        title: 'Opgeslagen oefenvragen',
+        description: 'Oefen opnieuw met vragen die je hebt opgeslagen.',
+        icon: Icons.bookmark,
+        color: Colors.teal,
+        onTap: () async {
+          final ids = await SavedQuestionsRepository.instance.getSavedQuestionIds();
+          if (!context.mounted) return;
+          if (ids.isNotEmpty) {
+            context.push('/quiz', extra: {
+              'mode': QuizMode.random,
+              'savedQuestionIds': ids,
+            });
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Nog geen opgeslagen vragen. Sla tijdens het oefenen vragen op met het bookmark-icoon.',
+                ),
+              ),
+            );
+          }
+        },
       ),
     ];
 

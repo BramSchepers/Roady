@@ -10,6 +10,7 @@ import '../models/exam_attempt.dart';
 import '../models/quiz_models.dart';
 import '../repositories/exam_history_repository.dart';
 import '../repositories/quiz_repository.dart';
+import '../repositories/saved_questions_repository.dart';
 import '../utils/onboarding_constants.dart';
 import '../utils/image_utils.dart';
 
@@ -17,12 +18,15 @@ class QuizScreen extends StatefulWidget {
   final QuizMode mode;
   final String? categoryId;
   final bool ttsEnabled;
+  /// Als gezet: laad alleen deze vragen (opgeslagen oefenvragen); [mode] wordt genegeerd.
+  final List<String>? savedQuestionIds;
 
   const QuizScreen({
     super.key,
     required this.mode,
     this.categoryId,
     this.ttsEnabled = true,
+    this.savedQuestionIds,
   });
 
   @override
@@ -72,9 +76,95 @@ class _QuizScreenState extends State<QuizScreen>
   static const int _examTimerSeconds = 15;
   static const int _passingScore = 41;
 
+  /// Opgeslagen vraag-ids voor bookmark-weergave (alleen ingelogde gebruikers).
+  Set<String> _savedIds = {};
+
   bool get _isExamMode => widget.mode == QuizMode.exam;
+  bool get _isSavedOnlyMode => widget.savedQuestionIds != null;
 
   bool get _effectiveTtsEnabled => _isExamMode ? _ttsEnabled : true;
+
+  List<Widget> get _examAppBarActions => [
+        Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.volume_up, size: 20, color: Colors.grey[700]),
+              const SizedBox(width: 4),
+              Switch(
+                value: _ttsEnabled,
+                onChanged: (v) => setState(() => _ttsEnabled = v),
+              ),
+            ],
+          ),
+        ),
+      ];
+
+  List<Widget> get _practiceAppBarActions => [];
+
+  Widget _buildBookmarkRow(QuizQuestion question) {
+    final saved = _savedIds.contains(question.id);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      color: Colors.white,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            saved ? 'Vraag opgeslagen' : 'Vraag niet opgeslagen',
+            style: TextStyle(
+              fontSize: 13,
+              color: saved ? Colors.teal[700] : Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 6),
+          IconButton(
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            icon: Icon(
+              saved ? Icons.bookmark : Icons.bookmark_border,
+              size: 28,
+              color: saved ? Colors.teal : Colors.grey[600],
+            ),
+            onPressed: () async {
+              final wasSaved = saved;
+              setState(() {
+                if (wasSaved) {
+                  _savedIds = Set.from(_savedIds)..remove(question.id);
+                } else {
+                  _savedIds = Set.from(_savedIds)..add(question.id);
+                }
+              });
+              try {
+                if (wasSaved) {
+                  await SavedQuestionsRepository.instance.removeSavedQuestionId(question.id);
+                } else {
+                  await SavedQuestionsRepository.instance.addSavedQuestionId(question.id);
+                }
+                if (!mounted) return;
+                await _refreshSavedIds();
+              } catch (_) {
+                if (!mounted) return;
+                setState(() {
+                  if (wasSaved) {
+                    _savedIds = Set.from(_savedIds)..add(question.id);
+                  } else {
+                    _savedIds = Set.from(_savedIds)..remove(question.id);
+                  }
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Kon niet synchroniseren. Probeer opnieuw.')),
+                );
+              }
+            },
+            tooltip: saved ? 'Verwijder uit opgeslagen' : 'Opslaan',
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -96,21 +186,34 @@ class _QuizScreenState extends State<QuizScreen>
   }
 
   Future<void> _loadQuestions() async {
-    final questions = await QuizRepository.instance.getQuestionsByMode(
-      widget.mode,
-      chapterId: widget.categoryId,
-      forceFromServer: true, // Altijd verse vragen van server voor sync
-    );
+    final List<QuizQuestion> questions;
+    if (widget.savedQuestionIds != null) {
+      questions = await QuizRepository.instance.getQuestionsByIds(
+        widget.savedQuestionIds!,
+      );
+    } else {
+      questions = await QuizRepository.instance.getQuestionsByMode(
+        widget.mode,
+        chapterId: widget.categoryId,
+        forceFromServer: true,
+      );
+    }
     if (mounted) {
       setState(() {
         _questions = questions;
         _isLoading = false;
       });
+      _refreshSavedIds();
       _prepareQuestionOptions();
       if (_isExamMode && _questions.isNotEmpty) {
         _startTtsForCurrentQuestion();
       }
     }
+  }
+
+  Future<void> _refreshSavedIds() async {
+    final ids = await SavedQuestionsRepository.instance.getSavedQuestionIds();
+    if (mounted) setState(() => _savedIds = Set.from(ids));
   }
 
   /// Shuffles answer options for the current question so users can't memorize positions.
@@ -377,7 +480,18 @@ class _QuizScreenState extends State<QuizScreen>
     if (_questions.isEmpty) {
       return Scaffold(
         appBar: AppBar(title: const Text('Oefenen')),
-        body: const Center(child: Text('Geen vragen gevonden.')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              widget.savedQuestionIds != null
+                  ? 'Nog geen opgeslagen vragen. Sla tijdens het oefenen vragen op met het bookmark-icoon.'
+                  : 'Geen vragen gevonden.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16),
+            ),
+          ),
+        ),
       );
     }
 
@@ -641,8 +755,11 @@ class _QuizScreenState extends State<QuizScreen>
                       : 'Bekijk Resultaat',
                   style: const TextStyle(fontSize: 16),
                 ),
-              ),
             ),
+          ),
+          // Bookmark + "Opgeslagen"-animatie vlak boven vraag X / Y (alleen oefenen, ingelogd)
+          if (!_isExamMode && FirebaseAuth.instance.currentUser != null && _questions.isNotEmpty && _currentIndex < _questions.length)
+            _buildBookmarkRow(question),
           // Vraag X / Y helemaal onderaan
           Container(
             width: double.infinity,
@@ -666,9 +783,11 @@ class _QuizScreenState extends State<QuizScreen>
       backgroundColor: isWideWeb ? Colors.transparent : Colors.white,
       appBar: AppBar(
         title: Text(
-          _isExamMode
-              ? '${(_examTimerRemaining ?? _examTimerSeconds) ~/ 60}:${((_examTimerRemaining ?? _examTimerSeconds) % 60).toString().padLeft(2, '0')}'
-              : 'Oefenen',
+          _isSavedOnlyMode
+              ? 'Opgeslagen vragen'
+              : _isExamMode
+                  ? '${(_examTimerRemaining ?? _examTimerSeconds) ~/ 60}:${((_examTimerRemaining ?? _examTimerSeconds) % 60).toString().padLeft(2, '0')}'
+                  : 'Oefenen',
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
@@ -677,24 +796,9 @@ class _QuizScreenState extends State<QuizScreen>
           icon: const Icon(Icons.close),
           onPressed: () => context.pop(),
         ),
-        actions: _isExamMode
-            ? [
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.volume_up, size: 20, color: Colors.grey[700]),
-                      const SizedBox(width: 4),
-                      Switch(
-                        value: _ttsEnabled,
-                        onChanged: (v) => setState(() => _ttsEnabled = v),
-                      ),
-                    ],
-                  ),
-                ),
-              ]
-            : null,
+        actions: [
+          if (_isExamMode) ..._examAppBarActions else ..._practiceAppBarActions,
+        ],
       ),
       body: isWideWeb
           ? Stack(

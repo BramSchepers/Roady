@@ -1,20 +1,18 @@
 import 'dart:convert';
 import 'dart:io';
 
-// #region agent log
-void debugLog(String location, String message,
-    {String? hypothesisId, Map<String, dynamic>? data}) {
+void writeDebugLog(String location, String message, Map<String, dynamic> data, String hypothesisId) {
   try {
-    final payload = <String, dynamic>{
+    final payload = {
+      'sessionId': '435d78',
       'id': 'log_${DateTime.now().millisecondsSinceEpoch}',
       'timestamp': DateTime.now().millisecondsSinceEpoch,
       'location': location,
       'message': message,
-      if (hypothesisId != null) 'hypothesisId': hypothesisId,
-      if (data != null) 'data': data,
+      'data': data,
+      'hypothesisId': hypothesisId,
     };
-    final path = r'c:\Users\brams\Desktop\Roady\.cursor\debug.log';
-    File(path).writeAsStringSync('${jsonEncode(payload)}\n', mode: FileMode.append);
+    final line = '${jsonEncode(payload)}\n';
+    File('debug-435d78.log').writeAsStringSync(line, mode: FileMode.append);
   } catch (_) {}
 }
-// #endregion

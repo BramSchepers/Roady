@@ -37,6 +37,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (mounted) _loadProStatus();
       });
     }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (FirebaseAuth.instance.currentUser?.isAnonymous == true) {
+        context.go('/auth');
+      }
+    });
   }
 
   Future<void> _loadProStatus() async {
@@ -46,10 +52,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
     try {
       final isPro = await RevenueCatService.instance.hasProEntitlement();
-      if (mounted) setState(() {
+      if (mounted) {
+        setState(() {
         _isPro = isPro;
         _proLoaded = true;
       });
+      }
     } catch (_) {
       if (mounted) setState(() => _proLoaded = true);
     }

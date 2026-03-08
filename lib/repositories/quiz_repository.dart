@@ -74,6 +74,41 @@ class QuizRepository {
     }
   }
 
+  /// Fetches questions by their Firestore document ids; order of [ids] is preserved.
+  /// Missing or invalid docs are skipped.
+  Future<List<QuizQuestion>> getQuestionsByIds(List<String> ids) async {
+    if (ids.isEmpty) return [];
+    final uniqueIds = ids.toSet().toList();
+    try {
+      final refs = uniqueIds
+          .map((id) => _firestore.collection(_collectionId).doc(id))
+          .toList();
+      final snaps = await Future.wait(refs.map((r) => r.get()));
+      final byId = <String, QuizQuestion>{};
+      for (final snap in snaps) {
+        if (!snap.exists) continue;
+        try {
+          final data = snap.data() ?? {};
+          data['id'] = snap.id;
+          final q = QuizQuestion.fromMap(Map<String, dynamic>.from(data));
+          if (q.options.isNotEmpty && q.text.isNotEmpty) {
+            byId[snap.id] = q;
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('QuizRepository: skip invalid doc ${snap.id}: $e');
+          }
+        }
+      }
+      return ids.map((id) => byId[id]).whereType<QuizQuestion>().toList();
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error fetching quiz questions by ids: $e');
+      }
+      return [];
+    }
+  }
+
   /// One-time seed method to upload hardcoded questions to Firestore.
   /// Call this from main.dart or a debug screen.
   Future<void> seedInitialData() async {

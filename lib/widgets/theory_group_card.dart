@@ -116,78 +116,87 @@ class TheoryGroupCard extends StatelessWidget {
             : BorderSide.none,
       ),
       clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onStart,
-        child: Stack(
-          children: [
-            Padding(
-              padding: _padding,
-              child: Column(
-                mainAxisSize: kIsWeb ? MainAxisSize.max : MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      height: _iconSize,
-                      color: _isComplete
-                          ? Colors.green.shade50
-                          : primaryColor.withValues(alpha: 0.15),
-                      child: Center(
-                        child: Icon(
-                          group.icon,
-                          size: _iconInnerSize,
-                          color: _isComplete
-                              ? Colors.green.shade700
-                              : primaryColor,
+        child: InkWell(
+          onTap: onStart,
+          child: Stack(
+            children: [
+              Padding(
+                padding: _padding,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            height: _iconSize,
+                            color: _isComplete
+                                ? Colors.green.shade50
+                                : primaryColor.withValues(alpha: 0.15),
+                            child: Center(
+                              child: Icon(
+                                group.icon,
+                                size: _iconInnerSize,
+                                color: _isComplete
+                                    ? Colors.green.shade700
+                                    : primaryColor,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
+                        SizedBox(height: kIsWeb ? 12 : 8),
+                        Text(
+                          group.title,
+                          style: TextStyle(
+                            fontSize: _titleFontSize,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (totalCount > 0 && !_isComplete) ...[
+                          SizedBox(height: kIsWeb ? 6 : 4),
+                          Text(
+                            '$completedCount / $totalCount lessen',
+                            style: TextStyle(
+                              fontSize: kIsWeb ? 13 : 12,
+                              color: Colors.grey[600],
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ],
                     ),
-                  ),
-                  SizedBox(height: kIsWeb ? 16 : 12),
-                  Text(
-                    group.title,
-                    style: TextStyle(
-                      fontSize: _titleFontSize,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (totalCount > 0 && !_isComplete) ...[
-                    SizedBox(height: kIsWeb ? 8 : 4),
-                    Text(
-                      '$completedCount / $totalCount lessen',
-                      style: TextStyle(
-                        fontSize: kIsWeb ? 14 : 12,
-                        color: Colors.grey[600],
+                    Padding(
+                      padding: EdgeInsets.only(top: kIsWeb ? 12 : 10),
+                      child: FilledButton.icon(
+                        onPressed: onStart,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: _isComplete
+                              ? Colors.green.shade600
+                              : primaryColor,
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(vertical: kIsWeb ? 12 : 10),
+                          minimumSize: const Size(double.infinity, 40),
+                        ),
+                        icon: Icon(
+                          _isComplete ? Icons.check_circle : Icons.play_arrow,
+                          size: 18,
+                        ),
+                        label: Text(_isComplete ? 'Voltooid · Bekijk' : 'Start nu'),
                       ),
-                      textAlign: TextAlign.center,
                     ),
                   ],
-                  if (kIsWeb) const Spacer(),
-                  SizedBox(height: kIsWeb ? 16 : 12),
-                  FilledButton.icon(
-                    onPressed: onStart,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: _isComplete
-                          ? Colors.green.shade600
-                          : primaryColor,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(vertical: kIsWeb ? 14 : 12),
-                      minimumSize: const Size(double.infinity, 44),
-                    ),
-                    icon: Icon(
-                      _isComplete ? Icons.check_circle : Icons.play_arrow,
-                      size: 20,
-                    ),
-                    label: Text(_isComplete ? 'Voltooid · Bekijk' : 'Start nu'),
-                  ),
-                ],
+                ),
               ),
-            ),
             if (_isComplete)
               Positioned(
                 top: 8,

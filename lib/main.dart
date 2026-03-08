@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 
 import 'auth/auth_state.dart';
 import 'firebase_options.dart';
+import 'debug_log.dart';
 import 'repositories/quiz_repository.dart';
 import 'services/analytics_consent_service.dart';
 import 'repositories/theory_repository.dart';
@@ -206,11 +207,28 @@ class RoadyApp extends StatelessWidget {
           return null;
         }
 
-        // Ingelogde user op /auth mag blijven als die bewust "terug" deed (back-knop)
+        // Gast (anonymous): geen toegang tot quiz en exam-routes; wel tot home, dashboard, shop, profile
+        if (authState.isAnonymous) {
+          if (path == '/quiz' || path == '/exam-history' || path.startsWith('/exam-review')) {
+            return '/auth?reason=register';
+          }
+        }
+        // Ingelogde user op /auth mag blijven als die bewust "terug" deed (back-knop), of als gast (account maken)
         if (path == '/auth' && state.uri.queryParameters['back'] == '1') {
           return null;
         }
-        if (path == '/auth' || path == '/') return '/start';
+        if (path == '/auth' && authState.isAnonymous) {
+          // #region agent log
+          writeDebugLog('main.dart:redirect', 'auth anonymous stay', {'path': path, 'isAnonymous': true}, 'H4');
+          // #endregion
+          return null;
+        }
+        if (path == '/auth' || path == '/') {
+          // #region agent log
+          writeDebugLog('main.dart:redirect', 'redirect to start', {'path': path}, 'H3');
+          // #endregion
+          return '/start';
+        }
         return null;
       },
       routes: <RouteBase>[
@@ -241,7 +259,14 @@ class RoadyApp extends StatelessWidget {
           pageBuilder: (context, state) {
             final mode = state.uri.queryParameters['mode'];
             final isSignUp = mode != 'login';
-            return _simplePage(state, AuthScreen(initialSignUp: isSignUp));
+            final reasonRegister = state.uri.queryParameters['reason'] == 'register';
+            return _simplePage(
+              state,
+              AuthScreen(
+                initialSignUp: isSignUp,
+                showRegisterPrompt: reasonRegister,
+              ),
+            );
           },
         ),
         GoRoute(
@@ -303,14 +328,25 @@ class RoadyApp extends StatelessWidget {
             final extra = state.extra;
             QuizMode mode = QuizMode.random;
             bool ttsEnabled = true;
+            List<String>? savedQuestionIds;
             if (extra is Map) {
               mode = extra['mode'] as QuizMode? ?? QuizMode.random;
               ttsEnabled = extra['ttsEnabled'] as bool? ?? true;
+              final raw = extra['savedQuestionIds'];
+              if (raw is List) {
+                savedQuestionIds = raw.map((e) => e.toString()).toList();
+              }
             } else if (extra is QuizMode) {
               mode = extra;
             }
             return _slideWithBouncePage(
-                state, QuizScreen(mode: mode, ttsEnabled: ttsEnabled));
+              state,
+              QuizScreen(
+                mode: mode,
+                ttsEnabled: ttsEnabled,
+                savedQuestionIds: savedQuestionIds,
+              ),
+            );
           },
         ),
         GoRoute(

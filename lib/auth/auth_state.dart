@@ -14,4 +14,5 @@ class AuthState extends ChangeNotifier {
 
   User? get user => _user;
   bool get isLoggedIn => _user != null;
+  bool get isAnonymous => _user?.isAnonymous ?? false;
 }

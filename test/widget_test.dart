@@ -19,6 +19,9 @@ class FakeAuthState extends ChangeNotifier implements AuthState {
   bool get isLoggedIn => false;
 
   @override
+  bool get isAnonymous => false;
+
+  @override
   User? get user => null;
 }
 

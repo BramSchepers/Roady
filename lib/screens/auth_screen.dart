@@ -1,13 +1,17 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'dart:convert';
 
+import '../debug_log.dart';
+
 class AuthScreen extends StatefulWidget {
   final bool initialSignUp;
+  final bool showRegisterPrompt;
 
-  const AuthScreen({super.key, this.initialSignUp = true});
+  const AuthScreen({super.key, this.initialSignUp = true, this.showRegisterPrompt = false});
 
   @override
   State<AuthScreen> createState() => _AuthScreenState();
@@ -68,8 +72,16 @@ class _AuthScreenState extends State<AuthScreen> {
     });
 
     try {
-      _log('Calling GoogleSignIn().signIn()');
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      _log('Creating GoogleSignIn instance');
+      final GoogleSignIn googleSignIn = kIsWeb
+          ? GoogleSignIn(
+              clientId:
+                  '280920543254-43du8407mdvpkleug9v8svdmqf0qki47.apps.googleusercontent.com',
+            )
+          : GoogleSignIn();
+
+      _log('Calling googleSignIn.signIn()');
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 
       if (googleUser == null) {
         _log('User cancelled sign in');
@@ -87,9 +99,16 @@ class _AuthScreenState extends State<AuthScreen> {
         idToken: googleAuth.idToken,
       );
 
-      _log('Signing in to Firebase');
-      await FirebaseAuth.instance.signInWithCredential(credential);
-      _log('Firebase sign in successful');
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null && currentUser.isAnonymous) {
+        _log('Linking Google credential to anonymous user');
+        await currentUser.linkWithCredential(credential);
+        _log('Firebase link successful');
+      } else {
+        _log('Signing in to Firebase');
+        await FirebaseAuth.instance.signInWithCredential(credential);
+        _log('Firebase sign in successful');
+      }
     } on FirebaseAuthException catch (e) {
       _log('FirebaseAuthException', {'code': e.code, 'message': e.message});
       setState(() {
@@ -106,6 +125,9 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Future<void> _signInAnonymously() async {
+    // #region agent log
+    writeDebugLog('auth_screen.dart:_signInAnonymously', 'entry', {}, 'H1');
+    // #endregion
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -113,12 +135,21 @@ class _AuthScreenState extends State<AuthScreen> {
 
     try {
       await FirebaseAuth.instance.signInAnonymously();
+      // #region agent log
+      writeDebugLog('auth_screen.dart:_signInAnonymously', 'success before setState', {'hasUser': FirebaseAuth.instance.currentUser != null}, 'H1');
+      // #endregion
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      context.go('/start');
     } on FirebaseAuthException catch (e) {
       setState(() {
         _errorMessage = _authErrorToDutch(e.code);
         _isLoading = false;
       });
     } catch (e) {
+      // #region agent log
+      writeDebugLog('auth_screen.dart:_signInAnonymously', 'catch', {'error': e.toString()}, 'H1');
+      // #endregion
       setState(() {
         _errorMessage = 'Inloggen als gast mislukt.';
         _isLoading = false;
@@ -150,11 +181,24 @@ class _AuthScreenState extends State<AuthScreen> {
           });
           return;
         }
-        final cred = await FirebaseAuth.instance
-            .createUserWithEmailAndPassword(email: email, password: password);
-        final name = _displayNameController.text.trim();
-        if (name.isNotEmpty && cred.user != null) {
-          await cred.user!.updateDisplayName(name);
+        final currentUser = FirebaseAuth.instance.currentUser;
+        if (currentUser != null && currentUser.isAnonymous) {
+          final credential = EmailAuthProvider.credential(
+            email: email,
+            password: password,
+          );
+          await currentUser.linkWithCredential(credential);
+          final name = _displayNameController.text.trim();
+          if (name.isNotEmpty) {
+            await currentUser.updateDisplayName(name);
+          }
+        } else {
+          final cred = await FirebaseAuth.instance
+              .createUserWithEmailAndPassword(email: email, password: password);
+          final name = _displayNameController.text.trim();
+          if (name.isNotEmpty && cred.user != null) {
+            await cred.user!.updateDisplayName(name);
+          }
         }
       } else {
         await FirebaseAuth.instance
@@ -209,6 +253,8 @@ class _AuthScreenState extends State<AuthScreen> {
     switch (code) {
       case 'email-already-in-use':
         return 'Dit e-mailadres is al in gebruik.';
+      case 'credential-already-in-use':
+        return 'Dit account (Google of e-mail) is al gekoppeld aan een ander profiel. Log in met dat account of gebruik een ander e-mailadres.';
       case 'invalid-email':
         return 'Ongeldig e-mailadres.';
       case 'operation-not-allowed':
@@ -250,14 +296,11 @@ class _AuthScreenState extends State<AuthScreen> {
             child: Center(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: ColoredBox(
-                  color: Colors.white,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 0),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 420),
-                      child: _authFormContent(context),
-                    ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 0),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 420),
+                    child: _authFormContent(context),
                   ),
                 ),
               ),
@@ -306,6 +349,16 @@ class _AuthScreenState extends State<AuthScreen> {
               style: Theme.of(context).textTheme.titleLarge,
               textAlign: TextAlign.center,
             ),
+            if (widget.showRegisterPrompt) ...[
+              const SizedBox(height: 12),
+              Text(
+                'Voortgang bewaren? Maak een account met e-mail of Google.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.grey.shade700,
+                    ),
+                textAlign: TextAlign.center,
+              ),
+            ],
             const SizedBox(height: 20),
             if (_errorMessage != null) ...[
               Container(

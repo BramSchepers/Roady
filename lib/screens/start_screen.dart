@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../auth/user_language_repository.dart';
+import '../debug_log.dart';
 
 class StartScreen extends StatefulWidget {
   const StartScreen({super.key});
@@ -24,6 +25,9 @@ class _StartScreenState extends State<StartScreen> {
   Future<void> _checkAndNavigate() async {
     if (!mounted) return;
     final user = FirebaseAuth.instance.currentUser;
+    // #region agent log
+    writeDebugLog('start_screen.dart:_checkAndNavigate', 'entry', {'hasUser': user != null, 'uid': user?.uid}, 'H2');
+    // #endregion
     if (user == null) {
       if (!mounted) return;
       context.go('/auth');
@@ -32,6 +36,9 @@ class _StartScreenState extends State<StartScreen> {
 
     final nextRoute =
         await UserLanguageRepository.instance.getNextOnboardingRoute(user.uid);
+    // #region agent log
+    writeDebugLog('start_screen.dart:_checkAndNavigate', 'after getNextOnboardingRoute', {'nextRoute': nextRoute}, 'H2');
+    // #endregion
     if (!mounted) return;
     context.go(nextRoute);
   }

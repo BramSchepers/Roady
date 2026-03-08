@@ -143,11 +143,20 @@ class _HomeScreenState extends State<HomeScreen>
                     TextButton.icon(
                       icon: Icon(Icons.person,
                           size: _webNavIconSize, color: _webNavTextColor),
-                      label: Text('Profiel',
+                      label: Text(
+                          FirebaseAuth.instance.currentUser?.isAnonymous == true
+                              ? 'Account maken'
+                              : 'Profiel',
                           style: TextStyle(
                               fontSize: _webNavFontSize,
                               color: _webNavTextColor)),
-                      onPressed: () => context.push('/profile'),
+                      onPressed: () {
+                        if (FirebaseAuth.instance.currentUser?.isAnonymous == true) {
+                          context.go('/auth');
+                        } else {
+                          context.push('/profile');
+                        }
+                      },
                       style: TextButton.styleFrom(
                         foregroundColor: _webNavTextColor,
                         padding: const EdgeInsets.symmetric(
@@ -277,7 +286,13 @@ class _HomeScreenState extends State<HomeScreen>
                             IconButton(
                               icon: const Icon(Icons.person,
                                   color: _webNavTextColor),
-                              onPressed: () => context.push('/profile'),
+                              onPressed: () {
+                                if (FirebaseAuth.instance.currentUser?.isAnonymous == true) {
+                                  context.go('/auth');
+                                } else {
+                                  context.push('/profile');
+                                }
+                              },
                             ),
                             IconButton(
                               icon: const Icon(Icons.shopping_cart,
@@ -327,6 +342,36 @@ class _HomeScreenState extends State<HomeScreen>
                                       children: [
                                         const FuelMeterCard(),
                                         const SizedBox(height: 32),
+                                        if (FirebaseAuth.instance.currentUser?.isAnonymous == true) ...[
+                                          Material(
+                                            color: _accentBlue.withValues(alpha: 0.08),
+                                            borderRadius: BorderRadius.circular(12),
+                                            child: InkWell(
+                                              onTap: () => context.go('/auth'),
+                                              borderRadius: BorderRadius.circular(12),
+                                              child: Padding(
+                                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                                child: Row(
+                                                  children: [
+                                                    Icon(Icons.info_outline, color: _accentBlue, size: 24),
+                                                    const SizedBox(width: 12),
+                                                    Expanded(
+                                                      child: Text(
+                                                        'Maak een account om je voortgang te bewaren.',
+                                                        style: TextStyle(
+                                                          fontSize: 14,
+                                                          color: Colors.grey.shade800,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Text('Account maken', style: TextStyle(fontWeight: FontWeight.w600, color: _accentBlue)),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 20),
+                                        ],
                                         Text(
                                           'Verder leren',
                                           style: Theme.of(context)
@@ -400,6 +445,36 @@ class _HomeScreenState extends State<HomeScreen>
                               children: [
                                 const FuelMeterCard(),
                                 const SizedBox(height: 32),
+                                if (FirebaseAuth.instance.currentUser?.isAnonymous == true) ...[
+                                  Material(
+                                    color: _accentBlue.withValues(alpha: 0.08),
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: InkWell(
+                                      onTap: () => context.go('/auth'),
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.info_outline, color: _accentBlue, size: 24),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Text(
+                                                'Maak een account om je voortgang te bewaren.',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: Colors.grey.shade800,
+                                                ),
+                                              ),
+                                            ),
+                                            Text('Account maken', style: TextStyle(fontWeight: FontWeight.w600, color: _accentBlue)),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 20),
+                                ],
                                 Text(
                                   'Verder leren',
                                   style: Theme.of(context)
@@ -479,20 +554,25 @@ class _HomeScreenState extends State<HomeScreen>
         ],
       ),
     ),
-    if (kIsWeb && _webMenuOpen) _buildWebMenuOverlay(context),
+    if (kIsWeb && _webMenuOpen)
+      Positioned.fill(
+        child: _buildWebMenuOverlay(context),
+      ),
       ],
     );
   }
 
   Widget _buildWebMenuOverlay(BuildContext context) {
     return Stack(
+      fit: StackFit.expand,
       children: [
-        GestureDetector(
-          onTap: _closeWebMenu,
-          child: Container(
-            color: Colors.black54,
-            width: double.infinity,
-            height: double.infinity,
+        Positioned.fill(
+          child: GestureDetector(
+            onTap: _closeWebMenu,
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              color: Colors.black54,
+            ),
           ),
         ),
         AnimatedBuilder(
@@ -561,9 +641,18 @@ class _HomeScreenState extends State<HomeScreen>
                   _buildWebMenuTile(
                     context,
                     Icons.person,
-                    'Profiel',
+                    FirebaseAuth.instance.currentUser?.isAnonymous == true
+                        ? 'Account maken'
+                        : 'Profiel',
                     _webNavTextColor,
-                    () => context.push('/profile'),
+                    () {
+                      if (FirebaseAuth.instance.currentUser?.isAnonymous == true) {
+                        _closeWebMenu();
+                        context.go('/auth');
+                      } else {
+                        context.push('/profile');
+                      }
+                    },
                   ),
                   _buildWebMenuTile(
                     context,

@@ -168,7 +168,7 @@ class _TheoryScreenState extends State<TheoryScreen> {
               padding: const EdgeInsets.all(28),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: crossAxisCount,
-                childAspectRatio: 0.78,
+                childAspectRatio: 0.72,
                 crossAxisSpacing: 28,
                 mainAxisSpacing: 28,
               ),

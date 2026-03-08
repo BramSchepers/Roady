@@ -19,9 +19,16 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState extends State<DashboardScreen>
+    with SingleTickerProviderStateMixin {
   // _selectedIndex is the index of the BottomNavigationBar (0..4)
   late int _selectedIndex;
+
+  // Web narrow viewport: hamburger menu (zelfde breakpoint als home)
+  bool _webMenuOpen = false;
+  static const _webMenuPanelWidth = 300.0;
+  late AnimationController _webMenuController;
+  late Animation<double> _webMenuAnimation;
 
   // Colors from HomeScreen
   static const _accentBlue = Color(
@@ -37,12 +44,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+    _webMenuController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+    );
+    _webMenuAnimation = CurvedAnimation(
+      parent: _webMenuController,
+      curve: Curves.easeInOut,
+    );
     // Map logical index (0..3) to visual index (0, 1, 3, 4)
     // 0 -> 0 (Theorie)
     // 1 -> 1 (Oefenvragen)
     // 2 -> 3 (Examen)
     // 3 -> 4 (AI)
-    _selectedIndex = _mapLogicalToVisual(widget.initialIndex);
+    var index = _mapLogicalToVisual(widget.initialIndex);
+    if (FirebaseAuth.instance.currentUser?.isAnonymous == true && index != 0) {
+      index = 0;
+    }
+    _selectedIndex = index;
+  }
+
+  @override
+  void dispose() {
+    _webMenuController.dispose();
+    super.dispose();
+  }
+
+  void _closeWebMenu() {
+    _webMenuController.reverse().then((_) {
+      if (mounted) setState(() => _webMenuOpen = false);
+    });
   }
 
   int _mapLogicalToVisual(int logicalIndex) {
@@ -69,10 +100,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // Prevent selecting the dummy item (index 2)
     if (index == 2) return;
 
+    final isGuest = FirebaseAuth.instance.currentUser?.isAnonymous == true;
+    if (isGuest && index != 0) {
+      if (index == 1) {
+        _showGuestDialog(
+          message: 'Maak een account of log in om oefenvragen te gebruiken.',
+          buttonLabel: 'Account aanmaken',
+          onPressed: () => context.go('/auth'),
+        );
+      } else if (index == 3 || index == 4) {
+        _showGuestDialog(
+          message: 'Examen en AI zijn premium functies. Upgrade uw account om door te gaan.',
+          buttonLabel: 'Upgrade uw account',
+          onPressed: () => context.go('/shop'),
+        );
+      }
+      return;
+    }
+
     setState(() {
       _isForward = index > _selectedIndex;
       _selectedIndex = index;
     });
+  }
+
+  void _showGuestDialog({
+    required String message,
+    required String buttonLabel,
+    required VoidCallback onPressed,
+  }) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Account nodig'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Annuleren'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              onPressed();
+            },
+            child: Text(buttonLabel),
+          ),
+        ],
+      ),
+    );
   }
 
   Color _getCurrentColor() {
@@ -122,10 +198,167 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return margin.clamp(24.0, double.infinity);
   }
 
+  /// Menu-item in het slide-out panel (narrow web).
+  Widget _buildWebMenuTile(
+    BuildContext context,
+    IconData icon,
+    String label,
+    Color iconColor,
+    VoidCallback onTap,
+  ) {
+    return ListTile(
+      leading: Icon(icon, color: iconColor, size: _webNavIconSize),
+      title: Text(
+        label,
+        style: const TextStyle(
+          fontSize: _webNavFontSize,
+          color: _webNavTextColor,
+        ),
+      ),
+      onTap: onTap,
+    );
+  }
+
+  Widget _buildWebMenuOverlay(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Positioned.fill(
+          child: GestureDetector(
+            onTap: _closeWebMenu,
+            behavior: HitTestBehavior.opaque,
+            child: Container(color: Colors.black54),
+          ),
+        ),
+        AnimatedBuilder(
+          animation: _webMenuAnimation,
+          builder: (context, child) {
+            return Positioned(
+              right: -_webMenuPanelWidth +
+                  _webMenuAnimation.value * _webMenuPanelWidth,
+              top: 0,
+              bottom: 0,
+              width: _webMenuPanelWidth,
+              child: child!,
+            );
+          },
+          child: Material(
+            elevation: 8,
+            color: Colors.white,
+            child: SafeArea(
+              left: false,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8.0, vertical: 8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.close,
+                              color: _webNavTextColor),
+                          onPressed: _closeWebMenu,
+                        ),
+                      ],
+                    ),
+                  ),
+                  _buildWebMenuTile(
+                    context,
+                    Icons.menu_book,
+                    'Theorie',
+                    _activeBlue,
+                    () {
+                      _closeWebMenu();
+                      _onItemTapped(0);
+                    },
+                  ),
+                  _buildWebMenuTile(
+                    context,
+                    Icons.quiz,
+                    'Oefenvragen',
+                    _tealColor,
+                    () {
+                      _closeWebMenu();
+                      _onItemTapped(1);
+                    },
+                  ),
+                  _buildWebMenuTile(
+                    context,
+                    Icons.school,
+                    'Examen',
+                    _orangeColor,
+                    () {
+                      _closeWebMenu();
+                      _onItemTapped(3);
+                    },
+                  ),
+                  _buildWebMenuTile(
+                    context,
+                    Icons.smart_toy,
+                    'AI',
+                    _purpleColor,
+                    () {
+                      _closeWebMenu();
+                      _onItemTapped(4);
+                    },
+                  ),
+                  _buildWebMenuTile(
+                    context,
+                    Icons.person,
+                    FirebaseAuth.instance.currentUser?.isAnonymous == true
+                        ? 'Account maken'
+                        : 'Profiel',
+                    _webNavTextColor,
+                    () {
+                      _closeWebMenu();
+                      if (FirebaseAuth.instance.currentUser?.isAnonymous ==
+                          true) {
+                        context.go('/auth');
+                      } else {
+                        context.push('/profile');
+                      }
+                    },
+                  ),
+                  _buildWebMenuTile(
+                    context,
+                    Icons.shopping_cart,
+                    'Shop',
+                    _webNavTextColor,
+                    () {
+                      _closeWebMenu();
+                      context.push('/shop');
+                    },
+                  ),
+                  _buildWebMenuTile(
+                    context,
+                    Icons.logout,
+                    'Uitloggen',
+                    _webNavTextColor,
+                    () async {
+                      _closeWebMenu();
+                      await FirebaseAuth.instance.signOut();
+                      if (context.mounted) context.go('/auth?mode=login');
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final sideMargin = kIsWeb ? _webNavSideMargin(context) : 0.0;
-    return Scaffold(
+    final width = MediaQuery.sizeOf(context).width;
+    final isNarrowWeb = kIsWeb && width < kWebNavBarBreakpoint;
+
+    final scaffold = Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -180,6 +413,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         );
                       },
                     ),
+                    if (!isNarrowWeb) ...[
                     const SizedBox(width: 24),
                     _buildWebNavItem(
                       Icons.menu_book,
@@ -209,6 +443,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       isSelected: _selectedIndex == 4,
                       iconColor: _purpleColor,
                     ),
+                    ],
                   ],
                 ),
               )
@@ -226,17 +461,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ? [
                 Padding(
                   padding: EdgeInsets.only(right: sideMargin),
-                  child: Row(
+                  child: isNarrowWeb
+                      ? IconButton(
+                          icon: const Icon(Icons.menu,
+                              color: _webNavTextColor, size: 32),
+                          onPressed: () {
+                            setState(() => _webMenuOpen = true);
+                            _webMenuController.forward();
+                          },
+                          tooltip: 'Menu',
+                        )
+                      : Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       TextButton.icon(
                         icon: Icon(Icons.person,
                             size: _webNavIconSize, color: _webNavTextColor),
-                        label: Text('Profiel',
+                        label: Text(
+                            FirebaseAuth.instance.currentUser?.isAnonymous == true
+                                ? 'Account maken'
+                                : 'Profiel',
                             style: TextStyle(
                                 fontSize: _webNavFontSize,
                                 color: _webNavTextColor)),
-                        onPressed: () => context.push('/profile'),
+                        onPressed: () {
+                          if (FirebaseAuth.instance.currentUser?.isAnonymous == true) {
+                            context.go('/auth');
+                          } else {
+                            context.push('/profile');
+                          }
+                        },
                         style: TextButton.styleFrom(
                           foregroundColor: _webNavTextColor,
                           padding: const EdgeInsets.symmetric(
@@ -282,7 +536,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 IconButton(
                   icon: const Icon(Icons.person, color: Colors.black87),
                   iconSize: 24,
-                  onPressed: () => context.push('/profile'),
+                  onPressed: () {
+                    if (FirebaseAuth.instance.currentUser?.isAnonymous == true) {
+                      context.go('/auth');
+                    } else {
+                      context.push('/profile');
+                    }
+                  },
                 ),
                 IconButton(
                   icon: const Icon(Icons.shopping_cart, color: Colors.black87),
@@ -313,6 +573,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
           ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (FirebaseAuth.instance.currentUser?.isAnonymous == true)
+                Material(
+                  color: _activeBlue.withValues(alpha: 0.12),
+                  child: SafeArea(
+                    bottom: false,
+                    child: InkWell(
+                      onTap: () => context.go('/auth'),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        child: Row(
+                          children: [
+                            Icon(Icons.info_outline, color: _activeBlue, size: 22),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Maak een account om je voortgang te bewaren.',
+                                style: TextStyle(fontSize: 13, color: Colors.grey.shade800),
+                              ),
+                            ),
+                            Text('Account maken', style: TextStyle(fontWeight: FontWeight.w600, color: _activeBlue, fontSize: 14)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              Expanded(
+                child:
           // Show active page: geen slide/shake op web, wel op mobiel
           AnimatedSwitcher(
             duration:
@@ -335,6 +626,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               key: ValueKey<int>(_selectedIndex),
               child: _pages[_mapVisualToLogical(_selectedIndex)],
             ),
+          ),
+              ),
+            ],
           ),
         ],
       ),
@@ -399,6 +693,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
               showUnselectedLabels: true,
             ),
     );
+
+    if (kIsWeb) {
+      return Stack(
+        children: [
+          scaffold,
+          if (_webMenuOpen)
+            Positioned.fill(
+              child: _buildWebMenuOverlay(context),
+            ),
+        ],
+      );
+    }
+    return scaffold;
   }
 }
 // _DirectionalSlideTransition removed as logic is now inline

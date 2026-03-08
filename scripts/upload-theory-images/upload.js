@@ -27,7 +27,7 @@ dotenv.config();
 
 // Config: lokale map → Firestore document ID
 const CHAPTER_MAPPING = {
-  chapter_02: 'chapter_02',
+  chapter_03: 'chapter_03',
   // chapter_01: 'volgend_hoofdstuk',
 };
 
