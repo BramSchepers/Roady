@@ -1,0 +1,15 @@
+{
+  "name": "upload-quiz-images",
+  "version": "1.0.0",
+  "description": "Upload quiz question images to Cloudinary and set imageUrl in Firestore quizQuestions",
+  "main": "upload.js",
+  "type": "module",
+  "scripts": {
+    "upload": "node upload.js"
+  },
+  "dependencies": {
+    "cloudinary": "^2.5.1",
+    "dotenv": "^16.4.5",
+    "firebase-admin": "^12.7.0"
+  }
+}
