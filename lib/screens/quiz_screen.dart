@@ -18,6 +18,7 @@ class QuizScreen extends StatefulWidget {
   final QuizMode mode;
   final String? categoryId;
   final bool ttsEnabled;
+
   /// Als gezet: laad alleen deze vragen (opgeslagen oefenvragen); [mode] wordt genegeerd.
   final List<String>? savedQuestionIds;
 
@@ -45,8 +46,10 @@ class _QuizScreenState extends State<QuizScreen>
 
   /// Shuffled options for current question (so users can't memorize positions).
   List<String> _shuffledOptions = [];
+
   /// Index in _shuffledOptions of the correct answer.
   int _correctShuffledIndex = 0;
+
   /// Maps shuffled position -> original index (for QuestionResult).
   List<int> _shuffledIndices = [];
 
@@ -139,9 +142,11 @@ class _QuizScreenState extends State<QuizScreen>
               });
               try {
                 if (wasSaved) {
-                  await SavedQuestionsRepository.instance.removeSavedQuestionId(question.id);
+                  await SavedQuestionsRepository.instance
+                      .removeSavedQuestionId(question.id);
                 } else {
-                  await SavedQuestionsRepository.instance.addSavedQuestionId(question.id);
+                  await SavedQuestionsRepository.instance
+                      .addSavedQuestionId(question.id);
                 }
                 if (!mounted) return;
                 await _refreshSavedIds();
@@ -155,7 +160,9 @@ class _QuizScreenState extends State<QuizScreen>
                   }
                 });
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Kon niet synchroniseren. Probeer opnieuw.')),
+                  const SnackBar(
+                      content:
+                          Text('Kon niet synchroniseren. Probeer opnieuw.')),
                 );
               }
             },
@@ -222,7 +229,8 @@ class _QuizScreenState extends State<QuizScreen>
     final q = _questions[_currentIndex];
     if (q.options.isEmpty) return;
     final indices = List.generate(q.options.length, (i) => i)..shuffle();
-    final correctPos = indices.indexOf(q.correctOptionIndex.clamp(0, q.options.length - 1));
+    final correctPos =
+        indices.indexOf(q.correctOptionIndex.clamp(0, q.options.length - 1));
     setState(() {
       _shuffledOptions = indices.map((i) => q.options[i]).toList();
       _shuffledIndices = indices;
@@ -339,11 +347,12 @@ class _QuizScreenState extends State<QuizScreen>
     if (_isExamMode && _questions.isNotEmpty) {
       final q = _questions[_currentIndex];
       final correct = _selectedOptionIndex == _correctShuffledIndex;
-      final selectedOriginal = _timedOutWithoutAnswer || _selectedOptionIndex == null
-          ? null
-          : (_shuffledIndices.length > _selectedOptionIndex!
-              ? _shuffledIndices[_selectedOptionIndex!]
-              : null);
+      final selectedOriginal =
+          _timedOutWithoutAnswer || _selectedOptionIndex == null
+              ? null
+              : (_shuffledIndices.length > _selectedOptionIndex!
+                  ? _shuffledIndices[_selectedOptionIndex!]
+                  : null);
       _questionResults.add(QuestionResult(
         questionSnapshot: q.toMap(),
         selectedOptionIndex: selectedOriginal,
@@ -450,11 +459,11 @@ class _QuizScreenState extends State<QuizScreen>
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
-                onPressed: () {
-                  Navigator.of(context).pop(); // close sheet
-                  context.pop(); // close quiz
-                  context.push('/exam-review/$attemptId');
-                },
+                  onPressed: () {
+                    Navigator.of(context).pop(); // close sheet
+                    context.pop(); // close quiz
+                    context.push('/exam-review/$attemptId');
+                  },
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
@@ -511,14 +520,16 @@ class _QuizScreenState extends State<QuizScreen>
                       value: 1.0 - _timerBarController.value,
                       backgroundColor: Colors.grey[200],
                       minHeight: 6,
-                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                          Color(0xFF2563EB)),
                     ),
                   )
                 : LinearProgressIndicator(
                     value: 1.0,
                     backgroundColor: Colors.grey[200],
                     minHeight: 6,
-                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
+                    valueColor:
+                        const AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
                   ))
             : LinearProgressIndicator(
                 value: (_currentIndex + 1) / _questions.length,
@@ -543,21 +554,24 @@ class _QuizScreenState extends State<QuizScreen>
                         borderRadius: BorderRadius.circular(12),
                         child: Container(
                           constraints: BoxConstraints(
-                            maxHeight: isWideWeb ? 500 : 250,
+                            // Iets lagere maxHeight op web zodat er meer ruimte
+                            // overblijft voor tekst/uitleg.
+                            maxHeight: isWideWeb ? 320 : 240,
                             maxWidth: isWideWeb ? 800 : double.infinity,
                           ),
-                          color: Colors.grey[200],
+                          color: Colors.white,
                           child: CachedNetworkImage(
                             imageUrl: question.imageUrl!,
                             fit: BoxFit.contain,
                             placeholder: (context, url) => const SizedBox(
-                              height: 200,
+                              height: 160,
                               child: Center(
                                 child: CircularProgressIndicator(),
                               ),
                             ),
-                            errorWidget: (context, url, error) => const SizedBox(
-                              height: 200,
+                            errorWidget: (context, url, error) =>
+                                const SizedBox(
+                              height: 160,
                               child: Icon(
                                 Icons.image_not_supported,
                                 size: 50,
@@ -573,210 +587,231 @@ class _QuizScreenState extends State<QuizScreen>
                 ],
                 Text(
                   question.text,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                // When timed out without answer: show message, do not highlight correct answer
+                if (_isAnswered && _timedOutWithoutAnswer) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.orange.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.schedule,
+                            color: Colors.orange.shade700, size: 22),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Tijd verstreken – vraag als fout gerekend.',
+                          style: TextStyle(
+                              fontSize: 14, color: Colors.orange.shade900),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  // When timed out without answer: show message, do not highlight correct answer
-                  if (_isAnswered && _timedOutWithoutAnswer) ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 12, horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.orange.shade200),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.schedule,
-                              color: Colors.orange.shade700, size: 22),
-                          const SizedBox(width: 10),
-                          Text(
-                            'Tijd verstreken – vraag als fout gerekend.',
-                            style: TextStyle(
-                                fontSize: 14, color: Colors.orange.shade900),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  ...List.generate(
-                    _shuffledOptions.isNotEmpty ? _shuffledOptions.length : question.options.length,
-                    (index) {
-                    final options = _shuffledOptions.isNotEmpty ? _shuffledOptions : question.options;
-                    final correctIndex = _shuffledOptions.isNotEmpty ? _correctShuffledIndex : question.correctOptionIndex;
-                    final isSelected = _selectedOptionIndex == index;
-                    final isCorrect = index == correctIndex;
-                    final hideCorrectAnswer = _timedOutWithoutAnswer;
+                  const SizedBox(height: 16),
+                ],
+                ...List.generate(
+                    _shuffledOptions.isNotEmpty
+                        ? _shuffledOptions.length
+                        : question.options.length, (index) {
+                  final options = _shuffledOptions.isNotEmpty
+                      ? _shuffledOptions
+                      : question.options;
+                  final correctIndex = _shuffledOptions.isNotEmpty
+                      ? _correctShuffledIndex
+                      : question.correctOptionIndex;
+                  final isSelected = _selectedOptionIndex == index;
+                  final isCorrect = index == correctIndex;
+                  final hideCorrectAnswer = _timedOutWithoutAnswer;
 
-                    // Determine color based on state (do not show correct/incorrect when timed out)
-                    Color? backgroundColor;
-                    Color textColor = Colors.black87;
-                    Color borderColor = Colors.grey.shade300;
+                  // Determine color based on state (do not show correct/incorrect when timed out)
+                  Color? backgroundColor;
+                  Color textColor = Colors.black87;
+                  Color borderColor = Colors.grey.shade300;
 
-                    if (_isAnswered && !hideCorrectAnswer) {
-                      if (isCorrect) {
-                        backgroundColor = Colors.green.shade50;
-                        borderColor = Colors.green;
-                        textColor = Colors.green.shade900;
-                      } else if (isSelected) {
-                        backgroundColor = Colors.red.shade50;
-                        borderColor = Colors.red;
-                        textColor = Colors.red.shade900;
-                      }
+                  if (_isAnswered && !hideCorrectAnswer) {
+                    if (isCorrect) {
+                      backgroundColor = Colors.green.shade50;
+                      borderColor = Colors.green;
+                      textColor = Colors.green.shade900;
                     } else if (isSelected) {
-                      borderColor = Theme.of(context).primaryColor;
-                      backgroundColor =
-                          Theme.of(context).primaryColor.withOpacity(0.05);
+                      backgroundColor = Colors.red.shade50;
+                      borderColor = Colors.red;
+                      textColor = Colors.red.shade900;
                     }
+                  } else if (isSelected) {
+                    borderColor = Theme.of(context).primaryColor;
+                    backgroundColor =
+                        Theme.of(context).primaryColor.withOpacity(0.05);
+                  }
 
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: InkWell(
-                        onTap: canTapAnswer ? () => _handleAnswer(index) : null,
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: backgroundColor ?? Colors.white,
-                            border: Border.all(color: borderColor, width: 1.5),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 32,
-                                height: 32,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: borderColor,
-                                  ),
-                                ),
-                                child: Text(
-                                  String.fromCharCode(65 + index), // A, B, C
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: _isAnswered &&
-                                            !hideCorrectAnswer &&
-                                            (isCorrect || isSelected)
-                                        ? borderColor
-                                        : Colors.grey[700],
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Text(
-                                  options[index],
-                                  style: TextStyle(
-                                    color: textColor,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                              if (_isAnswered &&
-                                  !hideCorrectAnswer &&
-                                  isCorrect)
-                                const Icon(Icons.check_circle,
-                                    color: Colors.green),
-                              if (_isAnswered &&
-                                  !hideCorrectAnswer &&
-                                  isSelected &&
-                                  !isCorrect)
-                                const Icon(Icons.cancel, color: Colors.red),
-                            ],
-                          ),
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: InkWell(
+                      onTap: canTapAnswer ? () => _handleAnswer(index) : null,
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: backgroundColor ?? Colors.white,
+                          border: Border.all(color: borderColor, width: 1.5),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                      ),
-                    );
-                  }),
-
-                  // Explanation Card (not shown during exam)
-                  if (_isAnswered && !_isExamMode) ...[
-                    const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.blue.shade100),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Row(
-                            children: [
-                              Icon(Icons.info_outline,
-                                  size: 20, color: Colors.blue),
-                              SizedBox(width: 8),
-                              Text(
-                                'Uitleg',
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 32,
+                              height: 32,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: borderColor,
+                                ),
+                              ),
+                              child: Text(
+                                String.fromCharCode(65 + index), // A, B, C
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.blue,
+                                  color: _isAnswered &&
+                                          !hideCorrectAnswer &&
+                                          (isCorrect || isSelected)
+                                      ? borderColor
+                                      : Colors.grey[700],
                                 ),
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            question.explanation,
-                            style: TextStyle(color: Colors.blue.shade900),
-                          ),
-                        ],
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Text(
+                                options[index],
+                                style: TextStyle(
+                                  color: textColor,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            if (_isAnswered && !hideCorrectAnswer && isCorrect)
+                              const Icon(Icons.check_circle,
+                                  color: Colors.green),
+                            if (_isAnswered &&
+                                !hideCorrectAnswer &&
+                                isSelected &&
+                                !isCorrect)
+                              const Icon(Icons.cancel, color: Colors.red),
+                          ],
+                        ),
                       ),
                     ),
-                  ],
+                  );
+                }),
+
+                // Explanation Card (not shown during exam)
+                if (_isAnswered && !_isExamMode) ...[
+                  const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.blue.shade100),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.info_outline,
+                                size: 20, color: Colors.blue),
+                            SizedBox(width: 8),
+                            Text(
+                              'Uitleg',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          question.explanation,
+                          style: TextStyle(color: Colors.blue.shade900),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
-              ),
+              ],
             ),
           ),
-          // Knop hoger; vraagnummer onderaan
-          if (_isAnswered && !_isExamMode)
-            Container(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              color: Colors.white,
-              child: FilledButton(
-                onPressed: _nextQuestion,
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: Text(
-                  _currentIndex < _questions.length - 1
-                      ? 'Volgende'
-                      : 'Bekijk Resultaat',
-                  style: const TextStyle(fontSize: 16),
-                ),
-            ),
-          ),
-          // Bookmark + "Opgeslagen"-animatie vlak boven vraag X / Y (alleen oefenen, ingelogd)
-          if (!_isExamMode && FirebaseAuth.instance.currentUser != null && _questions.isNotEmpty && _currentIndex < _questions.length)
-            _buildBookmarkRow(question),
-          // Vraag X / Y helemaal onderaan
+        ),
+        // Knop hoger; vraagnummer onderaan
+        if (_isAnswered && !_isExamMode)
           Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             color: Colors.white,
-            child: Center(
-              child: Text(
-                'Vraag ${_currentIndex + 1} / ${_questions.length}',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[800],
-                ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final buttonWidth =
+                    (constraints.maxWidth * 0.2).clamp(180.0, 280.0);
+                return Center(
+                  child: SizedBox(
+                    width: buttonWidth,
+                    child: FilledButton(
+                      onPressed: _nextQuestion,
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 18, horizontal: 24),
+                        textStyle: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      child: Text(
+                        _currentIndex < _questions.length - 1
+                            ? 'Volgende'
+                            : 'Bekijk Resultaat',
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        // Bookmark + "Opgeslagen"-animatie vlak boven vraag X / Y (alleen oefenen, ingelogd)
+        if (!_isExamMode &&
+            FirebaseAuth.instance.currentUser != null &&
+            _questions.isNotEmpty &&
+            _currentIndex < _questions.length)
+          _buildBookmarkRow(question),
+        // Vraag X / Y helemaal onderaan
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+          color: Colors.white,
+          child: Center(
+            child: Text(
+              'Vraag ${_currentIndex + 1} / ${_questions.length}',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[800],
               ),
             ),
           ),
-        ],
+        ),
+      ],
     );
 
     return Scaffold(

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../models/quiz_models.dart';
@@ -17,69 +18,39 @@ class _ExamScreenState extends State<ExamScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isWideWeb = kIsWeb && MediaQuery.sizeOf(context).width >= kNarrowViewportMaxWidth;
+    final isWideWeb =
+        kIsWeb && MediaQuery.sizeOf(context).width >= kNarrowViewportMaxWidth;
+    final isGuest = FirebaseAuth.instance.currentUser?.isAnonymous == true;
     final bodyContent = Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-              const SizedBox(height: 24),
-              Icon(Icons.school, size: 56, color: _accentBlue),
-              const SizedBox(height: 16),
-              Text(
-                'Theorie-examen',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '50 vragen · zoals het echte examen in Vlaanderen. 15 seconden per vraag.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[700],
-                    ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              isWideWeb
-                  ? Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 420),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey.shade300),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(Icons.volume_up,
-                                  size: 22, color: Colors.grey[700]),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  'Vraag voorlezen aanzetten voor het echte examen-gevoel',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
-                                      ?.copyWith(color: Colors.black87),
-                                ),
-                              ),
-                              Switch(
-                                value: _ttsEnabled,
-                                onChanged: (v) =>
-                                    setState(() => _ttsEnabled = v),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    )
-                  : Container(
+          const SizedBox(height: 24),
+          Icon(Icons.school, size: 56, color: _accentBlue),
+          const SizedBox(height: 16),
+          Text(
+            'Theorie-examen',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '50 vragen · zoals het echte examen in Vlaanderen. 15 seconden per vraag.',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey[700],
+                ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 32),
+          isWideWeb
+              ? Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 420),
+                    child: Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
@@ -103,68 +74,111 @@ class _ExamScreenState extends State<ExamScreen> {
                           ),
                           Switch(
                             value: _ttsEnabled,
-                            onChanged: (v) =>
-                                setState(() => _ttsEnabled = v),
+                            onChanged: (v) => setState(() => _ttsEnabled = v),
                           ),
                         ],
                       ),
                     ),
-              const SizedBox(height: 48),
-              isWideWeb
-                  ? Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 340),
-                        child: FilledButton(
-                          onPressed: () => context.push('/quiz', extra: {
-                            'mode': QuizMode.exam,
-                            'ttsEnabled': _ttsEnabled,
-                          }),
-                          style: FilledButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 18, horizontal: 24),
-                            backgroundColor: _accentBlue,
-                            minimumSize: const Size(double.infinity, 0),
-                          ),
-                          child: const Text('Examen starten'),
+                  ),
+                )
+              : Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.volume_up, size: 22, color: Colors.grey[700]),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Vraag voorlezen aanzetten voor het echte examen-gevoel',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(color: Colors.black87),
                         ),
                       ),
-                    )
-                  : FilledButton(
-                      onPressed: () => context.push('/quiz', extra: {
-                        'mode': QuizMode.exam,
-                        'ttsEnabled': _ttsEnabled,
-                      }),
+                      Switch(
+                        value: _ttsEnabled,
+                        onChanged: (v) => setState(() => _ttsEnabled = v),
+                      ),
+                    ],
+                  ),
+                ),
+          const SizedBox(height: 48),
+          isWideWeb
+              ? Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 340),
+                    child: FilledButton(
+                      onPressed: isGuest
+                          ? null
+                          : () => context.push('/quiz', extra: {
+                                'mode': QuizMode.exam,
+                                'ttsEnabled': _ttsEnabled,
+                              }),
                       style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 18, horizontal: 24),
                         backgroundColor: _accentBlue,
+                        minimumSize: const Size(double.infinity, 0),
                       ),
                       child: const Text('Examen starten'),
                     ),
-              const SizedBox(height: 16),
-              isWideWeb
-                  ? Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 340),
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: TextButton(
-                            onPressed: () => context.push('/exam-history'),
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 16, horizontal: 24),
-                            ),
-                            child: const Text('Examen historiek'),
-                          ),
+                  ),
+                )
+              : FilledButton(
+                  onPressed: isGuest
+                      ? null
+                      : () => context.push('/quiz', extra: {
+                            'mode': QuizMode.exam,
+                            'ttsEnabled': _ttsEnabled,
+                          }),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: _accentBlue,
+                  ),
+                  child: const Text('Examen starten'),
+                ),
+          if (isGuest) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Premium functie – maak een account om te starten.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.grey[600],
+                  ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+          const SizedBox(height: 16),
+          isWideWeb
+              ? Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 340),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: TextButton(
+                        onPressed: () => context.push('/exam-history'),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 16, horizontal: 24),
                         ),
+                        child: const Text('Examen historiek'),
                       ),
-                    )
-                  : TextButton(
-                      onPressed: () => context.push('/exam-history'),
-                      child: const Text('Examen historiek'),
                     ),
-              const SizedBox(height: 24),
-            ],
-          ),
+                  ),
+                )
+              : TextButton(
+                  onPressed: () => context.push('/exam-history'),
+                  child: const Text('Examen historiek'),
+                ),
+          const SizedBox(height: 24),
+        ],
+      ),
     );
 
     if (isWideWeb) {
@@ -191,7 +205,8 @@ class _ExamScreenState extends State<ExamScreen> {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: kWebContentMaxWidth),
+                      constraints:
+                          const BoxConstraints(maxWidth: kWebContentMaxWidth),
                       child: Container(
                         clipBehavior: Clip.antiAlias,
                         decoration: const BoxDecoration(

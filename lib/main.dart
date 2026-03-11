@@ -336,6 +336,7 @@ class RoadyApp extends StatelessWidget {
               if (raw is List) {
                 savedQuestionIds = raw.map((e) => e.toString()).toList();
               }
+              // questionLimit werd hier vroeger uitgelezen; huidige QuizScreen ondersteunt deze parameter niet meer.
             } else if (extra is QuizMode) {
               mode = extra;
             }

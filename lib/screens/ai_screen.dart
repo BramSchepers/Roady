@@ -9,7 +9,8 @@ class AiScreen extends StatefulWidget {
   State<AiScreen> createState() => _AiScreenState();
 }
 
-class _AiScreenState extends State<AiScreen> with SingleTickerProviderStateMixin {
+class _AiScreenState extends State<AiScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _pulseAnimation;
   late Animation<double> _floatAnimation;
@@ -43,131 +44,131 @@ class _AiScreenState extends State<AiScreen> with SingleTickerProviderStateMixin
     final content = SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
-          children: [
-            const SizedBox(height: 32),
-            // Animated AI icon
-            AnimatedBuilder(
-              animation: _controller,
-              builder: (context, child) {
-                return Transform.translate(
-                  offset: Offset(0, -_floatAnimation.value / 2),
-                  child: Transform.scale(
-                    scale: _pulseAnimation.value,
-                    child: child,
-                  ),
-                );
-              },
-              child: Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [_purpleLight, Colors.purple.shade50],
-                  ),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: _purple.withOpacity(0.2),
-                      blurRadius: 24,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
+        children: [
+          const SizedBox(height: 32),
+          // Animated AI icon
+          AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              return Transform.translate(
+                offset: Offset(0, -_floatAnimation.value / 2),
+                child: Transform.scale(
+                  scale: _pulseAnimation.value,
+                  child: child,
                 ),
-                child: Icon(
-                  Icons.smart_toy_rounded,
-                  size: 56,
-                  color: _purple,
-                ),
-              ),
-            ),
-            const SizedBox(height: 40),
-            // Coming Soon badge
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              );
+            },
+            child: Container(
+              width: 120,
+              height: 120,
               decoration: BoxDecoration(
-                color: _purple.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(30),
-                border: Border.all(color: _purple.withOpacity(0.3), width: 1.5),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.auto_awesome, size: 18, color: _purple),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Coming Soon',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: _purple,
-                      letterSpacing: 0.5,
-                    ),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [_purpleLight, Colors.purple.shade50],
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: _purple.withOpacity(0.2),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'AI Coach',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Jouw persoonlijke rijbewijs-assistent komt eraan.\nWe werken eraan om je optimaal te ondersteunen.',
-              style: TextStyle(
-                fontSize: 15,
-                color: Colors.grey[700],
-                height: 1.5,
+              child: Icon(
+                Icons.smart_toy_rounded,
+                size: 56,
+                color: _purple,
               ),
-              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 40),
-            // Feature teasers (zelfde breedte als oefenvragen-kaarten op web)
-            LayoutBuilder(
-              builder: (context, constraints) {
-                const blockWidth = 700.0;
-                final useFixedWidth = constraints.maxWidth > blockWidth;
-                final blockColumn = Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _ComingSoonFeature(
-                      icon: Icons.quiz_outlined,
-                      title: 'Vraag uitleg',
-                      subtitle: 'Begrijp antwoorden beter met AI-uitleg',
-                    ),
-                    const SizedBox(height: 12),
-                    _ComingSoonFeature(
-                      icon: Icons.trending_up,
-                      title: 'Persoonlijke tips',
-                      subtitle: 'Studie-advies op basis van je voortgang',
-                    ),
-                    const SizedBox(height: 12),
-                    _ComingSoonFeature(
-                      icon: Icons.chat_bubble_outline,
-                      title: 'Verkeersvragen',
-                      subtitle: 'Stel vragen over verkeersregels en situaties',
-                    ),
-                  ],
+          ),
+          const SizedBox(height: 40),
+          // Coming Soon badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            decoration: BoxDecoration(
+              color: _purple.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(color: _purple.withOpacity(0.3), width: 1.5),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.auto_awesome, size: 18, color: _purple),
+                const SizedBox(width: 8),
+                Text(
+                  'Coming Soon',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: _purple,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'AI Coach',
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Jouw persoonlijke rijbewijs-assistent komt eraan.\nWe werken eraan om je optimaal te ondersteunen.',
+            style: TextStyle(
+              fontSize: 15,
+              color: Colors.grey[700],
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 40),
+          // Feature teasers (zelfde breedte als oefenvragen-kaarten op web)
+          LayoutBuilder(
+            builder: (context, constraints) {
+              const blockWidth = 700.0;
+              final useFixedWidth = constraints.maxWidth > blockWidth;
+              final blockColumn = Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _ComingSoonFeature(
+                    icon: Icons.quiz_outlined,
+                    title: 'Vraag uitleg',
+                    subtitle: 'Begrijp antwoorden beter met AI-uitleg',
+                  ),
+                  const SizedBox(height: 12),
+                  _ComingSoonFeature(
+                    icon: Icons.trending_up,
+                    title: 'Persoonlijke tips',
+                    subtitle: 'Studie-advies op basis van je voortgang',
+                  ),
+                  const SizedBox(height: 12),
+                  _ComingSoonFeature(
+                    icon: Icons.chat_bubble_outline,
+                    title: 'Verkeersvragen',
+                    subtitle: 'Stel vragen over verkeersregels en situaties',
+                  ),
+                ],
+              );
+              if (useFixedWidth) {
+                return Center(
+                  child: SizedBox(
+                    width: blockWidth,
+                    child: blockColumn,
+                  ),
                 );
-                if (useFixedWidth) {
-                  return Center(
-                    child: SizedBox(
-                      width: blockWidth,
-                      child: blockColumn,
-                    ),
-                  );
-                }
-                return blockColumn;
-              },
-            ),
-          ],
-        ),
+              }
+              return blockColumn;
+            },
+          ),
+        ],
+      ),
     );
 
     if (kIsWeb && MediaQuery.sizeOf(context).width >= kNarrowViewportMaxWidth) {

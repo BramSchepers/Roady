@@ -7,15 +7,18 @@ import '../utils/revenuecat_constants.dart';
 
 /// Central service for RevenueCat: configuration, entitlement checks, customer info.
 ///
-/// Only initializes on iOS/Android (not web). Use [isSupported] before calling
-/// purchase/paywall APIs.
+/// Met Flutter SDK 9.x ondersteunt RevenueCat nu ook web (via de Web Billing API).
+/// Gebruik [isSupported] om te checken of RevenueCat in de huidige build geactiveerd is.
 class RevenueCatService {
   RevenueCatService._();
 
   static final RevenueCatService instance = RevenueCatService._();
 
-  /// True when running on a platform where RevenueCat IAP is supported (iOS/Android).
-  static bool get isSupported => !kIsWeb;
+  /// True wanneer RevenueCat in deze build geactiveerd is.
+  ///
+  /// We staan RevenueCat nu toe op alle platforms (inclusief web). Zorg er in
+  /// de RevenueCat‑dashboard voor dat Web Billing en de juiste API‑key zijn ingesteld.
+  static bool get isSupported => true;
 
   bool _initialized = false;
 
@@ -25,14 +28,16 @@ class RevenueCatService {
   Stream<CustomerInfo> get customerInfoUpdates => _customerInfoController.stream;
 
   /// One-time initialization. Call once after Firebase (e.g. in main.dart).
-  /// Skips initialization on web.
   Future<void> initialize({String? appUserId}) async {
     if (!isSupported) return;
     if (_initialized) return;
 
     try {
       await Purchases.setLogLevel(LogLevel.debug);
-      final config = PurchasesConfiguration(revenueCatApiKey)
+      final apiKey = kIsWeb && revenueCatWebApiKey != null && revenueCatWebApiKey!.isNotEmpty
+          ? revenueCatWebApiKey!
+          : revenueCatApiKey;
+      final config = PurchasesConfiguration(apiKey)
         ..appUserID = appUserId;
       await Purchases.configure(config);
       _initialized = true;

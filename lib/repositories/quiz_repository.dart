@@ -12,9 +12,16 @@ class QuizRepository {
   static const String _collectionId = 'quizQuestions';
 
   /// Fetches questions from Firestore based on the QuizMode.
+  ///
+  /// [limit] is optional and only applied for practice modes (e.g. willekeurig).
+  /// For exam mode we always enforce 50 vragen om het officiële examen te simuleren.
   /// Set [forceFromServer] to true to bypass cache and sync with latest questions (e.g. on quiz open).
-  Future<List<QuizQuestion>> getQuestionsByMode(QuizMode mode,
-      {String? chapterId, bool forceFromServer = false}) async {
+  Future<List<QuizQuestion>> getQuestionsByMode(
+    QuizMode mode, {
+    String? chapterId,
+    bool forceFromServer = false,
+    int? limit,
+  }) async {
     try {
       Query query = _firestore.collection(_collectionId);
 
@@ -57,12 +64,21 @@ class QuizRepository {
         }
       }
 
-      if (mode == QuizMode.random) {
-        questions.shuffle();
-        return questions.take(10).toList();
-      } else if (mode == QuizMode.exam) {
+      if (mode == QuizMode.exam) {
         questions.shuffle();
         return questions.take(50).toList();
+      }
+
+      if (mode == QuizMode.random) {
+        questions.shuffle();
+        final effectiveLimit = limit ?? 10;
+        if (effectiveLimit <= 0) return questions;
+        return questions.take(effectiveLimit).toList();
+      }
+
+      if (limit != null && limit > 0 && limit < questions.length) {
+        questions.shuffle();
+        return questions.take(limit).toList();
       }
 
       return questions;

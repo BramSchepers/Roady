@@ -121,30 +121,34 @@ class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
           children: [
             // SVG achtergrond zichtbaar aan de buitenste randen
             Positioned.fill(
-                child: Container(
-                  color: Colors.white,
-                  child: Image.asset(
-                    'assets/images/background.webp',
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: double.infinity,
-                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                  ),
+              child: Container(
+                color: Colors.white,
+                child: Image.asset(
+                  'assets/images/background.webp',
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                 ),
               ),
+            ),
             // Content met ~1/4 marge links/rechts op web
             SafeArea(
-              child: Align(
-                alignment: Alignment.topCenter,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: kIsWeb ? 900 : double.infinity),
+              child: Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: kIsWeb
+                        ? MediaQuery.sizeOf(context).width * 0.25
+                        : 0,
+                  ),
                   child: Column(
                     children: [
                       // Voortgangsindicator
                       Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: LinearProgressIndicator(
-                          value: (_currentPage + 1) / widget.chapter.lessons.length,
+                          value: (_currentPage + 1) /
+                              widget.chapter.lessons.length,
                           backgroundColor: Colors.grey[200],
                           color: const Color(0xFF2563EB), // Roady blauw
                           minHeight: 6,
@@ -160,7 +164,9 @@ class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
                             setState(() => _currentPage = index);
 
                             // Sla pending op als de app crasht, maar negeer snelle spurious events bij start (<500ms)
-                            if (DateTime.now().difference(_startTime).inMilliseconds >
+                            if (DateTime.now()
+                                    .difference(_startTime)
+                                    .inMilliseconds >
                                 500) {
                               if (index < widget.chapter.lessons.length) {
                                 EnergyState().savePendingViewedLessonId(
@@ -210,7 +216,8 @@ class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
                               ),
                             ),
 
-                            if (_currentPage < widget.chapter.lessons.length - 1)
+                            if (_currentPage <
+                                widget.chapter.lessons.length - 1)
                               FilledButton.icon(
                                 onPressed: () async {
                                   await _markLessonComplete(_currentPage);
@@ -318,7 +325,8 @@ class _TheoryPlayerScreenState extends State<TheoryPlayerScreen> {
 
   Widget _buildLessonCard(BuildContext context, TheoryLesson lesson) {
     final isMobile = !kIsWeb;
-    final isWideWeb = kIsWeb && MediaQuery.sizeOf(context).width >= kNarrowViewportMaxWidth;
+    final isWideWeb =
+        kIsWeb && MediaQuery.sizeOf(context).width >= kNarrowViewportMaxWidth;
     final titleFontSize = isMobile ? 22.0 : 27.0;
     final bodyFontSize = isMobile ? 16.0 : 18.0;
     final h1FontSize = isMobile ? 19.0 : 22.0;

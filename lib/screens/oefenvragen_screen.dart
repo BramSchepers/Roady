@@ -1,46 +1,90 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../models/quiz_models.dart';
 import '../repositories/saved_questions_repository.dart';
+import '../services/revenuecat_service.dart';
 import '../utils/onboarding_constants.dart';
 
-class OefenvragenScreen extends StatelessWidget {
+class OefenvragenScreen extends StatefulWidget {
   const OefenvragenScreen({super.key});
+
+  @override
+  State<OefenvragenScreen> createState() => _OefenvragenScreenState();
+}
+
+class _OefenvragenScreenState extends State<OefenvragenScreen> {
+  bool _isPro = false;
+  bool _proLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProStatus();
+  }
+
+  Future<void> _loadProStatus() async {
+    if (!RevenueCatService.isSupported) {
+      if (mounted) {
+        setState(() => _proLoaded = true);
+      }
+      return;
+    }
+    try {
+      final isPro = await RevenueCatService.instance.hasProEntitlement();
+      if (mounted) {
+        setState(() {
+          _isPro = isPro;
+          _proLoaded = true;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _proLoaded = true);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final isWideWeb =
         kIsWeb && MediaQuery.sizeOf(context).width >= kNarrowViewportMaxWidth;
+    final isGuest = FirebaseAuth.instance.currentUser?.isAnonymous == true;
+    final isPro = _isPro;
 
     final List<Widget> cardList = [
+      _QuizSelectionCard(
+        title: 'Willekeurig',
+        description: 'Een mix van alle soorten vragen.',
+        icon: Icons.shuffle,
+        color: Colors.purple,
+        onTap: () => _onCategorySelected(context, QuizMode.random),
+        enabled: !isGuest,
+      ),
       _QuizSelectionCard(
         title: 'Verkeersborden',
         description: 'Oefen specifiek op borden en hun betekenis.',
         color: Colors.blue,
-        icon: Icons.traffic,
-        onTap: () => context.push('/quiz', extra: QuizMode.trafficSigns),
+        customIcon: _TrafficSignC43Icon(color: Colors.blue),
+        onTap: () => _onCategorySelected(context, QuizMode.trafficSigns),
+        enabled: !isGuest && isPro,
       ),
       _QuizSelectionCard(
         title: 'Per Hoofdstuk',
         description: 'Toets je kennis per onderwerp.',
         icon: Icons.menu_book,
         color: Colors.orange,
-        onTap: () => context.push('/quiz', extra: QuizMode.chapter),
-      ),
-      _QuizSelectionCard(
-        title: 'Willekeurig',
-        description: 'Een mix van alle soorten vragen.',
-        icon: Icons.shuffle,
-        color: Colors.purple,
-        onTap: () => context.push('/quiz', extra: QuizMode.random),
+        onTap: () => _onCategorySelected(context, QuizMode.chapter),
+        enabled: !isGuest && isPro,
       ),
       _QuizSelectionCard(
         title: 'Zware overtredingen',
         description: 'Oefen enkel de zware overtredingen',
         icon: Icons.warning_amber_rounded,
         color: Colors.red,
-        onTap: () => context.push('/quiz', extra: QuizMode.random),
+        onTap: () => _onCategorySelected(context, QuizMode.random),
+        enabled: !isGuest && isPro,
       ),
       _QuizSelectionCard(
         title: 'Opgeslagen oefenvragen',
@@ -48,13 +92,20 @@ class OefenvragenScreen extends StatelessWidget {
         icon: Icons.bookmark,
         color: Colors.teal,
         onTap: () async {
-          final ids = await SavedQuestionsRepository.instance.getSavedQuestionIds();
+          final ids =
+              await SavedQuestionsRepository.instance.getSavedQuestionIds();
           if (!context.mounted) return;
           if (ids.isNotEmpty) {
-            context.push('/quiz', extra: {
-              'mode': QuizMode.random,
-              'savedQuestionIds': ids,
-            });
+            // Gebruik een vaste limiet op basis van Pro / niet-Pro, maar toon geen selector hier.
+            final questionLimit = isPro ? 20 : 5;
+            context.push(
+              '/quiz',
+              extra: {
+                'mode': QuizMode.random,
+                'savedQuestionIds': ids,
+                'questionLimit': questionLimit,
+              },
+            );
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -65,6 +116,7 @@ class OefenvragenScreen extends StatelessWidget {
             );
           }
         },
+        enabled: !isGuest && isPro,
       ),
     ];
 
@@ -92,6 +144,28 @@ class OefenvragenScreen extends StatelessWidget {
                   color: Colors.grey[700],
                 ),
           ),
+          if (isGuest) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Maak een account om te oefenen.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.orange.shade800,
+                    fontWeight: FontWeight.w500,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+          ] else if (!isGuest && !isPro && _proLoaded) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Upgrade naar Roady Pro om alle oefenvragen vrij te spelen. '
+              'Als niet‑Pro kun je alleen willekeurige vragen oefenen.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.orange.shade800,
+                    fontWeight: FontWeight.w500,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+          ],
           const SizedBox(height: 32),
           ...cardList.map(
             (c) => Padding(
@@ -128,6 +202,28 @@ class OefenvragenScreen extends StatelessWidget {
                   color: Colors.grey[700],
                 ),
           ),
+          if (isGuest) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Maak een account om te oefenen.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.orange.shade800,
+                    fontWeight: FontWeight.w500,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+          ] else if (!isGuest && !isPro && _proLoaded) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Upgrade naar Roady Pro om alle oefenvragen vrij te spelen. '
+              'Als niet‑Pro kun je alleen willekeurige vragen oefenen.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.orange.shade800,
+                    fontWeight: FontWeight.w500,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+          ],
           const SizedBox(height: 32),
           ...cardList.map((c) => Padding(
                 padding: const EdgeInsets.only(bottom: 16),
@@ -203,6 +299,129 @@ class OefenvragenScreen extends StatelessWidget {
       body: SafeArea(child: mobileContent),
     );
   }
+
+  /// Toont een simpele vraag-selector (5 / 10 / 20) en navigeert daarna naar de quiz.
+  Future<void> _onCategorySelected(BuildContext context, QuizMode mode) async {
+    final isGuest = FirebaseAuth.instance.currentUser?.isAnonymous == true;
+    final isPro = _isPro;
+
+    // Alleen ingelogde gebruikers mogen hier komen; gasten zijn al uitgegrijsd.
+    if (isGuest) return;
+
+    final bool isRandomMode = mode == QuizMode.random;
+
+    // Niet-Pro en geen willekeurig: zouden al disabled moeten zijn.
+    if (!isPro && !isRandomMode) return;
+
+    final bool isRandomNonPro = !isPro && isRandomMode;
+
+    final bool useCenterDialog = kIsWeb &&
+        MediaQuery.sizeOf(context).width >= kNarrowViewportMaxWidth;
+
+    final int? selected = useCenterDialog
+        ? await showDialog<int>(
+            context: context,
+            builder: (ctx) => Dialog(
+              child: _QuestionCountContent(
+                isRandomNonPro: isRandomNonPro,
+                onSelected: (value) => Navigator.of(ctx).pop(value),
+                onCancel: () => Navigator.of(ctx).pop(),
+              ),
+            ),
+          )
+        : await showModalBottomSheet<int>(
+            context: context,
+            isScrollControlled: false,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            builder: (ctx) => _QuestionCountContent(
+              isRandomNonPro: isRandomNonPro,
+              onSelected: (value) => Navigator.of(ctx).pop(value),
+              onCancel: () => Navigator.of(ctx).pop(),
+            ),
+          );
+
+    if (selected == null || !context.mounted) return;
+
+    context.push(
+      '/quiz',
+      extra: {
+        'mode': mode,
+        'questionLimit': selected,
+      },
+    );
+  }
+}
+
+/// Gedeelde inhoud voor vraagkeuze: centraal dialoog (web) of bottom sheet (mobiel).
+class _QuestionCountContent extends StatelessWidget {
+  final bool isRandomNonPro;
+  final void Function(int) onSelected;
+  final VoidCallback onCancel;
+
+  const _QuestionCountContent({
+    required this.isRandomNonPro,
+    required this.onSelected,
+    required this.onCancel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isWideWeb = kIsWeb &&
+        MediaQuery.sizeOf(context).width >= kNarrowViewportMaxWidth;
+    final maxWidth = isWideWeb ? 520.0 : double.infinity;
+
+    return SafeArea(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxWidth),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Hoeveel vragen wil je oefenen?',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                _QuestionCountButton(
+                  limit: 5,
+                  onTap: () => onSelected(5),
+                ),
+                const SizedBox(height: 10),
+                _QuestionCountButton(
+                  limit: 10,
+                  onTap: isRandomNonPro ? null : () => onSelected(10),
+                  enabled: !isRandomNonPro,
+                  subtitle:
+                      isRandomNonPro ? 'Alleen met Roady Pro' : null,
+                ),
+                const SizedBox(height: 10),
+                _QuestionCountButton(
+                  limit: 20,
+                  onTap: isRandomNonPro ? null : () => onSelected(20),
+                  enabled: !isRandomNonPro,
+                  subtitle:
+                      isRandomNonPro ? 'Alleen met Roady Pro' : null,
+                ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: onCancel,
+                  child: const Text('Annuleren'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _QuizSelectionCard extends StatelessWidget {
@@ -211,18 +430,24 @@ class _QuizSelectionCard extends StatelessWidget {
   final IconData? icon;
   final Color color;
   final VoidCallback onTap;
+  final Widget? customIcon;
+  final bool enabled;
 
   const _QuizSelectionCard({
     required this.title,
     required this.description,
     this.icon,
+    this.customIcon,
     required this.color,
     required this.onTap,
+    this.enabled = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Opacity(
+      opacity: enabled ? 1 : 0.6,
+      child: Container(
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.9),
         borderRadius: BorderRadius.circular(20),
@@ -241,7 +466,7 @@ class _QuizSelectionCard extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: onTap,
+          onTap: enabled ? onTap : null,
           borderRadius: BorderRadius.circular(20),
           child: Padding(
             padding: const EdgeInsets.all(20),
@@ -255,11 +480,12 @@ class _QuizSelectionCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   alignment: Alignment.center,
-                  child: Icon(
-                    icon ?? Icons.traffic,
-                    color: color,
-                    size: 32,
-                  ),
+                  child: customIcon ??
+                      Icon(
+                        icon ?? Icons.traffic,
+                        color: color,
+                        size: 32,
+                      ),
                 ),
                 const SizedBox(width: 20),
                 Expanded(
@@ -297,6 +523,108 @@ class _QuizSelectionCard extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 }
+
+class _QuestionCountButton extends StatelessWidget {
+  final int limit;
+  final VoidCallback? onTap;
+  final bool enabled;
+  final String? subtitle;
+
+  const _QuestionCountButton({
+    required this.limit,
+    required this.onTap,
+    this.enabled = true,
+    this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final bgColor = enabled
+        ? theme.colorScheme.primary
+        : theme.colorScheme.surfaceVariant;
+    final fgColor = enabled
+        ? theme.colorScheme.onPrimary
+        : theme.colorScheme.onSurfaceVariant.withOpacity(0.7);
+
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: FilledButton(
+        onPressed: enabled ? onTap : null,
+        style: FilledButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          backgroundColor: bgColor,
+          foregroundColor: fgColor,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('$limit vragen'),
+            const SizedBox(height: 2),
+            Text(
+              subtitle ?? '',
+              style: TextStyle(
+                fontSize: 12,
+                color: fgColor.withOpacity(subtitle == null ? 0 : 0.8),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TrafficSignC43Icon extends StatelessWidget {
+  final Color color;
+
+  const _TrafficSignC43Icon({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    const circleSize = 32.0;
+    const steelWidth = 6.0;
+    const steelHeight = 18.0;
+    const overlap = 6.0; // steel loopt onder de cirkel door
+    return SizedBox(
+      width: 40,
+      height: 54,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned(
+            left: (40 - steelWidth) / 2,
+            top: circleSize - overlap,
+            child: Container(
+              width: steelWidth,
+              height: steelHeight,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade700,
+                borderRadius: BorderRadius.circular(1),
+              ),
+            ),
+          ),
+          Positioned(
+            left: (40 - circleSize) / 2,
+            top: 0,
+            child: Container(
+              width: circleSize,
+              height: circleSize,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+                border: Border.all(color: color, width: 4),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+

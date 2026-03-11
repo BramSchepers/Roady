@@ -58,10 +58,15 @@ class _DashboardScreenState extends State<DashboardScreen>
     // 2 -> 3 (Examen)
     // 3 -> 4 (AI)
     var index = _mapLogicalToVisual(widget.initialIndex);
-    if (FirebaseAuth.instance.currentUser?.isAnonymous == true && index != 0) {
-      index = 0;
-    }
+    final isGuest = FirebaseAuth.instance.currentUser?.isAnonymous == true;
     _selectedIndex = index;
+    // Gast op Oefenvragen of Examen (via URL): toon popup, tab blijft zoals gevraagd
+    if (isGuest && (widget.initialIndex == 1 || widget.initialIndex == 2)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _showGuestDialogForLogicalIndex(widget.initialIndex);
+      });
+    }
   }
 
   @override
@@ -101,27 +106,32 @@ class _DashboardScreenState extends State<DashboardScreen>
     if (index == 2) return;
 
     final isGuest = FirebaseAuth.instance.currentUser?.isAnonymous == true;
-    if (isGuest && index != 0) {
-      if (index == 1) {
-        _showGuestDialog(
-          message: 'Maak een account of log in om oefenvragen te gebruiken.',
-          buttonLabel: 'Account aanmaken',
-          onPressed: () => context.go('/auth'),
-        );
-      } else if (index == 3 || index == 4) {
-        _showGuestDialog(
-          message: 'Examen en AI zijn premium functies. Upgrade uw account om door te gaan.',
-          buttonLabel: 'Upgrade uw account',
-          onPressed: () => context.go('/shop'),
-        );
-      }
-      return;
-    }
+    final isLockedForGuest = isGuest && (index == 1 || index == 3);
 
     setState(() {
       _isForward = index > _selectedIndex;
       _selectedIndex = index;
     });
+
+    // Na tabwissel: voor gast op Oefenvragen/Examen popup tonen
+    if (isLockedForGuest) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        if (index == 1) {
+          _showGuestDialog(
+            message: 'Maak een account of log in om oefenvragen te gebruiken.',
+            buttonLabel: 'Account aanmaken',
+            onPressed: () => context.go('/auth'),
+          );
+        } else if (index == 3) {
+          _showGuestDialog(
+            message: 'Examen is een premium functie. Upgrade uw account om door te gaan.',
+            buttonLabel: 'Upgrade uw account',
+            onPressed: () => context.go('/shop'),
+          );
+        }
+      });
+    }
   }
 
   void _showGuestDialog({
@@ -149,6 +159,26 @@ class _DashboardScreenState extends State<DashboardScreen>
         ],
       ),
     );
+  }
+
+  /// Toon de juiste gast-dialoog wanneer iemand via URL op een vergrendelde tab komt.
+  void _showGuestDialogForLogicalIndex(int logicalIndex) {
+    if (logicalIndex == 0 || logicalIndex == 3) return; // Theorie, AI: geen dialoog
+    if (logicalIndex == 1) {
+      _showGuestDialog(
+        message: 'Maak een account of log in om oefenvragen te gebruiken.',
+        buttonLabel: 'Account aanmaken',
+        onPressed: () => context.go('/auth'),
+      );
+      return;
+    }
+    if (logicalIndex == 2) {
+      _showGuestDialog(
+        message: 'Examen is een premium functie. Upgrade uw account om door te gaan.',
+        buttonLabel: 'Upgrade uw account',
+        onPressed: () => context.go('/shop'),
+      );
+    }
   }
 
   Color _getCurrentColor() {

@@ -56,17 +56,17 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
       body: Stack(
         children: [
           Positioned.fill(
-              child: Container(
-                color: Colors.white,
-                child: Image.asset(
-                  'assets/images/background.webp',
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                ),
+            child: Container(
+              color: Colors.white,
+              child: Image.asset(
+                'assets/images/background.webp',
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
+                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
               ),
             ),
+          ),
           SafeArea(
             child: Padding(
               padding: EdgeInsets.symmetric(
@@ -84,113 +84,115 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: IconButton(
-                      icon: const Icon(Icons.arrow_back_rounded),
-                      onPressed: () => context.go('/auth?back=1'),
-                      color: _accentBlue,
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.white.withOpacity(0.8),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Center(
-                    child: Image.asset(
-                      'assets/images/logo-roady.png',
-                      height: 40,
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => const Text('Roady',
-                          style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: _accentBlue)),
-                    ),
-                  ),
-                  const SizedBox(height: 48),
-                  Text(
-                    'Kies je taal',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                      fontSize: kIsWeb ? 22 : null,
-                    ),
-                  ),
-                  const SizedBox(height: 48),
-                  _LanguageOptionCard(
-                    title: 'Nederlands',
-                    subtitle: 'Dutch',
-                    icon: Icons.language,
-                    flagImageUrl: '$_flagBaseUrl/nl.png',
-                    isActive: true,
-                    onTap: () async {
-                      final uid = FirebaseAuth.instance.currentUser?.uid;
-                      if (uid == null) return;
-                      await UserLanguageRepository.instance
-                          .setLanguage(uid, 'nl');
-                      if (!context.mounted) return;
-                      final nextRoute = await UserLanguageRepository.instance
-                          .getNextOnboardingRoute(uid);
-                      if (context.mounted) context.go(nextRoute);
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  _LanguageOptionCard(
-                    title: 'Français',
-                    subtitle: 'Frans',
-                    icon: Icons.language,
-                    flagImageUrl: '$_flagBaseUrl/fr.png',
-                    isActive: false,
-                    onTap: () {},
-                  ),
-                  const SizedBox(height: 16),
-                  _LanguageOptionCard(
-                    title: 'English',
-                    subtitle: 'Engels',
-                    icon: Icons.language,
-                    flagImageUrl: '$_flagBaseUrl/gb.png',
-                    isActive: false,
-                    onTap: () {},
-                  ),
-                  const Spacer(),
-                  const Center(
-                    child: OnboardingPageIndicator(
-                      currentIndex: 0,
-                      totalSteps: kIsWeb ? 3 : 4,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.info_outline,
-                            size: 20, color: Colors.grey[900]),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Frans en Engels komen binnenkort beschikbaar!',
-                            style: TextStyle(
-                              color: Colors.grey[900],
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
+                    children: [
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: IconButton(
+                          icon: const Icon(Icons.arrow_back_rounded),
+                          onPressed: () => context.go('/auth?back=1'),
+                          color: _accentBlue,
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.white.withOpacity(0.8),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                      ),
+                      const SizedBox(height: 8),
+                      Center(
+                        child: Image.asset(
+                          'assets/images/logo-roady.png',
+                          height: 40,
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, __, ___) => const Text('Roady',
+                              style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: _accentBlue)),
+                        ),
+                      ),
+                      const SizedBox(height: 48),
+                      Text(
+                        'Kies je taal',
+                        textAlign: TextAlign.center,
+                        style:
+                            Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                  fontSize: kIsWeb ? 22 : null,
+                                ),
+                      ),
+                      const SizedBox(height: 48),
+                      _LanguageOptionCard(
+                        title: 'Nederlands',
+                        subtitle: 'Dutch',
+                        icon: Icons.language,
+                        flagImageUrl: '$_flagBaseUrl/nl.png',
+                        isActive: true,
+                        onTap: () async {
+                          final uid = FirebaseAuth.instance.currentUser?.uid;
+                          if (uid == null) return;
+                          await UserLanguageRepository.instance
+                              .setLanguage(uid, 'nl');
+                          if (!context.mounted) return;
+                          final nextRoute = await UserLanguageRepository
+                              .instance
+                              .getNextOnboardingRoute(uid);
+                          if (context.mounted) context.go(nextRoute);
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      _LanguageOptionCard(
+                        title: 'Français',
+                        subtitle: 'Frans',
+                        icon: Icons.language,
+                        flagImageUrl: '$_flagBaseUrl/fr.png',
+                        isActive: false,
+                        onTap: () {},
+                      ),
+                      const SizedBox(height: 16),
+                      _LanguageOptionCard(
+                        title: 'English',
+                        subtitle: 'Engels',
+                        icon: Icons.language,
+                        flagImageUrl: '$_flagBaseUrl/gb.png',
+                        isActive: false,
+                        onTap: () {},
+                      ),
+                      const Spacer(),
+                      const Center(
+                        child: OnboardingPageIndicator(
+                          currentIndex: 0,
+                          totalSteps: kIsWeb ? 3 : 4,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.white),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.info_outline,
+                                size: 20, color: Colors.grey[900]),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Frans en Engels komen binnenkort beschikbaar!',
+                                style: TextStyle(
+                                  color: Colors.grey[900],
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                   ),
                 ),
               ),
@@ -266,7 +268,8 @@ class _LanguageOptionCard extends StatelessWidget {
                               height: iconSize / 2,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: isActive ? accentColor : Colors.grey[400],
+                                color:
+                                    isActive ? accentColor : Colors.grey[400],
                               ),
                             ),
                           ),
@@ -315,8 +318,8 @@ class _LanguageOptionCard extends StatelessWidget {
                 )
               else
                 Container(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: compact ? 6 : 8, vertical: compact ? 3 : 4),
+                  padding: EdgeInsets.symmetric(
+                      horizontal: compact ? 6 : 8, vertical: compact ? 3 : 4),
                   decoration: BoxDecoration(
                     color: Colors.grey[200],
                     borderRadius: BorderRadius.circular(8),

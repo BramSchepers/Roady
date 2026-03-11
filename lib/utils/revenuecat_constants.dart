@@ -3,7 +3,14 @@
 /// Dashboard: https://app.revenuecat.com
 /// - Create an entitlement "Roady Pro" and attach your products (monthly, yearly).
 /// - For production: use separate API keys per platform (Project Settings > API keys).
+///
+/// Web: na Stripe-koppeling in RevenueCat → Project Settings → API keys → kopieer
+/// de "Web" public key hieronder (of laat gelijk aan revenueCatApiKey als je één key gebruikt).
 const String revenueCatApiKey = 'test_edfMsyrbszqcIobMgOioagGchUi';
+
+/// Web-specifieke API key (RevenueCat Web Billing). Als leeg of gelijk aan [revenueCatApiKey],
+/// wordt op web dezelfde key gebruikt. Zet hier de Web public key uit RevenueCat als die anders is.
+const String? revenueCatWebApiKey = null;
 
 /// Entitlement identifier for Roady Pro. Must match the entitlement ID in RevenueCat dashboard.
 const String entitlementRoadyPro = 'Roady Pro';

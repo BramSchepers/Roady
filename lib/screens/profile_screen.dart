@@ -276,7 +276,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           if (!option.active) ...[
                             const SizedBox(width: 8),
                             Text(
-                              'Coming soon',
+                              option.id == 'fr'
+                                  ? 'Bientôt disponible'
+                                  : 'Coming soon',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey[600],
